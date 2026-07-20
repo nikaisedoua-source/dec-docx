@@ -1,0 +1,42 @@
+name: Publish DEC DOCX Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, for example v1.6.0"
+        required: true
+        default: "v1.6.0"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release-files
+          cp "DEC_DOCX/android/DEC_DOCX.apk" "release-files/DEC_DOCX.apk"
+          cp "DEC_DOCX/update.json" "release-files/update.json"
+          ditto -c -k --sequesterRsrc --keepParent "DEC_DOCX/mac/DEC DOCX.app" "release-files/DEC_DOCX-mac.zip"
+          if [ -d "DEC_DOCX/windows" ]; then
+            ditto -c -k "DEC_DOCX/windows" "release-files/DEC_DOCX-windows.zip"
+          fi
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.version }}
+          name: "DEC DOCX ${{ inputs.version }}"
+          body: |
+            DEC DOCX release.
+
+            Android: DEC_DOCX.apk
+            macOS: DEC_DOCX-mac.zip
+            Windows: DEC_DOCX-windows.zip, when available
+          files: release-files/*

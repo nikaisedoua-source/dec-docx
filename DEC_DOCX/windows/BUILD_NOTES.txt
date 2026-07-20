@@ -1,0 +1,6 @@
+DEC DOCX Windows build not generated on this machine.
+
+Flutter only supports "flutter build windows" on Windows hosts.
+
+On a Windows machine with Flutter desktop support, run:
+flutter build windows --release
