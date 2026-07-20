@@ -4,6 +4,10 @@ Application Flutter pour Android, macOS, Web et Windows. Version actuelle : `1.6
 Elle genere un fichier `.docx` a partir d'un texte colle, d'un fichier fourni,
 ou de plusieurs fichiers fournis.
 
+## Telechargements publics
+
+Les liens directs sont listes dans [TELECHARGEMENTS.md](TELECHARGEMENTS.md).
+
 ## Fonctionnalites
 
 - Saisie separee du titre du chapitre, du sous-titre optionnel et des chapitres
