@@ -1,7 +1,7 @@
 {
   "version": "1.6.3",
   "message": "Cette version garantit un démarrage propre après chaque mise à jour Android en supprimant automatiquement les anciennes données internes et les caches.\n\nPour effectuer la mise à jour, ouvre le lien ci-dessous dans ton navigateur, télécharge le fichier APK, puis ouvre-le pour lancer l’installation. Tes documents enregistrés sur le téléphone ne seront pas supprimés.",
-  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.6.3/DEC_DOCX.apk",
+  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.6.3/DEC_DOCX-1.6.3.apk",
   "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.6.3/DEC_DOCX-mac.zip",
   "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.6.3/DEC_DOCX-windows.zip",
   "webUrl": "https://nikaisedoua-source.github.io/dec-docx/"
