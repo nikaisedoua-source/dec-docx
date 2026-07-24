@@ -1,7 +1,7 @@
 {
   "version": "1.7.1",
   "message": "Le numéro de version apparaît désormais directement dans le nom affiché sous l’icône Android, afin d’identifier immédiatement l’application installée.\n\nPour effectuer la mise à jour, ouvre le lien ci-dessous dans ton navigateur, télécharge le fichier APK, puis ouvre-le pour lancer l’installation.",
-  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.7.1/DEC_DOCX-1.7.1.apk",
+  "downloadUrl": "https://nikaisedoua-source.github.io/dec-docx/DEC_DOCX-1.7.1.apk",
   "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.7.1/DEC_DOCX-mac.zip",
   "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.7.1/DEC_DOCX-windows.zip",
   "webUrl": "https://nikaisedoua-source.github.io/dec-docx/"
