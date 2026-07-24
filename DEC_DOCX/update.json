@@ -1,6 +1,6 @@
 {
   "version": "1.6.2",
-  "message": "Comment mettre a jour : copie le lien de telechargement affiche ci-dessous, colle-le dans ton navigateur, telecharge le fichier APK puis ouvre-le et confirme l'installation. Tu n'as pas besoin de desinstaller l'ancienne version.",
+  "message": "Cette version améliore la visibilité des notifications et simplifie l’accès au téléchargement.\n\nPour effectuer la mise à jour, ouvre le lien ci-dessous dans ton navigateur, télécharge le fichier APK, puis ouvre-le pour lancer l’installation. Il n’est pas nécessaire de désinstaller la version actuelle.",
   "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.6.2/DEC_DOCX.apk",
   "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.6.2/DEC_DOCX-mac.zip",
   "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.6.2/DEC_DOCX-windows.zip",
