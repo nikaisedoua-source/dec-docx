@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -12,7 +13,7 @@ import 'docx_builder.dart';
 import 'sermon_reference.dart';
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.6.3';
+const _appVersion = '1.7.0';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -96,6 +97,30 @@ class AppStrings {
     'Chapter content',
     'Contenido del capitulo',
     'Conteudo do capitulo',
+  );
+  String get chapterDetails => _text(
+    'Informations du chapitre',
+    'Chapter details',
+    'Información del capítulo',
+    'Informações do capítulo',
+  );
+  String get chapterDetailsDescription => _text(
+    'Renseigne les informations qui apparaîtront dans le document final.',
+    'Enter the information that will appear in the final document.',
+    'Introduce la información que aparecerá en el documento final.',
+    'Informe os dados que aparecerão no documento final.',
+  );
+  String get contentDescription => _text(
+    'Colle le texte ou importe un fichier existant.',
+    'Paste the text or import an existing file.',
+    'Pega el texto o importa un archivo existente.',
+    'Cole o texto ou importe um arquivo existente.',
+  );
+  String get exportDescription => _text(
+    'Choisis la langue, vérifie le nom puis génère ton document.',
+    'Choose the language, check the name, then generate your document.',
+    'Elige el idioma, comprueba el nombre y genera tu documento.',
+    'Escolha o idioma, confira o nome e gere seu documento.',
   );
   String get inputHint => _text(
     'Colle les paragraphes numerotes. Les numeros seuls seront rattaches au texte suivant; un verset manquant reste une erreur.',
@@ -406,12 +431,72 @@ class DocxGeneratorApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1F7A6D),
+          seedColor: const Color(0xFF075E68),
           brightness: Brightness.light,
+          surface: Colors.white,
         ),
         useMaterial3: true,
-        inputDecorationTheme: const InputDecorationTheme(
-          border: OutlineInputBorder(),
+        scaffoldBackgroundColor: const Color(0xFFF3F6F8),
+        fontFamily: 'Roboto',
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Color(0xFF102A2E),
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 1,
+          centerTitle: false,
+        ),
+        cardTheme: CardThemeData(
+          color: Colors.white,
+          elevation: 0,
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: const BorderSide(color: Color(0xFFE3EAEC)),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFFF7F9FA),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: 17,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFFDCE5E7)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFFDCE5E7)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFF087F8C), width: 2),
+          ),
+          helperStyle: const TextStyle(color: Color(0xFF60777B), height: 1.35),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(0, 54),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            textStyle: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(0, 54),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            side: const BorderSide(color: Color(0xFFB7CDD0)),
+            textStyle: const TextStyle(fontWeight: FontWeight.w700),
+          ),
         ),
       ),
       home: const GeneratorPage(),
@@ -533,20 +618,15 @@ class _GeneratorPageState extends State<GeneratorPage> {
       return;
     }
 
-    final client = HttpClient();
     try {
-      final request = await client
-          .getUrl(uri)
-          .timeout(const Duration(seconds: 8));
-      request.headers.set(HttpHeaders.acceptHeader, 'application/json');
-      final response = await request.close().timeout(
-        const Duration(seconds: 12),
-      );
+      final response = await http
+          .get(uri, headers: const {'Accept': 'application/json'})
+          .timeout(const Duration(seconds: 12));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         return;
       }
 
-      final payload = jsonDecode(await utf8.decoder.bind(response).join());
+      final payload = jsonDecode(response.body);
       if (payload is! Map<String, dynamic>) {
         return;
       }
@@ -579,8 +659,6 @@ class _GeneratorPageState extends State<GeneratorPage> {
       });
     } catch (_) {
       // Update checks are advisory. Offline users can keep working.
-    } finally {
-      client.close(force: true);
     }
   }
 
@@ -896,38 +974,63 @@ class _GeneratorPageState extends State<GeneratorPage> {
 
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 68,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const _BrandMark(size: 30),
-            const SizedBox(width: 10),
-            Text(strings.appTitle),
+            const _BrandMark(size: 36),
+            const SizedBox(width: 11),
+            Text(
+              strings.appTitle,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
+              ),
+            ),
           ],
         ),
         actions: [
-          DropdownButtonHideUnderline(
-            child: DropdownButton<AppLanguage>(
-              value: _language,
-              items: AppLanguage.values
-                  .map(
-                    (language) => DropdownMenuItem(
-                      value: language,
-                      child: Text(language.label),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (language) {
-                if (language != null) {
-                  setState(() => _language = language);
-                }
-              },
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            padding: const EdgeInsets.only(left: 12, right: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0F6F6),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<AppLanguage>(
+                value: _language,
+                borderRadius: BorderRadius.circular(16),
+                icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                style: const TextStyle(
+                  color: Color(0xFF174B52),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+                items: AppLanguage.values
+                    .map(
+                      (language) => DropdownMenuItem(
+                        value: language,
+                        child: Text(language.label),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (language) {
+                  if (language != null) {
+                    setState(() => _language = language);
+                  }
+                },
+              ),
             ),
           ),
+          const SizedBox(width: 4),
           IconButton(
             tooltip: strings.clear,
             onPressed: _clearAll,
-            icon: const Icon(Icons.delete_outline),
+            icon: const Icon(Icons.restart_alt_rounded),
           ),
+          const SizedBox(width: 6),
         ],
       ),
       body: SafeArea(
@@ -963,55 +1066,62 @@ class _GeneratorPageState extends State<GeneratorPage> {
               onRemoveSource: _removeSource,
             );
 
+            final horizontalPadding = constraints.maxWidth < 600 ? 14.0 : 24.0;
+
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                18,
+                horizontalPadding,
+                30,
+              ),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1180),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (_updateNotice != null) ...[
-                        _AnimatedUpdateBanner(
-                          message: _updateNotice!,
-                          buttonLabel: strings.updateNow,
-                          onUpdate: _openUpdateDownload,
-                        ),
+                  child: _PageEntrance(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_updateNotice != null) ...[
+                          _AnimatedUpdateBanner(
+                            message: _updateNotice!,
+                            buttonLabel: strings.updateNow,
+                            onUpdate: _openUpdateDownload,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        _BrandHeader(strings: strings),
                         const SizedBox(height: 18),
+                        if (wide)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(flex: 3, child: editor),
+                              const SizedBox(width: 20),
+                              Expanded(flex: 2, child: settings),
+                            ],
+                          )
+                        else ...[
+                          editor,
+                          const SizedBox(height: 16),
+                          settings,
+                        ],
+                        const SizedBox(height: 22),
+                        Text(
+                          strings.footer,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: const Color(0xFF6B7F82),
+                            height: 1.45,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ],
-                      _BrandHeader(strings: strings),
-                      const SizedBox(height: 18),
-                      if (wide)
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(flex: 3, child: editor),
-                            const SizedBox(width: 20),
-                            Expanded(flex: 2, child: settings),
-                          ],
-                        )
-                      else ...[
-                        editor,
-                        const SizedBox(height: 16),
-                        settings,
-                      ],
-                    ],
+                    ),
                   ),
                 ),
               ),
             );
           },
-        ),
-      ),
-      bottomNavigationBar: ColoredBox(
-        color: theme.colorScheme.surfaceContainerHighest,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          child: Text(
-            strings.footer,
-            style: theme.textTheme.bodySmall,
-            textAlign: TextAlign.center,
-          ),
         ),
       ),
     );
@@ -1028,33 +1138,111 @@ class _BrandHeader extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7FAF9),
-        border: Border.all(color: const Color(0xFFDCE8E5)),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          const _BrandMark(size: 72),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(strings.appTitle, style: theme.textTheme.headlineSmall),
-                const SizedBox(height: 2),
-                Text(strings.tagline, style: theme.textTheme.bodyMedium),
-              ],
-            ),
-          ),
-          Text(
-            strings.versionLabel,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: theme.colorScheme.primary,
-            ),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF073E47), Color(0xFF087F8C)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x26075E68),
+            blurRadius: 24,
+            offset: Offset(0, 10),
           ),
         ],
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 520;
+          return Row(
+            children: [
+              _BrandMark(size: compact ? 58 : 72),
+              SizedBox(width: compact ? 14 : 18),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      strings.appTitle,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.6,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      strings.tagline,
+                      maxLines: compact ? 2 : 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFFD7F0F1),
+                        height: 1.35,
+                      ),
+                    ),
+                    if (compact) ...[
+                      const SizedBox(height: 10),
+                      _VersionPill(label: strings.versionLabel),
+                    ],
+                  ],
+                ),
+              ),
+              if (!compact) _VersionPill(label: strings.versionLabel),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _VersionPill extends StatelessWidget {
+  const _VersionPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _PageEntrance extends StatelessWidget {
+  const _PageEntrance({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 550),
+      curve: Curves.easeOutCubic,
+      tween: Tween(begin: 0, end: 1),
+      child: child,
+      builder: (context, value, child) => Opacity(
+        opacity: value,
+        child: Transform.translate(
+          offset: Offset(0, 16 * (1 - value)),
+          child: child,
+        ),
       ),
     );
   }
@@ -1154,6 +1342,76 @@ class _BrandMark extends StatelessWidget {
   }
 }
 
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({
+    required this.step,
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.child,
+  });
+
+  final String step;
+  final IconData icon;
+  final String title;
+  final String description;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE3F4F4),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, color: const Color(0xFF08717C)),
+                ),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$step  •  $title',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: const Color(0xFF12383D),
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        description,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: const Color(0xFF6A7F82),
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _InputPanel extends StatelessWidget {
   const _InputPanel({
     required this.strings,
@@ -1182,92 +1440,144 @@ class _InputPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TextField(
-          controller: chapterTitleController,
-          decoration: InputDecoration(
-            labelText: strings.chapterTitle,
-            hintText: strings.chapterTitleHint,
-            helperText: strings.chapterTitleLowercaseHelp,
-            suffixText: '*',
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: subtitleController,
-          decoration: InputDecoration(
-            labelText: strings.subtitle,
-            hintText: strings.subtitleHint,
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: similarChaptersController,
-          decoration: InputDecoration(
-            labelText: strings.similarChapters,
-            hintText: strings.similarChaptersHint,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          strings.workflowTips,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        const SizedBox(height: 18),
-        Text(strings.inputTitle, style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 10),
-        TextField(
-          controller: manualTextController,
-          minLines: 16,
-          maxLines: 26,
-          textAlignVertical: TextAlignVertical.top,
-          decoration: InputDecoration(hintText: strings.inputHint),
-        ),
-        const SizedBox(height: 12),
-        FilledButton.icon(
-          onPressed: onPickFiles,
-          icon: const Icon(Icons.upload_file),
-          label: Text(strings.addFiles),
-        ),
-        const SizedBox(height: 18),
-        Text(strings.download, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 10),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final field = TextField(
-              controller: downloadUrlController,
-              keyboardType: TextInputType.url,
-              decoration: InputDecoration(
-                labelText: strings.urlLabel,
-                hintText: 'https://example.com/text.txt',
+        _SectionCard(
+          step: '01',
+          icon: Icons.edit_note_rounded,
+          title: strings.chapterDetails,
+          description: strings.chapterDetailsDescription,
+          child: Column(
+            children: [
+              TextField(
+                controller: chapterTitleController,
+                decoration: InputDecoration(
+                  labelText: strings.chapterTitle,
+                  hintText: strings.chapterTitleHint,
+                  helperText: strings.chapterTitleLowercaseHelp,
+                  helperMaxLines: 3,
+                  suffixIcon: const Icon(Icons.title_rounded),
+                ),
               ),
-            );
-            final button = FilledButton.icon(
-              onPressed: isDownloading ? null : onDownloadText,
-              icon: isDownloading
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.download),
-              label: Text(strings.downloadButton),
-            );
-
-            if (constraints.maxWidth < 560) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [field, const SizedBox(height: 10), button],
-              );
-            }
-
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: field),
-                const SizedBox(width: 10),
-                SizedBox(height: 56, child: button),
-              ],
-            );
-          },
+              const SizedBox(height: 14),
+              TextField(
+                controller: subtitleController,
+                decoration: InputDecoration(
+                  labelText: strings.subtitle,
+                  hintText: strings.subtitleHint,
+                  suffixIcon: const Icon(Icons.short_text_rounded),
+                ),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: similarChaptersController,
+                decoration: InputDecoration(
+                  labelText: strings.similarChapters,
+                  hintText: strings.similarChaptersHint,
+                  suffixIcon: const Icon(Icons.hub_outlined),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F7F7),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.tips_and_updates_outlined,
+                      size: 20,
+                      color: Color(0xFF08717C),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        strings.workflowTips,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: const Color(0xFF466368),
+                          height: 1.45,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        _SectionCard(
+          step: '02',
+          icon: Icons.article_outlined,
+          title: strings.inputTitle,
+          description: strings.contentDescription,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: manualTextController,
+                minLines: 12,
+                maxLines: 24,
+                textAlignVertical: TextAlignVertical.top,
+                decoration: InputDecoration(
+                  hintText: strings.inputHint,
+                  alignLabelWithHint: true,
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: onPickFiles,
+                icon: const Icon(Icons.upload_file_rounded),
+                label: Text(strings.addFiles),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                strings.download,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 10),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final field = TextField(
+                    controller: downloadUrlController,
+                    keyboardType: TextInputType.url,
+                    decoration: InputDecoration(
+                      labelText: strings.urlLabel,
+                      hintText: 'https://example.com/text.txt',
+                      prefixIcon: const Icon(Icons.link_rounded),
+                    ),
+                  );
+                  final button = FilledButton.icon(
+                    onPressed: isDownloading ? null : onDownloadText,
+                    icon: isDownloading
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.download_rounded),
+                    label: Text(strings.downloadButton),
+                  );
+                  if (constraints.maxWidth < 560) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [field, const SizedBox(height: 10), button],
+                    );
+                  }
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: field),
+                      const SizedBox(width: 10),
+                      button,
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -1303,88 +1613,161 @@ class _SettingsPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(strings.output, style: theme.textTheme.titleLarge),
-        const SizedBox(height: 10),
-        DropdownButtonFormField<KacouLanguage>(
-          initialValue: selectedDocumentLanguage,
-          decoration: InputDecoration(labelText: strings.siteLanguage),
-          items: _kacouLanguages
-              .map(
-                (language) => DropdownMenuItem(
-                  value: language,
-                  child: Text(language.name),
-                ),
-              )
-              .toList(),
-          onChanged: onLanguageSelected,
-        ),
-        const SizedBox(height: 10),
-        TextField(
-          controller: documentLanguageController,
-          decoration: InputDecoration(
-            labelText: strings.documentLanguage,
-            hintText: strings.documentLanguageHint,
-            suffixText: '*',
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: fileNameController,
-          readOnly: true,
-          decoration: InputDecoration(
-            labelText: strings.fileName,
-            helperText: strings.fileNameRule,
-          ),
-        ),
-        const SizedBox(height: 16),
-        FilledButton.icon(
-          onPressed: isGenerating ? null : onGenerate,
-          icon: isGenerating
-              ? const SizedBox.square(
-                  dimension: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+    return _SectionCard(
+      step: '03',
+      icon: Icons.auto_awesome_rounded,
+      title: strings.output,
+      description: strings.exportDescription,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          DropdownButtonFormField<KacouLanguage>(
+            initialValue: selectedDocumentLanguage,
+            borderRadius: BorderRadius.circular(16),
+            decoration: InputDecoration(
+              labelText: strings.siteLanguage,
+              prefixIcon: const Icon(Icons.language_rounded),
+            ),
+            items: _kacouLanguages
+                .map(
+                  (language) => DropdownMenuItem(
+                    value: language,
+                    child: Text(language.name),
+                  ),
                 )
-              : const Icon(Icons.description_outlined),
-          label: Text(strings.generate),
-        ),
-        const SizedBox(height: 20),
-        Text(strings.sources, style: theme.textTheme.titleMedium),
-        const SizedBox(height: 8),
-        if (sources.isEmpty)
-          Text(strings.noSources, style: theme.textTheme.bodyMedium)
-        else
-          ...sources.map(
-            (source) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                dense: true,
-                tileColor: theme.colorScheme.surfaceContainerHighest,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                .toList(),
+            onChanged: onLanguageSelected,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: documentLanguageController,
+            decoration: InputDecoration(
+              labelText: strings.documentLanguage,
+              hintText: strings.documentLanguageHint,
+              prefixIcon: const Icon(Icons.translate_rounded),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: fileNameController,
+            readOnly: true,
+            decoration: InputDecoration(
+              labelText: strings.fileName,
+              helperText: strings.fileNameRule,
+              prefixIcon: const Icon(Icons.description_outlined),
+            ),
+          ),
+          const SizedBox(height: 16),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF087F8C), Color(0xFF075E68)],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x30075E68),
+                  blurRadius: 18,
+                  offset: Offset(0, 8),
                 ),
-                leading: const Icon(Icons.article_outlined),
-                title: Text(
-                  source.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              ],
+            ),
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                shadowColor: Colors.transparent,
+                minimumSize: const Size.fromHeight(58),
+              ),
+              onPressed: isGenerating ? null : onGenerate,
+              icon: isGenerating
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.auto_fix_high_rounded),
+              label: Text(strings.generate),
+            ),
+          ),
+          const SizedBox(height: 22),
+          Row(
+            children: [
+              Text(
+                strings.sources,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
                 ),
-                subtitle: Text(strings.words(_wordCount(source.text))),
-                trailing: IconButton(
-                  tooltip: strings.remove,
-                  onPressed: () => onRemoveSource(source),
-                  icon: const Icon(Icons.close),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F3F3),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(
+                  '${sources.length}',
+                  style: const TextStyle(
+                    color: Color(0xFF075E68),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (sources.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF7F9FA),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text(
+                strings.noSources,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: const Color(0xFF718487),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            )
+          else
+            ...sources.map(
+              (source) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  dense: true,
+                  tileColor: const Color(0xFFF4F8F8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  leading: const Icon(
+                    Icons.article_outlined,
+                    color: Color(0xFF08717C),
+                  ),
+                  title: Text(
+                    source.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(strings.words(_wordCount(source.text))),
+                  trailing: IconButton(
+                    tooltip: strings.remove,
+                    onPressed: () => onRemoveSource(source),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
                 ),
               ),
             ),
-          ),
-        if (status != null) ...[
-          const SizedBox(height: 14),
-          _StatusMessage(text: status!),
+          if (status != null) ...[
+            const SizedBox(height: 14),
+            _StatusMessage(text: status!),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
