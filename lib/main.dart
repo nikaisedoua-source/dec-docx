@@ -11,10 +11,10 @@ import 'docx_builder.dart';
 import 'sermon_reference.dart';
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.6.0';
+const _appVersion = '1.6.1';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
-  defaultValue: '',
+  defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
 );
 
 void main() {
@@ -109,10 +109,16 @@ class AppStrings {
     'Titulo do capitulo',
   );
   String get chapterTitleHint => _text(
-    'KACOU 1 : C’EST ICI LA VOIX DE MATTHIEU 25 :6',
-    'KACOU 1: THIS IS THE VOICE OF MATTHEW 25:6',
-    'KACOU 1: AQUI ESTA LA VOZ DE MATEO 25:6',
-    'KACOU 1: AQUI ESTA A VOZ DE MATEUS 25:6',
+    'KACOU 1 : C’est ici la voix de Matthieu 25 :6',
+    'KACOU 1: This is the voice of Matthew 25:6',
+    'KACOU 1: Aqui esta la voz de Mateo 25:6',
+    'KACOU 1: Aqui esta a voz de Mateus 25:6',
+  );
+  String get chapterTitleLowercaseHelp => _text(
+    'Écris le titre normalement, pas tout en majuscules. Les débuts de phrase et les noms propres peuvent avoir une majuscule.',
+    'Use normal capitalization, not all caps. Sentences and proper names may start with a capital letter.',
+    'Usa mayusculas normales, no todo en mayusculas. Las frases y los nombres propios pueden empezar con mayuscula.',
+    'Use maiusculas normalmente, nao escreva tudo em maiusculas. Frases e nomes proprios podem comecar com maiuscula.',
   );
   String get subtitle => _text(
     'Sous-titre optionnel',
@@ -444,6 +450,7 @@ class _GeneratorPageState extends State<GeneratorPage> {
   bool _isGenerating = false;
   bool _isDownloading = false;
   String? _status;
+  String? _updateNotice;
 
   AppStrings get _strings => AppStrings(_language);
 
@@ -544,7 +551,7 @@ class _GeneratorPageState extends State<GeneratorPage> {
       }
 
       setState(
-        () => _status = _strings.updateAvailable(
+        () => _updateNotice = _strings.updateAvailable(
           version: latestVersion,
           message: message.isEmpty
               ? 'Une nouvelle version est prete.'
@@ -917,6 +924,7 @@ class _GeneratorPageState extends State<GeneratorPage> {
               },
               sources: _fileSources,
               status: _status,
+              updateNotice: _updateNotice,
               isGenerating: _isGenerating,
               onGenerate: _generate,
               onRemoveSource: _removeSource,
@@ -1063,6 +1071,7 @@ class _InputPanel extends StatelessWidget {
           decoration: InputDecoration(
             labelText: strings.chapterTitle,
             hintText: strings.chapterTitleHint,
+            helperText: strings.chapterTitleLowercaseHelp,
             suffixText: '*',
           ),
         ),
@@ -1158,6 +1167,7 @@ class _SettingsPanel extends StatelessWidget {
     required this.onLanguageSelected,
     required this.sources,
     required this.status,
+    required this.updateNotice,
     required this.isGenerating,
     required this.onGenerate,
     required this.onRemoveSource,
@@ -1170,6 +1180,7 @@ class _SettingsPanel extends StatelessWidget {
   final ValueChanged<KacouLanguage?> onLanguageSelected;
   final List<DocumentSource> sources;
   final String? status;
+  final String? updateNotice;
   final bool isGenerating;
   final VoidCallback onGenerate;
   final ValueChanged<DocumentSource> onRemoveSource;
@@ -1181,6 +1192,33 @@ class _SettingsPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (updateNotice != null) ...[
+          Card(
+            color: theme.colorScheme.primaryContainer,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.system_update_alt,
+                    color: theme.colorScheme.onPrimaryContainer,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      updateNotice!,
+                      style: TextStyle(
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
         Text(strings.output, style: theme.textTheme.titleLarge),
         const SizedBox(height: 10),
         DropdownButtonFormField<KacouLanguage>(

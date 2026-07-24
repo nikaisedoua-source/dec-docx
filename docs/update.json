@@ -1,5 +1,5 @@
 {
-  "version": "1.6.0",
-  "message": "Nouvelle version DEC DOCX disponible.",
+  "version": "1.6.1",
+  "message": "Les titres doivent maintenant etre ecrits normalement, sans etre entierement en majuscules. Les noms propres restent autorises.",
   "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/raw/main/DEC_DOCX/android/DEC_DOCX.apk"
 }

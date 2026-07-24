@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:dec_docx/docx_builder.dart';
@@ -13,10 +14,62 @@ void main() {
     await tester.pumpWidget(const DocxGeneratorApp());
 
     expect(find.text('DEC DOCX'), findsWidgets);
-    expect(find.text('Version 1.6.0'), findsOneWidget);
+    expect(find.text('Version 1.6.1'), findsOneWidget);
     expect(find.text('Titre du chapitre'), findsOneWidget);
+    expect(
+      find.text(
+        'Écris le titre normalement, pas tout en majuscules. Les débuts de phrase et les noms propres peuvent avoir une majuscule.',
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Sous-titre optionnel'), findsOneWidget);
     expect(find.text('Chapitres similaires finaux'), findsOneWidget);
+  });
+
+  testWidgets('preserves normal capitals in the chapter title', (tester) async {
+    await tester.pumpWidget(const DocxGeneratorApp());
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Titre du chapitre'),
+      'KACOU 1 : Jésus parle à Matthieu',
+    );
+
+    final field = tester.widget<TextField>(
+      find.widgetWithText(TextField, 'Titre du chapitre'),
+    );
+    expect(field.controller!.text, 'KACOU 1 : Jésus parle à Matthieu');
+  });
+
+  test('rejects a chapter title written entirely in uppercase', () {
+    final validation = DocxBuilder.validateChapter(
+      const ChapterInput(
+        title: 'KACOU 1 : TITRE EN MAJUSCULES',
+        subtitle: '',
+        similarChapters: '',
+        sources: [DocumentSource(name: 'Test', text: '1 Premier paragraphe')],
+      ),
+    );
+
+    expect(validation.hasErrors, isTrue);
+    expect(
+      validation.errors,
+      contains(
+        'Titre du chapitre : ne l’écris pas entièrement en majuscules. Écris-le normalement, par exemple "KACOU 1 : C’est ici la voix de Matthieu 25 :6". Les débuts de phrase et les noms propres peuvent garder leur majuscule.',
+      ),
+    );
+  });
+
+  test('accepts capitals at the beginning and in proper names', () {
+    final validation = DocxBuilder.validateChapter(
+      const ChapterInput(
+        title: 'KACOU 1 : Jésus parle à Matthieu',
+        subtitle: '',
+        similarChapters: '',
+        sources: [DocumentSource(name: 'Test', text: '1 Premier paragraphe')],
+      ),
+    );
+
+    expect(validation.hasErrors, isFalse);
   });
 
   test('builds a valid docx archive with separated paragraph numbers', () {
@@ -38,7 +91,7 @@ void main() {
   test('keeps a subtitle between title and first paragraph', () {
     final bytes = DocxBuilder.buildChapter(
       const ChapterInput(
-        title: 'KACOU 1 : Titre du document',
+        title: 'kacou 1 : titre du document',
         subtitle: 'Sous titre du document',
         similarChapters: '',
         sources: [
@@ -82,7 +135,7 @@ void main() {
     () {
       final validation = DocxBuilder.validateChapter(
         const ChapterInput(
-          title: 'KACOU 112 : Exemple',
+          title: 'kacou 112 : exemple',
           subtitle: '',
           similarChapters: '',
           sources: [
@@ -113,7 +166,7 @@ Troisieme paragraphe
   test('ignores a pasted KACOU numbered title inside chapter content', () {
     final bytes = DocxBuilder.buildChapter(
       const ChapterInput(
-        title: 'KACOU 1 : Titre du document',
+        title: 'kacou 1 : titre du document',
         subtitle: '',
         similarChapters: '',
         sources: [
@@ -147,7 +200,7 @@ Troisieme paragraphe
   test('adds similar chapters centered after the last paragraph', () {
     final bytes = DocxBuilder.buildChapter(
       const ChapterInput(
-        title: 'KACOU 1 : Titre',
+        title: 'kacou 1 : titre',
         subtitle: '',
         similarChapters: 'Kc.36, Kc.64',
         sources: [
@@ -196,7 +249,7 @@ PARTIE 2 : SUITE
   test('repairs numbered paragraphs pasted on one line', () {
     final validation = DocxBuilder.validateChapter(
       const ChapterInput(
-        title: 'KACOU 180 : Exemple',
+        title: 'kacou 180 : exemple',
         subtitle: '',
         similarChapters: '',
         sources: [
@@ -220,7 +273,7 @@ PARTIE 2 : SUITE
   test('detects paragraph numbers with leading special symbols', () {
     final validation = DocxBuilder.validateChapter(
       const ChapterInput(
-        title: 'KACOU 181 : Exemple',
+        title: 'kacou 181 : exemple',
         subtitle: '',
         similarChapters: '',
         sources: [
@@ -253,7 +306,7 @@ PARTIE 2 : SUITE
   test('splits one-line paragraphs with leading special symbols', () {
     final validation = DocxBuilder.validateChapter(
       const ChapterInput(
-        title: 'KACOU 182 : Exemple',
+        title: 'kacou 182 : exemple',
         subtitle: '',
         similarChapters: '',
         sources: [
@@ -277,7 +330,7 @@ PARTIE 2 : SUITE
   test('does not split dates inside a numbered paragraph', () {
     final validation = DocxBuilder.validateChapter(
       const ChapterInput(
-        title: 'KACOU 139 : Exemple',
+        title: 'kacou 139 : exemple',
         subtitle: '',
         similarChapters: '',
         sources: [
@@ -302,7 +355,7 @@ PARTIE 2 : SUITE
   test('accepts similar chapters line after the last numbered paragraph', () {
     final validation = DocxBuilder.validateChapter(
       const ChapterInput(
-        title: 'KACOU 139 : Exemple',
+        title: 'kacou 139 : exemple',
         subtitle: '',
         similarChapters: '',
         sources: [
@@ -323,7 +376,7 @@ PARTIE 2 : SUITE
   test('accepts Vietnamese similar chapters after numbered paragraphs', () {
     final validation = DocxBuilder.validateChapter(
       const ChapterInput(
-        title: 'KACOU 34 : Ví dụ',
+        title: 'kacou 34 : ví dụ',
         subtitle: '',
         similarChapters: '',
         sources: [
@@ -344,7 +397,7 @@ PARTIE 2 : SUITE
   test('keeps concordances in place and renders them in green', () {
     final bytes = DocxBuilder.buildChapter(
       const ChapterInput(
-        title: 'KACOU 3 : Exemple',
+        title: 'kacou 3 : exemple',
         subtitle: '',
         similarChapters: '',
         sources: [
@@ -378,7 +431,7 @@ PARTIE 2 : SUITE
   test('adds explicit spacing after each numbered paragraph', () {
     final bytes = DocxBuilder.buildChapter(
       const ChapterInput(
-        title: 'KACOU 183 : Exemple',
+        title: 'kacou 183 : exemple',
         subtitle: '',
         similarChapters: '',
         sources: [

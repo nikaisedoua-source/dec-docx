@@ -107,7 +107,11 @@ class DocxBuilder {
 
     if (title.isEmpty) {
       errors.add(
-        'Titre du chapitre : ce champ est obligatoire. Mets un titre comme "KACOU 1 : C’EST ICI LA VOIX DE MATTHIEU 25 :6".',
+        'Titre du chapitre : ce champ est obligatoire. Mets un titre comme "KACOU 1 : C’est ici la voix de Matthieu 25 :6".',
+      );
+    } else if (_isAllCapsTitle(title)) {
+      errors.add(
+        'Titre du chapitre : ne l’écris pas entièrement en majuscules. Écris-le normalement, par exemple "KACOU 1 : C’est ici la voix de Matthieu 25 :6". Les débuts de phrase et les noms propres peuvent garder leur majuscule.',
       );
     }
 
@@ -150,6 +154,24 @@ class DocxBuilder {
       ],
       errors: errors,
     );
+  }
+
+  static bool _isAllCapsTitle(String title) {
+    final separatorIndex = title.indexOf(':');
+    final descriptiveTitle =
+        (separatorIndex >= 0
+                ? title.substring(separatorIndex + 1)
+                : title.replaceFirst(
+                    RegExp(
+                      r'^kacou\s*(?:n[°ºo]?\s*)?\d+\s*',
+                      caseSensitive: false,
+                    ),
+                    '',
+                  ))
+            .trim();
+    return descriptiveTitle.isNotEmpty &&
+        descriptiveTitle == descriptiveTitle.toUpperCase() &&
+        descriptiveTitle != descriptiveTitle.toLowerCase();
   }
 
   static int? extractKacouChapterNumber(String value) {

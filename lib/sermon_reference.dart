@@ -40,7 +40,7 @@ class SermonReferenceService {
       final request = await client
           .getUrl(url)
           .timeout(const Duration(seconds: 15));
-      request.headers.set(HttpHeaders.userAgentHeader, 'DEC DOCX/1.6.0');
+      request.headers.set(HttpHeaders.userAgentHeader, 'DEC DOCX/1.6.1');
       final response = await request.close().timeout(
         const Duration(seconds: 20),
       );
