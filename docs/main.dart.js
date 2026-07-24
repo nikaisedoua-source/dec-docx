@@ -48474,7 +48474,7 @@ f=a==null?"":a
 d=i.i(0,"webUrl")
 a0=d==null?null:B.c.bg(J.dG(d))
 e=a0==null?f:a0
-if(J.cd(h)===0||!A.aVn(h,"1.6.2")||m.c==null){n=[1]
+if(J.cd(h)===0||!A.aVn(h,"1.6.3")||m.c==null){n=[1]
 s=5
 break}m.ac(new A.anE(m,e,h,g))
 n.push(6)
@@ -48760,7 +48760,7 @@ l=A.ayn(!0,A.axZ(new A.ao2(r,p)),B.b7,!0)
 k=o.ax
 s=k.RG
 k=s==null?k.k2:s
-return new A.Bt(new A.xt(m,n,new A.UF(q,q,1/0,56),q),l,new A.mx(k,new A.cW(B.Fj,A.cr(p.bn("DEC DOCX 1.6.2 : detection DOCX mal forme, correction des numeros existants, comparaison non bornee et fonctionnement hors connexion.","DEC DOCX 1.6.2: malformed DOCX detection, existing number repair, unbounded comparison and offline use.","DEC DOCX 1.6.2: deteccion DOCX mal formado, reparacion de numeros existentes, comparacion sin limite y uso sin conexion.","DEC DOCX 1.6.2: deteccao DOCX mal formatado, reparo de numeros existentes, comparacao sem limite e uso offline."),q,q,q,o.ok.Q,B.f4,q),q),q),q)}}
+return new A.Bt(new A.xt(m,n,new A.UF(q,q,1/0,56),q),l,new A.mx(k,new A.cW(B.Fj,A.cr(p.bn("DEC DOCX 1.6.3 : detection DOCX mal forme, correction des numeros existants, comparaison non bornee et fonctionnement hors connexion.","DEC DOCX 1.6.3: malformed DOCX detection, existing number repair, unbounded comparison and offline use.","DEC DOCX 1.6.3: deteccion DOCX mal formado, reparacion de numeros existentes, comparacion sin limite y uso sin conexion.","DEC DOCX 1.6.3: deteccao DOCX mal formatado, reparo de numeros existentes, comparacao sem limite e uso offline."),q,q,q,o.ok.Q,B.f4,q),q),q),q)}}
 A.anE.prototype={
 $0(){var s,r,q,p=this,o=p.a
 o.cx=p.b
@@ -48891,8 +48891,8 @@ r=r.a
 s.y.sfX(r)},
 $S:0}
 A.QF.prototype={
-R(a){var s=null,r="Version 1.6.2",q=A.Y(a),p=new A.aY(B.DC,1,B.u,-1),o=A.jy(8),n=q.ok,m=this.c,l=t.D,k=A.Ko(A.my(A.b([A.cr("DEC DOCX",s,s,s,n.f,s,s),B.Qc,A.cr(m.bn("Corrige les DOCX mal formes sans inventer de versets","Repairs malformed DOCX without inventing verses","Corrige DOCX mal formados sin inventar versiculos","Corrige DOCX mal formatados sem inventar versiculos"),s,s,s,n.z,s,s)],l),B.bs,B.al,B.bv),1)
-m=m.bn(r,r,r,"Versao 1.6.2")
+R(a){var s=null,r="Version 1.6.3",q=A.Y(a),p=new A.aY(B.DC,1,B.u,-1),o=A.jy(8),n=q.ok,m=this.c,l=t.D,k=A.Ko(A.my(A.b([A.cr("DEC DOCX",s,s,s,n.f,s,s),B.Qc,A.cr(m.bn("Corrige les DOCX mal formes sans inventer de versets","Repairs malformed DOCX without inventing verses","Corrige DOCX mal formados sin inventar versiculos","Corrige DOCX mal formatados sem inventar versiculos"),s,s,s,n.z,s,s)],l),B.bs,B.al,B.bv),1)
+m=m.bn(r,r,r,"Versao 1.6.3")
 n=n.as
 return A.Jw(A.qy(A.b([B.WX,B.Q8,k,A.cr(m,s,s,s,n==null?s:n.bQ(q.ax.b),s,s)],l),B.bg,B.al,B.bv,0),B.H,new A.eL(B.Dp,s,new A.dv(p,p,p,p),o,s,s,B.bf),s,s,B.Fh,s)}}
 A.DA.prototype={
@@ -49026,7 +49026,7 @@ p=3
 s=6
 return A.S(g.xS("get",h).rq(B.fU),$async$qH)
 case 6:m=d
-m.dx.pt("user-agent","DEC DOCX/1.6.2")
+m.dx.pt("user-agent","DEC DOCX/1.6.3")
 s=7
 return A.S(m.al().rq(B.ES),$async$qH)
 case 7:l=d
