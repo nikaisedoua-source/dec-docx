@@ -36,6 +36,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["appLabel"] = "DEC DOCX ${flutter.versionName}"
     }
 
     signingConfigs {

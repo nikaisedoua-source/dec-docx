@@ -49547,7 +49547,7 @@ i=d==null?"":d
 g=l.i(0,"webUrl")
 c=g==null?null:B.c.bi(J.dr(g))
 h=c==null?i:c
-if(J.cb(k)===0||!A.aYo(k,"1.7.0")||n.c==null){s=1
+if(J.cb(k)===0||!A.aYo(k,"1.7.1")||n.c==null){s=1
 break}n.ag(new A.apy(n,h,k,j))
 p=2
 s=6
@@ -49943,7 +49943,7 @@ k.push(B.zr)
 if(r>=900)k.push(A.j9(A.b([A.pB(o,3),B.Rt,A.pB(n,2)],l),B.b3,B.V,B.ay,0))
 else B.b.P(k,A.b([o,B.i6,n],l))
 k.push(B.zs)
-r=q.bc("DEC DOCX 1.7.0 : detection DOCX mal forme, correction des numeros existants, comparaison non bornee et fonctionnement hors connexion.","DEC DOCX 1.7.0: malformed DOCX detection, existing number repair, unbounded comparison and offline use.","DEC DOCX 1.7.0: deteccion DOCX mal formado, reparacion de numeros existentes, comparacion sin limite y uso sin conexion.","DEC DOCX 1.7.0: deteccao DOCX mal formatado, reparo de numeros existentes, comparacao sem limite e uso offline.")
+r=q.bc("DEC DOCX 1.7.1 : detection DOCX mal forme, correction des numeros existants, comparaison non bornee et fonctionnement hors connexion.","DEC DOCX 1.7.1: malformed DOCX detection, existing number repair, unbounded comparison and offline use.","DEC DOCX 1.7.1: deteccion DOCX mal formado, reparacion de numeros existentes, comparacion sin limite y uso sin conexion.","DEC DOCX 1.7.1: deteccao DOCX mal formatado, reparo de numeros existentes, comparacao sem limite e uso offline.")
 q=this.c.ok.Q
 k.push(A.cu(r,s,s,s,q==null?s:q.zE(B.EL,1.45),B.dS,s))
 return new A.vm(new A.aR(m,18,m,30),A.mD(new A.eU(B.Bq,new A.V6(A.hZ(k,B.bI,B.V,B.ay),s),s),s,s),s)},
@@ -49962,7 +49962,7 @@ A.RG.prototype={
 R(a){var s=null,r=A.X(a),q=A.d6(24)
 return A.jP(A.a92(new A.am7(this,r)),B.B,new A.df(s,s,s,q,B.K5,B.Ik,B.ao),s,s,B.fZ,s)}}
 A.am7.prototype={
-$2(a,b){var s,r,q,p,o=null,n="Version 1.7.0",m="Versao 1.7.0",l=b.b<520,k=l?58:72,j=A.ks(o,o,l?14:18),i=this.b.ok,h=i.f
+$2(a,b){var s,r,q,p,o=null,n="Version 1.7.1",m="Versao 1.7.1",l=b.b<520,k=l?58:72,j=A.ks(o,o,l?14:18),i=this.b.ok,h=i.f
 h=A.cu("DEC DOCX",o,o,o,h==null?o:h.anL(B.k,B.kd,-0.6),o,o)
 s=this.a.c
 r=s.bc("Corrige les DOCX mal formes sans inventer de versets","Repairs malformed DOCX without inventing verses","Corrige DOCX mal formados sin inventar versiculos","Corrige DOCX mal formatados sem inventar versiculos")
@@ -50141,7 +50141,7 @@ p=3
 s=6
 return A.S(g.FE("get",h).pz(B.fY),$async$r2)
 case 6:m=d
-m.dx.t9("user-agent","DEC DOCX/1.7.0")
+m.dx.t9("user-agent","DEC DOCX/1.7.1")
 s=7
 return A.S(m.a8().pz(B.FC),$async$r2)
 case 7:l=d

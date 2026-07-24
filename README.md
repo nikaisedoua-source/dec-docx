@@ -1,6 +1,6 @@
 # DEC DOCX
 
-Application Flutter pour Android, macOS, Web et Windows. Version actuelle : `1.7.0`.
+Application Flutter pour Android, macOS, Web et Windows. Version actuelle : `1.7.1`.
 Elle genere un fichier `.docx` a partir d'un texte colle, d'un fichier fourni,
 ou de plusieurs fichiers fournis.
 

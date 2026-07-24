@@ -1,6 +1,6 @@
 # Telechargements DEC DOCX
 
-Version actuelle : `1.7.0`
+Version actuelle : `1.7.1`
 
 ## Android
 
