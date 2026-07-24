@@ -1,5 +1,8 @@
 {
-  "version": "1.6.1",
-  "message": "Les titres doivent maintenant etre ecrits normalement, sans etre entierement en majuscules. Les noms propres restent autorises.",
-  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/raw/main/DEC_DOCX/android/DEC_DOCX.apk"
+  "version": "1.6.2",
+  "message": "La mise a jour est maintenant affichee en haut avec une alerte animee et un telechargement direct.",
+  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.6.2/DEC_DOCX.apk",
+  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.6.2/DEC_DOCX-mac.zip",
+  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.6.2/DEC_DOCX-windows.zip",
+  "webUrl": "https://nikaisedoua-source.github.io/dec-docx/"
 }

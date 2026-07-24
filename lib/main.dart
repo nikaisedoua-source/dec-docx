@@ -6,12 +6,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'docx_builder.dart';
 import 'sermon_reference.dart';
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.6.1';
+const _appVersion = '1.6.2';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -272,15 +273,24 @@ class AppStrings {
     'Idioma obligatorio: elige un idioma del sitio o escribelo manualmente para nombrar correctamente el archivo.',
     'Idioma obrigatorio: escolha um idioma do site ou escreva manualmente para nomear corretamente o arquivo.',
   );
-  String updateAvailable({
-    required String version,
-    required String message,
-    required String url,
-  }) => _text(
-    'Mise a jour disponible : DEC DOCX $version\n$message\nTelechargement : $url',
-    'Update available: DEC DOCX $version\n$message\nDownload: $url',
-    'Actualizacion disponible: DEC DOCX $version\n$message\nDescarga: $url',
-    'Atualizacao disponivel: DEC DOCX $version\n$message\nDownload: $url',
+  String updateAvailable({required String version, required String message}) =>
+      _text(
+        'Mise à jour disponible : DEC DOCX $version\n$message',
+        'Update available: DEC DOCX $version\n$message',
+        'Actualización disponible: DEC DOCX $version\n$message',
+        'Atualização disponível: DEC DOCX $version\n$message',
+      );
+  String get updateNow => _text(
+    'Mettre à jour maintenant',
+    'Update now',
+    'Actualizar ahora',
+    'Atualizar agora',
+  );
+  String get updateDownloadFailed => _text(
+    'Impossible d’ouvrir le téléchargement de la mise à jour.',
+    'Unable to open the update download.',
+    'No se pudo abrir la descarga de la actualización.',
+    'Não foi possível abrir o download da atualização.',
   );
   String similarChaptersOnlineMissing(String similarChapters) => _text(
     'Chapitres similaires detectes en ligne : $similarChapters\nAjoute ce bloc dans "Chapitres similaires finaux" avant de generer.',
@@ -451,6 +461,7 @@ class _GeneratorPageState extends State<GeneratorPage> {
   bool _isDownloading = false;
   String? _status;
   String? _updateNotice;
+  String? _updateDownloadUrl;
 
   AppStrings get _strings => AppStrings(_language);
 
@@ -542,7 +553,14 @@ class _GeneratorPageState extends State<GeneratorPage> {
 
       final latestVersion = payload['version']?.toString().trim() ?? '';
       final message = payload['message']?.toString().trim() ?? '';
-      final downloadUrl = payload['downloadUrl']?.toString().trim() ?? '';
+      final fallbackUrl = payload['downloadUrl']?.toString().trim() ?? '';
+      final downloadUrl = kIsWeb
+          ? payload['webUrl']?.toString().trim() ?? fallbackUrl
+          : Platform.isMacOS
+          ? payload['macDownloadUrl']?.toString().trim() ?? fallbackUrl
+          : Platform.isWindows
+          ? payload['windowsDownloadUrl']?.toString().trim() ?? fallbackUrl
+          : fallbackUrl;
 
       if (latestVersion.isEmpty ||
           !_isVersionNewer(latestVersion, _appVersion) ||
@@ -550,19 +568,35 @@ class _GeneratorPageState extends State<GeneratorPage> {
         return;
       }
 
-      setState(
-        () => _updateNotice = _strings.updateAvailable(
+      setState(() {
+        _updateDownloadUrl = downloadUrl;
+        _updateNotice = _strings.updateAvailable(
           version: latestVersion,
           message: message.isEmpty
               ? 'Une nouvelle version est prete.'
               : message,
-          url: downloadUrl,
-        ),
-      );
+        );
+      });
     } catch (_) {
       // Update checks are advisory. Offline users can keep working.
     } finally {
       client.close(force: true);
+    }
+  }
+
+  Future<void> _openUpdateDownload() async {
+    final uri = Uri.tryParse(_updateDownloadUrl ?? '');
+    if (uri == null ||
+        !uri.hasScheme ||
+        !await launchUrl(
+          uri,
+          mode: kIsWeb
+              ? LaunchMode.platformDefault
+              : LaunchMode.externalApplication,
+        )) {
+      if (mounted) {
+        setState(() => _status = _strings.updateDownloadFailed);
+      }
     }
   }
 
@@ -924,7 +958,6 @@ class _GeneratorPageState extends State<GeneratorPage> {
               },
               sources: _fileSources,
               status: _status,
-              updateNotice: _updateNotice,
               isGenerating: _isGenerating,
               onGenerate: _generate,
               onRemoveSource: _removeSource,
@@ -938,6 +971,14 @@ class _GeneratorPageState extends State<GeneratorPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      if (_updateNotice != null) ...[
+                        _AnimatedUpdateBanner(
+                          message: _updateNotice!,
+                          buttonLabel: strings.updateNow,
+                          onUpdate: _openUpdateDownload,
+                        ),
+                        const SizedBox(height: 18),
+                      ],
                       _BrandHeader(strings: strings),
                       const SizedBox(height: 18),
                       if (wide)
@@ -1014,6 +1055,81 @@ class _BrandHeader extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AnimatedUpdateBanner extends StatefulWidget {
+  const _AnimatedUpdateBanner({
+    required this.message,
+    required this.buttonLabel,
+    required this.onUpdate,
+  });
+
+  final String message;
+  final String buttonLabel;
+  final VoidCallback onUpdate;
+
+  @override
+  State<_AnimatedUpdateBanner> createState() => _AnimatedUpdateBannerState();
+}
+
+class _AnimatedUpdateBannerState extends State<_AnimatedUpdateBanner>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+    lowerBound: 0.97,
+    upperBound: 1,
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return ScaleTransition(
+      scale: _controller,
+      child: Material(
+        elevation: 8,
+        color: colors.errorContainer,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Wrap(
+            spacing: 16,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Icon(
+                Icons.notification_important,
+                size: 34,
+                color: colors.onErrorContainer,
+              ),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 680),
+                child: Text(
+                  widget.message,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: colors.onErrorContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              FilledButton.icon(
+                onPressed: widget.onUpdate,
+                icon: const Icon(Icons.download),
+                label: Text(widget.buttonLabel),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1167,7 +1283,6 @@ class _SettingsPanel extends StatelessWidget {
     required this.onLanguageSelected,
     required this.sources,
     required this.status,
-    required this.updateNotice,
     required this.isGenerating,
     required this.onGenerate,
     required this.onRemoveSource,
@@ -1180,7 +1295,6 @@ class _SettingsPanel extends StatelessWidget {
   final ValueChanged<KacouLanguage?> onLanguageSelected;
   final List<DocumentSource> sources;
   final String? status;
-  final String? updateNotice;
   final bool isGenerating;
   final VoidCallback onGenerate;
   final ValueChanged<DocumentSource> onRemoveSource;
@@ -1192,33 +1306,6 @@ class _SettingsPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (updateNotice != null) ...[
-          Card(
-            color: theme.colorScheme.primaryContainer,
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.system_update_alt,
-                    color: theme.colorScheme.onPrimaryContainer,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      updateNotice!,
-                      style: TextStyle(
-                        color: theme.colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-        ],
         Text(strings.output, style: theme.textTheme.titleLarge),
         const SizedBox(height: 10),
         DropdownButtonFormField<KacouLanguage>(
