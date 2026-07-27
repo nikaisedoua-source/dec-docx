@@ -14,7 +14,7 @@ void main() {
     await tester.pumpWidget(const DocxGeneratorApp());
 
     expect(find.text('DEC DOCX'), findsWidgets);
-    expect(find.text('Version 1.7.1'), findsOneWidget);
+    expect(find.text('Version 1.7.2'), findsOneWidget);
     expect(find.text('Titre du chapitre'), findsOneWidget);
     expect(
       find.text(
@@ -349,6 +349,39 @@ PARTIE 2 : SUITE
     expect(
       validation.documents.first.paragraphs.first.text,
       contains('07 na Novembro ya 2019'),
+    );
+  });
+
+  test('accepts a Turkish parenthesized date and similar chapter label', () {
+    final validation = DocxBuilder.validateChapter(
+      const ChapterInput(
+        title: 'Kacou 86: Piramidin Tepesinde',
+        subtitle: '',
+        similarChapters: '',
+        sources: [
+          DocumentSource(
+            name: 'Kacou 86 Turqu.',
+            text: '''
+(24 Mayıs 2009 Pazar günü Adjamé'de vaaz edilmiştir)
+1 Birinci paragraf
+2 İkinci paragraf
+Benzer bölüm: Kc. 118
+''',
+          ),
+        ],
+      ),
+    );
+
+    expect(validation.hasErrors, isFalse);
+    expect(
+      validation.documents.single.paragraphs.map(
+        (paragraph) => paragraph.number,
+      ),
+      [1, 2],
+    );
+    expect(
+      validation.documents.single.similarChapters,
+      'Benzer bölüm: Kc. 118',
     );
   });
 

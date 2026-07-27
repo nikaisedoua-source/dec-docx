@@ -404,7 +404,9 @@ class DocxBuilder {
         continue;
       }
 
-      final paragraph = _parseNumberedParagraph(line);
+      final paragraph = _looksLikeParenthesizedDate(line)
+          ? null
+          : _parseNumberedParagraph(line);
       if (paragraph == null) {
         if (!sawNumberedParagraph || _looksLikeSectionSubtitle(line)) {
           blocks.add(DocumentBlock.subtitle(line));
@@ -576,9 +578,17 @@ class DocxBuilder {
     return letters > 0 && uppercase / letters >= 0.7;
   }
 
+  static bool _looksLikeParenthesizedDate(String value) {
+    return RegExp(
+      r'^\(\s*\d{1,2}\s+\p{L}',
+      caseSensitive: false,
+      unicode: true,
+    ).hasMatch(value.trim());
+  }
+
   static bool _looksLikeSimilarChaptersLine(String value) {
     return RegExp(
-      r'^(?:chapitres?(?:\s+similaires)?|cap[ií]tulos?(?:\s+similares)?|similar\s+chapters|similar\s+chapter|ähnliche\s+kapitel|capitoli\s+simili|cap[ií]tulos?\s+semelhantes|ikapitulu\s+solikanana|chương\s+tương\s+tự)[\s\u00a0]*:',
+      r'^(?:chapitres?(?:\s+similaires)?|cap[ií]tulos?(?:\s+similares)?|similar\s+chapters|similar\s+chapter|ähnliche\s+kapitel|capitoli\s+simili|cap[ií]tulos?\s+semelhantes|ikapitulu\s+solikanana|chương\s+tương\s+tự|benzer\s+bölüm(?:ler)?)[\s\u00a0]*:',
       caseSensitive: false,
       unicode: true,
     ).hasMatch(value.trim());
