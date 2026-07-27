@@ -14,7 +14,7 @@ void main() {
     await tester.pumpWidget(const DocxGeneratorApp());
 
     expect(find.text('DEC DOCX'), findsWidgets);
-    expect(find.text('Version 1.7.3'), findsOneWidget);
+    expect(find.text('Version 1.7.4'), findsOneWidget);
     expect(find.text('Titre du chapitre'), findsOneWidget);
     expect(
       find.text(
@@ -574,6 +574,19 @@ Texte sans numero
 ''';
 
     expect(SermonReferenceService.parseParagraphCount(html), 24);
+  });
+
+  test('parses paragraph count from web reader plain text', () {
+    const text = '''
+Title: Kacou 86
+
+1 Premier paragraphe
+2 Deuxième paragraphe
+24 Mai 2009
+3 Troisième paragraphe
+''';
+
+    expect(SermonReferenceService.parseParagraphCount(text), 3);
   });
 }
 

@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
+
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 
 class SermonReferenceResult {
   const SermonReferenceResult({
@@ -34,38 +36,34 @@ class SermonReferenceService {
       'www.philippekacou.org',
       '/$locale/sermons/$chapterNumber',
     );
-    final client = HttpClient();
+    final requestUrl = kIsWeb
+        ? Uri.parse('https://r.jina.ai/http://${url.host}${url.path}')
+        : url;
+    final response = await http.get(requestUrl).timeout(
+      const Duration(seconds: 25),
+    );
 
-    try {
-      final request = await client
-          .getUrl(url)
-          .timeout(const Duration(seconds: 15));
-      request.headers.set(HttpHeaders.userAgentHeader, 'DEC DOCX/1.7.3');
-      final response = await request.close().timeout(
-        const Duration(seconds: 20),
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw http.ClientException(
+        'HTTP ${response.statusCode}',
+        requestUrl,
       );
-
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw HttpException('HTTP ${response.statusCode}', uri: url);
-      }
-
-      final html = await utf8.decoder.bind(response).join();
-      final count = parseParagraphCount(html);
-      if (count == null || count == 0) {
-        throw const FormatException(
-          'Impossible de trouver les paragraphes du chapitre sur la page.',
-        );
-      }
-
-      return SermonReferenceResult(
-        chapterNumber: chapterNumber,
-        paragraphCount: count,
-        url: url,
-        similarChapters: parseSimilarChapters(html),
-      );
-    } finally {
-      client.close(force: true);
     }
+
+    final content = utf8.decode(response.bodyBytes, allowMalformed: true);
+    final count = parseParagraphCount(content);
+    if (count == null || count == 0) {
+      throw const FormatException(
+        'Impossible de trouver les paragraphes du chapitre sur la page.',
+      );
+    }
+
+    return SermonReferenceResult(
+      chapterNumber: chapterNumber,
+      paragraphCount: count,
+      url: url,
+      similarChapters: parseSimilarChapters(content),
+    );
   }
 
   static String? parseSimilarChapters(String html) {
@@ -96,6 +94,11 @@ class SermonReferenceService {
 
     if (maxNumber > 0) {
       return maxNumber;
+    }
+
+    final sequentialCount = _parseSequentialPlainTextParagraphs(html);
+    if (sequentialCount != null) {
+      return sequentialCount;
     }
 
     final strongMatches = RegExp(
@@ -129,6 +132,30 @@ class SermonReferenceService {
     }
 
     return maxNumber == 0 ? null : maxNumber;
+  }
+
+  static int? _parseSequentialPlainTextParagraphs(String content) {
+    final numbers = content
+        .split('\n')
+        .map(
+          (line) => RegExp(
+            r'^\s*(\d{1,3})[.)-]?\s+\p{L}',
+            unicode: true,
+          ).firstMatch(line),
+        )
+        .whereType<RegExpMatch>()
+        .map((match) => int.parse(match.group(1)!))
+        .toList();
+
+    var expected = 1;
+    var highest = 0;
+    for (final number in numbers) {
+      if (number == expected) {
+        highest = number;
+        expected++;
+      }
+    }
+    return highest == 0 ? null : highest;
   }
 
   static String _decodeJsonString(String value) {
