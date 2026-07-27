@@ -1,8 +1,8 @@
 {
-  "version": "1.7.2",
-  "message": "La détection des documents turcs est corrigée : les dates entre parenthèses et la mention « Benzer bölüm » sont désormais reconnues correctement.\n\nPour effectuer la mise à jour, ouvre le lien ci-dessous dans ton navigateur, télécharge le fichier APK, puis ouvre-le pour lancer l’installation.",
-  "downloadUrl": "https://nikaisedoua-source.github.io/dec-docx/DEC_DOCX-1.7.2.apk",
-  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.7.2/DEC_DOCX-mac.zip",
-  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.7.2/DEC_DOCX-windows.zip",
+  "version": "1.7.3",
+  "message": "La détection des dates écrites dans les paragraphes turcs est corrigée. Une date comme « 24 Nisan 1993 » n’est plus confondue avec un nouveau paragraphe.\n\nPour effectuer la mise à jour, ouvre le lien ci-dessous dans ton navigateur, télécharge le fichier APK, puis ouvre-le pour lancer l’installation.",
+  "downloadUrl": "https://nikaisedoua-source.github.io/dec-docx/DEC_DOCX-1.7.3.apk",
+  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.7.3/DEC_DOCX-mac.zip",
+  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.7.3/DEC_DOCX-windows.zip",
   "webUrl": "https://nikaisedoua-source.github.io/dec-docx/"
 }

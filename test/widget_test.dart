@@ -14,7 +14,7 @@ void main() {
     await tester.pumpWidget(const DocxGeneratorApp());
 
     expect(find.text('DEC DOCX'), findsWidgets);
-    expect(find.text('Version 1.7.2'), findsOneWidget);
+    expect(find.text('Version 1.7.3'), findsOneWidget);
     expect(find.text('Titre du chapitre'), findsOneWidget);
     expect(
       find.text(
@@ -349,6 +349,34 @@ PARTIE 2 : SUITE
     expect(
       validation.documents.first.paragraphs.first.text,
       contains('07 na Novembro ya 2019'),
+    );
+  });
+
+  test('does not split a sequential Turkish date inside a paragraph', () {
+    final validation = DocxBuilder.validateChapter(
+      const ChapterInput(
+        title: 'Kacou 86: Piramidin Tepesinde',
+        subtitle: '',
+        similarChapters: '',
+        sources: [
+          DocumentSource(
+            name: 'Kacou 86 Turqu.',
+            text: '''
+23 Tüm zamanların seçilmişleri, 24 Nisan 1993'teki gibi Kurtuluş eylemlerinden asla uzak olmadılar.
+24 Ve o 24 Nisan 1993'te, Gökteki tüm tapınma durdu.
+25 Sonraki paragraf.
+''',
+          ),
+        ],
+      ),
+    );
+
+    expect(validation.hasErrors, isFalse);
+    expect(
+      validation.documents.single.paragraphs.map(
+        (paragraph) => paragraph.number,
+      ),
+      [23, 24, 25],
     );
   });
 

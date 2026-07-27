@@ -532,7 +532,13 @@ class DocxBuilder {
     final matches = RegExp(
       r'(^|\s)[^\p{L}\p{N}\r\n]{0,8}\s*(\d{1,3})[\s.)-]+(?=\S)',
       unicode: true,
-    ).allMatches(line.text).toList();
+    ).allMatches(line.text).where((match) {
+      final candidate = line.text.substring(match.start);
+      return !RegExp(
+        r'^\s*[^\p{L}\p{N}\r\n]{0,8}\s*\d{1,2}\s+\p{L}+\s+\d{4}\b',
+        unicode: true,
+      ).hasMatch(candidate);
+    }).toList();
 
     if (matches.length <= 1 || matches.first.start != 0) {
       return [line];
