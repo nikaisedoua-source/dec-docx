@@ -39,15 +39,12 @@ class SermonReferenceService {
     final requestUrl = kIsWeb
         ? Uri.parse('https://r.jina.ai/http://${url.host}${url.path}')
         : url;
-    final response = await http.get(requestUrl).timeout(
-      const Duration(seconds: 25),
-    );
+    final response = await http
+        .get(requestUrl)
+        .timeout(const Duration(seconds: 25));
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw http.ClientException(
-        'HTTP ${response.statusCode}',
-        requestUrl,
-      );
+      throw http.ClientException('HTTP ${response.statusCode}', requestUrl);
     }
 
     final content = utf8.decode(response.bodyBytes, allowMalformed: true);
@@ -137,14 +134,9 @@ class SermonReferenceService {
   static int? _parseSequentialPlainTextParagraphs(String content) {
     final numbers = content
         .split('\n')
-        .map(
-          (line) => RegExp(
-            r'^\s*(\d{1,3})[.)-]?\s+\p{L}',
-            unicode: true,
-          ).firstMatch(line),
-        )
+        .map((line) => _plainTextParagraphPattern.firstMatch(line))
         .whereType<RegExpMatch>()
-        .map((match) => int.parse(match.group(1)!))
+        .map((match) => int.parse(match.group(1) ?? match.group(2)!))
         .toList();
 
     var expected = 1;
@@ -157,6 +149,11 @@ class SermonReferenceService {
     }
     return highest == 0 ? null : highest;
   }
+
+  static final RegExp _plainTextParagraphPattern = RegExp(
+    r'^\s*(?:(?:\*\*|__)(\d{1,3})(?:\*\*|__)\s*|(\d{1,3})[.)-]?\s+)\p{L}',
+    unicode: true,
+  );
 
   static String _decodeJsonString(String value) {
     try {

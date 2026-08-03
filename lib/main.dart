@@ -13,7 +13,7 @@ import 'docx_builder.dart';
 import 'sermon_reference.dart';
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.7.5';
+const _appVersion = '1.7.6';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -239,10 +239,10 @@ class AppStrings {
   );
   String get remove => _text('Retirer', 'Remove', 'Quitar', 'Remover');
   String get footer => _text(
-    'DEC DOCX $_appVersion : les references numeriques internes ne sont plus confondues avec des paragraphes.',
-    'DEC DOCX $_appVersion: internal numeric references are no longer mistaken for paragraphs.',
-    'DEC DOCX $_appVersion: las referencias numericas internas ya no se confunden con parrafos.',
-    'DEC DOCX $_appVersion: referencias numericas internas nao sao mais confundidas com paragrafos.',
+    'DEC DOCX $_appVersion : la comparaison en ligne reconnait le nouveau format des paragraphes du site.',
+    'DEC DOCX $_appVersion: online comparison recognizes the website’s new paragraph format.',
+    'DEC DOCX $_appVersion: la comparacion en linea reconoce el nuevo formato de parrafos del sitio.',
+    'DEC DOCX $_appVersion: a comparacao online reconhece o novo formato de paragrafos do site.',
   );
   String get noInput => _text(
     'Ajoute un texte ou au moins un fichier.',

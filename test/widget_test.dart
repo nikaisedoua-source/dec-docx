@@ -14,7 +14,7 @@ void main() {
     await tester.pumpWidget(const DocxGeneratorApp());
 
     expect(find.text('DEC DOCX'), findsWidgets);
-    expect(find.text('Version 1.7.4'), findsOneWidget);
+    expect(find.text('Version 1.7.6'), findsOneWidget);
     expect(find.text('Titre du chapitre'), findsOneWidget);
     expect(
       find.text(
@@ -617,6 +617,20 @@ Title: Kacou 86
 2 Deuxième paragraphe
 24 Mai 2009
 3 Troisième paragraphe
+''';
+
+    expect(SermonReferenceService.parseParagraphCount(text), 3);
+  });
+
+  test('parses paragraph count from Jina markdown with bold numbers', () {
+    const text = '''
+Title: Kacou 119
+
+**1**Ce matin, je desire parler du sujet.
+
+**2**La premiere question est la suivante.
+
+**3**Et parlant de la Bible, les Juifs ont rassemble des livres.
 ''';
 
     expect(SermonReferenceService.parseParagraphCount(text), 3);
