@@ -1,8 +1,8 @@
 {
-  "version": "1.7.6",
-  "message": "La comparaison en ligne reconnaît maintenant le nouveau format Markdown des paragraphes renvoyé par le site de référence. Kacou 119 et les autres chapitres sont de nouveau vérifiés en ligne.\n\nPour effectuer la mise à jour, ouvre le lien ci-dessous dans ton navigateur, télécharge le fichier APK, puis ouvre-le pour lancer l’installation.",
-  "downloadUrl": "https://nikaisedoua-source.github.io/dec-docx/DEC_DOCX-1.7.6.apk",
-  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.7.6/DEC_DOCX-mac.zip",
+  "version": "1.7.7",
+  "message": "La comparaison en ligne utilise maintenant toujours le chapitre français de référence, quelle que soit la langue du document. Kacou 119 turc est correctement comparé à 66 paragraphes au lieu de 48.\n\nPour effectuer la mise à jour, ouvre le lien ci-dessous dans ton navigateur, télécharge le fichier APK, puis ouvre-le pour lancer l’installation.",
+  "downloadUrl": "https://nikaisedoua-source.github.io/dec-docx/DEC_DOCX-1.7.7.apk",
+  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.7.7/DEC_DOCX-mac.zip",
   "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.7.4/DEC_DOCX-windows.zip",
   "webUrl": "https://nikaisedoua-source.github.io/dec-docx/"
 }

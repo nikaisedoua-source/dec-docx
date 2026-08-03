@@ -13,7 +13,7 @@ import 'docx_builder.dart';
 import 'sermon_reference.dart';
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.7.6';
+const _appVersion = '1.7.7';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -35,30 +35,29 @@ enum AppLanguage {
 }
 
 class KacouLanguage {
-  const KacouLanguage(this.name, this.locale);
+  const KacouLanguage(this.name);
 
   final String name;
-  final String? locale;
 }
 
 const _kacouLanguages = <KacouLanguage>[
-  KacouLanguage('francais', 'fr-fr'),
-  KacouLanguage('anglais', 'en-en'),
-  KacouLanguage('espagnol', 'es-es'),
-  KacouLanguage('portugais', 'pt-pt'),
-  KacouLanguage('allemand', 'de-de'),
-  KacouLanguage('russe', 'ru-ru'),
-  KacouLanguage('italien', 'it-it'),
-  KacouLanguage('attie', 'ci-ati'),
-  KacouLanguage('agni', 'ci-any'),
-  KacouLanguage('wan', 'ci-wan'),
-  KacouLanguage('yemba', 'cm-ybb'),
-  KacouLanguage('fon', 'bj-fon'),
-  KacouLanguage('kikongo', 'ao-kg'),
-  KacouLanguage('gouin', 'bf-gux'),
-  KacouLanguage('moore', 'bf-mos'),
-  KacouLanguage('bambara', 'ml-bmq'),
-  KacouLanguage('chinois', null),
+  KacouLanguage('francais'),
+  KacouLanguage('anglais'),
+  KacouLanguage('espagnol'),
+  KacouLanguage('portugais'),
+  KacouLanguage('allemand'),
+  KacouLanguage('russe'),
+  KacouLanguage('italien'),
+  KacouLanguage('attie'),
+  KacouLanguage('agni'),
+  KacouLanguage('wan'),
+  KacouLanguage('yemba'),
+  KacouLanguage('fon'),
+  KacouLanguage('kikongo'),
+  KacouLanguage('gouin'),
+  KacouLanguage('moore'),
+  KacouLanguage('bambara'),
+  KacouLanguage('chinois'),
 ];
 
 class AppStrings {
@@ -239,10 +238,10 @@ class AppStrings {
   );
   String get remove => _text('Retirer', 'Remove', 'Quitar', 'Remover');
   String get footer => _text(
-    'DEC DOCX $_appVersion : la comparaison en ligne reconnait le nouveau format des paragraphes du site.',
-    'DEC DOCX $_appVersion: online comparison recognizes the website’s new paragraph format.',
-    'DEC DOCX $_appVersion: la comparacion en linea reconoce el nuevo formato de parrafos del sitio.',
-    'DEC DOCX $_appVersion: a comparacao online reconhece o novo formato de paragrafos do site.',
+    'DEC DOCX $_appVersion : tous les documents sont compares avec le chapitre francais de reference.',
+    'DEC DOCX $_appVersion: all documents are compared with the French reference chapter.',
+    'DEC DOCX $_appVersion: todos los documentos se comparan con el capitulo frances de referencia.',
+    'DEC DOCX $_appVersion: todos os documentos sao comparados com o capitulo frances de referencia.',
   );
   String get noInput => _text(
     'Ajoute un texte ou au moins un fichier.',
@@ -896,9 +895,8 @@ class _GeneratorPageState extends State<GeneratorPage> {
 
     late final SermonReferenceResult reference;
     try {
-      reference = await _referenceService.fetchReference(
+      reference = await _referenceService.fetchFrenchParagraphCount(
         chapterNumber,
-        locale: _referenceLocaleFor(input.language),
       );
     } catch (error) {
       return _ReferenceCheckResult.ok(
@@ -1883,14 +1881,6 @@ String _automaticFileName({
   return _normalizedFileName('KACOU $chapterNumber $normalizedLanguage');
 }
 
-String _referenceLocaleFor(String language) {
-  final normalized = _normalizeLanguageName(language);
-  final match = _kacouLanguages.where(
-    (item) => _normalizeLanguageName(item.name) == normalized,
-  );
-  return match.isEmpty ? 'fr-fr' : match.first.locale ?? 'fr-fr';
-}
-
 String _fileNamePart(String value) {
   final normalized = value
       .trim()
@@ -1898,43 +1888,6 @@ String _fileNamePart(String value) {
       .replaceAll(RegExp(r'[\\/:*?"<>|]+'), ' ')
       .replaceAll(RegExp(r'\s+'), ' ');
   return normalized.isEmpty ? 'langue' : normalized;
-}
-
-String _normalizeLanguageName(String value) {
-  const replacements = {
-    'à': 'a',
-    'á': 'a',
-    'â': 'a',
-    'ä': 'a',
-    'ã': 'a',
-    'å': 'a',
-    'ç': 'c',
-    'è': 'e',
-    'é': 'e',
-    'ê': 'e',
-    'ë': 'e',
-    'ì': 'i',
-    'í': 'i',
-    'î': 'i',
-    'ï': 'i',
-    'ñ': 'n',
-    'ò': 'o',
-    'ó': 'o',
-    'ô': 'o',
-    'ö': 'o',
-    'õ': 'o',
-    'ù': 'u',
-    'ú': 'u',
-    'û': 'u',
-    'ü': 'u',
-    'ý': 'y',
-    'ÿ': 'y',
-  };
-  var output = value.trim().toLowerCase();
-  for (final entry in replacements.entries) {
-    output = output.replaceAll(entry.key, entry.value);
-  }
-  return output.replaceAll(RegExp(r'\s+'), ' ');
 }
 
 bool _isVersionNewer(String candidate, String current) {
