@@ -380,6 +380,39 @@ PARTIE 2 : SUITE
     );
   });
 
+  test('does not split Turkish verse references into fake paragraphs', () {
+    final validation = DocxBuilder.validateChapter(
+      const ChapterInput(
+        title: 'Kacou 119: Israil ve Amerika uzerine peygamberlik',
+        subtitle: '',
+        similarChapters: '',
+        sources: [
+          DocumentSource(
+            name: 'Kc. 119 turcq.',
+            text: '''
+25 Simdi fark edin ki bunlar iki farkli gruptur. Daniel'in 26 ve 27. ayetlerde gordugu iste budur.
+26 Insanlik bir Gece Yarisi Bagirisi olacagini kabul etmelidir.
+27 Branhamci bir pastorun vaazini dinliyordum.
+28 Bu Bagiris gelecek olan sekizinci bir elci peygamber mi olacaktir?
+''',
+          ),
+        ],
+      ),
+    );
+
+    expect(validation.hasErrors, isFalse);
+    expect(
+      validation.documents.single.paragraphs.map(
+        (paragraph) => paragraph.number,
+      ),
+      [25, 26, 27, 28],
+    );
+    expect(
+      validation.documents.single.paragraphs.first.text,
+      contains("Daniel'in 26 ve 27. ayetlerde"),
+    );
+  });
+
   test('accepts a Turkish parenthesized date and similar chapter label', () {
     final validation = DocxBuilder.validateChapter(
       const ChapterInput(

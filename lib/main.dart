@@ -13,7 +13,7 @@ import 'docx_builder.dart';
 import 'sermon_reference.dart';
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.7.4';
+const _appVersion = '1.7.5';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -239,10 +239,10 @@ class AppStrings {
   );
   String get remove => _text('Retirer', 'Remove', 'Quitar', 'Remover');
   String get footer => _text(
-    'DEC DOCX $_appVersion : detection DOCX mal forme, correction des numeros existants, comparaison non bornee et fonctionnement hors connexion.',
-    'DEC DOCX $_appVersion: malformed DOCX detection, existing number repair, unbounded comparison and offline use.',
-    'DEC DOCX $_appVersion: deteccion DOCX mal formado, reparacion de numeros existentes, comparacion sin limite y uso sin conexion.',
-    'DEC DOCX $_appVersion: deteccao DOCX mal formatado, reparo de numeros existentes, comparacao sem limite e uso offline.',
+    'DEC DOCX $_appVersion : les references numeriques internes ne sont plus confondues avec des paragraphes.',
+    'DEC DOCX $_appVersion: internal numeric references are no longer mistaken for paragraphs.',
+    'DEC DOCX $_appVersion: las referencias numericas internas ya no se confunden con parrafos.',
+    'DEC DOCX $_appVersion: referencias numericas internas nao sao mais confundidas com paragrafos.',
   );
   String get noInput => _text(
     'Ajoute un texte ou au moins un fichier.',
