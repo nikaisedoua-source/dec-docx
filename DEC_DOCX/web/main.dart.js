@@ -49545,7 +49545,7 @@ i=d==null?"":d
 g=l.i(0,"webUrl")
 c=g==null?null:B.c.bn(J.ds(g))
 h=c==null?i:c
-if(J.cb(k)===0||!A.aYs(k,"1.8.1")||n.c==null){s=1
+if(J.cb(k)===0||!A.aYs(k,"1.8.2")||n.c==null){s=1
 break}n.ag(new A.apD(n,h,k,j))
 p=2
 s=6
@@ -49943,7 +49943,7 @@ k.push(B.zq)
 if(r>=900)k.push(A.jb(A.b([A.pD(o,3),B.Ru,A.pD(n,2)],l),B.b3,B.V,B.ay,0))
 else B.b.P(k,A.b([o,B.i5,n],l))
 k.push(B.zr)
-r=q.bc("DEC DOCX 1.8.1 : tous les documents sont compares avec le chapitre francais de reference.","DEC DOCX 1.8.1: all documents are compared with the French reference chapter.","DEC DOCX 1.8.1: todos los documentos se comparan con el capitulo frances de referencia.","DEC DOCX 1.8.1: todos os documentos sao comparados com o capitulo frances de referencia.")
+r=q.bc("DEC DOCX 1.8.2 : tous les documents sont compares avec le chapitre francais de reference.","DEC DOCX 1.8.2: all documents are compared with the French reference chapter.","DEC DOCX 1.8.2: todos los documentos se comparan con el capitulo frances de referencia.","DEC DOCX 1.8.2: todos os documentos sao comparados com o capitulo frances de referencia.")
 q=this.c.ok.Q
 k.push(A.ct(r,s,s,s,q==null?s:q.zD(B.EK,1.45),B.dS,s))
 return new A.vm(new A.aR(m,18,m,30),A.mF(new A.eU(B.Bp,new A.V5(A.hZ(k,B.bI,B.V,B.ay),s),s),s,s),s)},
@@ -49962,7 +49962,7 @@ A.RF.prototype={
 R(a){var s=null,r=A.X(a),q=A.d6(24)
 return A.jR(A.a94(new A.amc(this,r)),B.B,new A.df(s,s,s,q,B.K4,B.Ij,B.ao),s,s,B.fY,s)}}
 A.amc.prototype={
-$2(a,b){var s,r,q,p,o=null,n="Version 1.8.1",m="Versao 1.8.1",l=b.b<520,k=l?58:72,j=A.ku(o,o,l?14:18),i=this.b.ok,h=i.f
+$2(a,b){var s,r,q,p,o=null,n="Version 1.8.2",m="Versao 1.8.2",l=b.b<520,k=l?58:72,j=A.ku(o,o,l?14:18),i=this.b.ok,h=i.f
 h=A.ct("DEC DOCX",o,o,o,h==null?o:h.anL(B.k,B.kd,-0.6),o,o)
 s=this.a.c
 r=s.bc("Corrige les DOCX mal formes sans inventer de versets","Repairs malformed DOCX without inventing verses","Corrige DOCX mal formados sin inventar versiculos","Corrige DOCX mal formatados sem inventar versiculos")
@@ -100300,7 +100300,7 @@ s($,"b1u","aL1",()=>A.LJ(B.KT))
 s($,"b1t","aL0",()=>A.LJ(B.Jp))
 s($,"b1a","a00",()=>A.ar("^[^\\p{L}\\p{N}\\r\\n]{0,8}\\s*(\\d{1,3})[\\s.)-]+(.+)$",!0,!1,!0))
 s($,"b1b","aKU",()=>A.ar("^[^\\p{L}\\p{N}\\r\\n]{0,8}\\s*(\\d{1,3})[^\\p{L}\\p{N}\\r\\n]{0,8}$",!0,!1,!0))
-s($,"b2W","aLR",()=>A.ar("^\\s*(?:(?:\\*\\*|__)(\\d{1,3})(?:\\*\\*|__)\\s*|(\\d{1,3})[.)-]?\\s+)(?:\\*\\*?|__?|~~)?\\p{L}",!0,!1,!0))
+s($,"b2W","aLR",()=>A.ar("^\\s*(?:(?:\\*\\*|__)(\\d{1,3})(?:\\*\\*|__)|(\\d{1,3})[.)-]?\\s+(?:\\*\\*?|__?|~~)?\\p{L})",!0,!1,!0))
 s($,"b1m","aCy",()=>new A.J())
 r($,"aQp","aCx",()=>{var q=new A.ac8(A.aRM("miguelruivo.flutter.plugins.filepicker",B.bD))
 q.xd($.aCy())

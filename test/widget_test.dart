@@ -15,7 +15,7 @@ void main() {
     await tester.pumpWidget(const DocxGeneratorApp());
 
     expect(find.text('DEC DOCX'), findsWidgets);
-    expect(find.text('Version 1.8.1'), findsOneWidget);
+    expect(find.text('Version 1.8.2'), findsOneWidget);
     expect(find.text('Titre du chapitre'), findsOneWidget);
     expect(
       find.text(
@@ -644,6 +644,20 @@ Title: Kacou 181
 **1**Premier paragraphe.
 
 **2**_Deuxieme paragraphe en italique._
+
+**3**Troisieme paragraphe.
+''';
+
+    expect(SermonReferenceService.parseParagraphCount(text), 3);
+  });
+
+  test('parses Jina paragraphs whose text starts with a markdown link', () {
+    const text = '''
+Title: Kacou 181
+
+**1**Premier paragraphe.
+
+**2**[](https://example.com)Deuxieme paragraphe avec un lien.
 
 **3**Troisieme paragraphe.
 ''';
