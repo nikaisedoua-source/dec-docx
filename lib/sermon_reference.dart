@@ -36,20 +36,21 @@ class SermonReferenceService {
       'www.philippekacou.org',
       '/$locale/sermons/$chapterNumber',
     );
-    final requestUrl = kIsWeb
-        ? Uri.parse('https://r.jina.ai/http://${url.host}${url.path}')
-        : url;
-    final response = await http
-        .get(requestUrl)
-        .timeout(const Duration(seconds: 25));
+    final contents = kIsWeb
+        ? await _fetchWebReferenceCopies(url)
+        : [await _fetchContent(url)];
+    String? content;
+    var count = 0;
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw http.ClientException('HTTP ${response.statusCode}', requestUrl);
+    for (final candidate in contents) {
+      final candidateCount = parseParagraphCount(candidate) ?? 0;
+      if (candidateCount > count) {
+        content = candidate;
+        count = candidateCount;
+      }
     }
 
-    final content = utf8.decode(response.bodyBytes, allowMalformed: true);
-    final count = parseParagraphCount(content);
-    if (count == null || count == 0) {
+    if (content == null || count == 0) {
       throw const FormatException(
         'Impossible de trouver les paragraphes du chapitre sur la page.',
       );
@@ -61,6 +62,46 @@ class SermonReferenceService {
       url: url,
       similarChapters: parseSimilarChapters(content),
     );
+  }
+
+  static Future<List<String>> _fetchWebReferenceCopies(Uri url) async {
+    final requestUrls = [
+      Uri.parse('https://r.jina.ai/http://${url.host}${url.path}'),
+      Uri.parse('https://r.jina.ai/https://${url.host}${url.path}'),
+    ];
+    final responses = await Future.wait(
+      requestUrls.map((requestUrl) async {
+        try {
+          return await _fetchContent(
+            requestUrl,
+            headers: const {'X-No-Cache': 'true'},
+          );
+        } catch (_) {
+          return null;
+        }
+      }),
+    );
+    final contents = responses.whereType<String>().toList();
+    if (contents.isEmpty) {
+      throw http.ClientException(
+        'Aucune source de comparaison en ligne disponible.',
+        requestUrls.first,
+      );
+    }
+    return contents;
+  }
+
+  static Future<String> _fetchContent(
+    Uri requestUrl, {
+    Map<String, String>? headers,
+  }) async {
+    final response = await http
+        .get(requestUrl, headers: headers)
+        .timeout(const Duration(seconds: 25));
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw http.ClientException('HTTP ${response.statusCode}', requestUrl);
+    }
+    return utf8.decode(response.bodyBytes, allowMalformed: true);
   }
 
   static String? parseSimilarChapters(String html) {

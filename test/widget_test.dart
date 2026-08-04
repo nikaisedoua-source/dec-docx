@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
@@ -14,7 +15,7 @@ void main() {
     await tester.pumpWidget(const DocxGeneratorApp());
 
     expect(find.text('DEC DOCX'), findsWidgets);
-    expect(find.text('Version 1.7.8'), findsOneWidget);
+    expect(find.text('Version 1.7.9'), findsOneWidget);
     expect(find.text('Titre du chapitre'), findsOneWidget);
     expect(
       find.text(
@@ -634,6 +635,24 @@ Title: Kacou 119
 ''';
 
     expect(SermonReferenceService.parseParagraphCount(text), 3);
+  });
+
+  test('selects the complete count when one proxy response is truncated', () {
+    final truncated = List.generate(
+      48,
+      (index) => '**${index + 1}**Paragraphe',
+    ).join('\n');
+    final complete = List.generate(
+      66,
+      (index) => '**${index + 1}**Paragraphe',
+    ).join('\n');
+
+    final counts = [
+      truncated,
+      complete,
+    ].map(SermonReferenceService.parseParagraphCount).whereType<int>();
+
+    expect(counts.reduce(max), 66);
   });
 }
 
