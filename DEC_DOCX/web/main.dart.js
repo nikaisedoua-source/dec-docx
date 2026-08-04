@@ -49514,7 +49514,7 @@ i=d==null?"":d
 g=l.i(0,"webUrl")
 c=g==null?null:B.c.bn(J.ds(g))
 h=c==null?i:c
-if(J.cb(k)===0||!A.aYo(k,"1.7.7")||n.c==null){s=1
+if(J.cb(k)===0||!A.aYo(k,"1.7.8")||n.c==null){s=1
 break}n.ag(new A.apz(n,h,k,j))
 p=2
 s=6
@@ -49912,7 +49912,7 @@ k.push(B.zq)
 if(r>=900)k.push(A.ja(A.b([A.pC(o,3),B.Rr,A.pC(n,2)],l),B.b3,B.V,B.ay,0))
 else B.b.P(k,A.b([o,B.i5,n],l))
 k.push(B.zr)
-r=q.bc("DEC DOCX 1.7.7 : tous les documents sont compares avec le chapitre francais de reference.","DEC DOCX 1.7.7: all documents are compared with the French reference chapter.","DEC DOCX 1.7.7: todos los documentos se comparan con el capitulo frances de referencia.","DEC DOCX 1.7.7: todos os documentos sao comparados com o capitulo frances de referencia.")
+r=q.bc("DEC DOCX 1.7.8 : tous les documents sont compares avec le chapitre francais de reference.","DEC DOCX 1.7.8: all documents are compared with the French reference chapter.","DEC DOCX 1.7.8: todos los documentos se comparan con el capitulo frances de referencia.","DEC DOCX 1.7.8: todos os documentos sao comparados com o capitulo frances de referencia.")
 q=this.c.ok.Q
 k.push(A.ct(r,s,s,s,q==null?s:q.zD(B.EK,1.45),B.dS,s))
 return new A.vm(new A.aR(m,18,m,30),A.mE(new A.eU(B.Bp,new A.V5(A.hZ(k,B.bI,B.V,B.ay),s),s),s,s),s)},
@@ -49931,7 +49931,7 @@ A.RF.prototype={
 R(a){var s=null,r=A.X(a),q=A.d6(24)
 return A.jQ(A.a93(new A.am8(this,r)),B.B,new A.df(s,s,s,q,B.K4,B.Ij,B.ao),s,s,B.fY,s)}}
 A.am8.prototype={
-$2(a,b){var s,r,q,p,o=null,n="Version 1.7.7",m="Versao 1.7.7",l=b.b<520,k=l?58:72,j=A.kt(o,o,l?14:18),i=this.b.ok,h=i.f
+$2(a,b){var s,r,q,p,o=null,n="Version 1.7.8",m="Versao 1.7.8",l=b.b<520,k=l?58:72,j=A.kt(o,o,l?14:18),i=this.b.ok,h=i.f
 h=A.ct("DEC DOCX",o,o,o,h==null?o:h.anK(B.k,B.kd,-0.6),o,o)
 s=this.a.c
 r=s.bc("Corrige les DOCX mal formes sans inventer de versets","Repairs malformed DOCX without inventing verses","Corrige DOCX mal formados sin inventar versiculos","Corrige DOCX mal formatados sem inventar versiculos")
