@@ -637,6 +637,20 @@ Title: Kacou 119
     expect(SermonReferenceService.parseParagraphCount(text), 3);
   });
 
+  test('parses Jina paragraphs whose text starts with markdown emphasis', () {
+    const text = '''
+Title: Kacou 181
+
+**1**Premier paragraphe.
+
+**2**_Deuxieme paragraphe en italique._
+
+**3**Troisieme paragraphe.
+''';
+
+    expect(SermonReferenceService.parseParagraphCount(text), 3);
+  });
+
   test('selects the complete count when one proxy response is truncated', () {
     final truncated = List.generate(
       48,

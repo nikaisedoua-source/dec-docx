@@ -205,7 +205,7 @@ class SermonReferenceService {
   }
 
   static final RegExp _plainTextParagraphPattern = RegExp(
-    r'^\s*(?:(?:\*\*|__)(\d{1,3})(?:\*\*|__)\s*|(\d{1,3})[.)-]?\s+)\p{L}',
+    r'^\s*(?:(?:\*\*|__)(\d{1,3})(?:\*\*|__)\s*|(\d{1,3})[.)-]?\s+)(?:\*\*?|__?|~~)?\p{L}',
     unicode: true,
   );
 
