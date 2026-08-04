@@ -1,8 +1,8 @@
 {
-  "version": "1.7.9",
-  "message": "La comparaison Web interroge maintenant deux sources sans cache et conserve la réponse la plus complète. Une réponse tronquée au paragraphe 48 ne remplace plus la référence complète de 66 paragraphes pour Kacou 119.\n\nPour effectuer la mise à jour, ouvre le lien ci-dessous dans ton navigateur, télécharge le fichier APK, puis ouvre-le pour lancer l’installation.",
-  "downloadUrl": "https://nikaisedoua-source.github.io/dec-docx/DEC_DOCX-1.7.9.apk",
-  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.7.9/DEC_DOCX-mac.zip",
+  "version": "1.8.0",
+  "message": "Kacou 119 est maintenant toujours compare au total officiel verifie de 66 paragraphes, meme si le relais Web renvoie une copie tronquee a 48.\n\nPour effectuer la mise a jour, ouvre le lien ci-dessous dans ton navigateur, telecharge le fichier APK, puis ouvre-le pour lancer l'installation.",
+  "downloadUrl": "https://nikaisedoua-source.github.io/dec-docx/DEC_DOCX-1.8.0.apk",
+  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.8.0/DEC_DOCX-mac.zip",
   "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.7.4/DEC_DOCX-windows.zip",
   "webUrl": "https://nikaisedoua-source.github.io/dec-docx/"
 }

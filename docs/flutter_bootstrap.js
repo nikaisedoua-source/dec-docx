@@ -39,7 +39,7 @@ _flutter.buildConfig = {"engineRevision":"461ce17941ae46ed656b187fe5e627d660608d
 
 for (const build of _flutter.buildConfig.builds) {
   if (build.mainJsPath) {
-    build.mainJsPath = `${build.mainJsPath}?v=1.7.9`;
+    build.mainJsPath = `${build.mainJsPath}?v=1.8.0`;
   }
 }
 

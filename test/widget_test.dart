@@ -15,7 +15,7 @@ void main() {
     await tester.pumpWidget(const DocxGeneratorApp());
 
     expect(find.text('DEC DOCX'), findsWidgets);
-    expect(find.text('Version 1.7.9'), findsOneWidget);
+    expect(find.text('Version 1.8.0'), findsOneWidget);
     expect(find.text('Titre du chapitre'), findsOneWidget);
     expect(
       find.text(
@@ -653,6 +653,11 @@ Title: Kacou 119
     ].map(SermonReferenceService.parseParagraphCount).whereType<int>();
 
     expect(counts.reduce(max), 66);
+  });
+
+  test('keeps the verified Kacou 119 count when every proxy is truncated', () {
+    expect(SermonReferenceService.applyVerifiedParagraphMinimum(119, 48), 66);
+    expect(SermonReferenceService.applyVerifiedParagraphMinimum(120, 48), 48);
   });
 }
 

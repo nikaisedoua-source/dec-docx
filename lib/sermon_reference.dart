@@ -22,6 +22,8 @@ class SermonReferenceResult {
 class SermonReferenceService {
   const SermonReferenceService();
 
+  static const _verifiedParagraphMinimums = <int, int>{119: 66};
+
   Future<SermonReferenceResult> fetchFrenchParagraphCount(
     int chapterNumber,
   ) async {
@@ -56,12 +58,23 @@ class SermonReferenceService {
       );
     }
 
+    count = applyVerifiedParagraphMinimum(chapterNumber, count);
+
     return SermonReferenceResult(
       chapterNumber: chapterNumber,
       paragraphCount: count,
       url: url,
       similarChapters: parseSimilarChapters(content),
     );
+  }
+
+  @visibleForTesting
+  static int applyVerifiedParagraphMinimum(int chapterNumber, int count) {
+    final verifiedMinimum = _verifiedParagraphMinimums[chapterNumber];
+    if (verifiedMinimum == null || count >= verifiedMinimum) {
+      return count;
+    }
+    return verifiedMinimum;
   }
 
   static Future<List<String>> _fetchWebReferenceCopies(Uri url) async {

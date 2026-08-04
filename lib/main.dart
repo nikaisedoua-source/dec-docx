@@ -13,7 +13,7 @@ import 'docx_builder.dart';
 import 'sermon_reference.dart';
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.7.9';
+const _appVersion = '1.8.0';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
