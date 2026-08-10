@@ -13,7 +13,7 @@ import 'docx_builder.dart';
 import 'sermon_reference.dart';
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.8.4';
+const _appVersion = '1.8.5';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -304,12 +304,8 @@ class AppStrings {
         'Actualización disponible: DEC DOCX $version\n$message',
         'Atualização disponível: DEC DOCX $version\n$message',
       );
-  String get updateNow => _text(
-    'Mettre à jour maintenant',
-    'Update now',
-    'Actualizar ahora',
-    'Atualizar agora',
-  );
+  String get updateNow =>
+      _text('Mettre à jour', 'Update', 'Actualizar', 'Atualizar');
   String get updateDownloadFailed => _text(
     'Impossible d’ouvrir le téléchargement de la mise à jour.',
     'Unable to open the update download.',
@@ -546,7 +542,7 @@ class _GeneratorPageState extends State<GeneratorPage>
   bool _isGenerating = false;
   bool _isDownloading = false;
   String? _status;
-  String? _updateNotice;
+  String? _availableUpdateVersion;
   String? _updateDownloadUrl;
   late final AnimationController _ambientController;
 
@@ -561,7 +557,6 @@ class _GeneratorPageState extends State<GeneratorPage>
     )..repeat(reverse: true);
     _chapterTitleController.addListener(_syncAutomaticFileName);
     _documentLanguageController.addListener(_syncAutomaticFileName);
-    _clearRuntimeCache();
     _checkForUpdateNotice();
   }
 
@@ -598,23 +593,6 @@ class _GeneratorPageState extends State<GeneratorPage>
     }
   }
 
-  Future<void> _clearRuntimeCache() async {
-    try {
-      final directory = await getTemporaryDirectory();
-      if (await directory.exists()) {
-        await for (final entity in directory.list()) {
-          try {
-            await entity.delete(recursive: true);
-          } catch (_) {
-            // Ignore files locked by the system.
-          }
-        }
-      }
-    } catch (_) {
-      // Cache cleanup must never block app startup.
-    }
-  }
-
   Future<void> _checkForUpdateNotice() async {
     if (_updateManifestUrl.isEmpty) {
       return;
@@ -639,7 +617,6 @@ class _GeneratorPageState extends State<GeneratorPage>
       }
 
       final latestVersion = payload['version']?.toString().trim() ?? '';
-      final message = payload['message']?.toString().trim() ?? '';
       final fallbackUrl = payload['downloadUrl']?.toString().trim() ?? '';
       final downloadUrl = kIsWeb
           ? payload['webUrl']?.toString().trim() ?? fallbackUrl
@@ -657,12 +634,7 @@ class _GeneratorPageState extends State<GeneratorPage>
 
       setState(() {
         _updateDownloadUrl = downloadUrl;
-        _updateNotice = _strings.updateAvailable(
-          version: latestVersion,
-          message: message.isEmpty
-              ? 'Une nouvelle version est prete.'
-              : message,
-        );
+        _availableUpdateVersion = latestVersion;
       });
     } catch (_) {
       // Update checks are advisory. Offline users can keep working.
@@ -1046,13 +1018,13 @@ class _GeneratorPageState extends State<GeneratorPage>
                               ),
                               const SizedBox(height: 18),
                             ],
-                            if (_updateNotice != null) ...[
+                            if (_availableUpdateVersion != null) ...[
                               _AnimatedUpdateBanner(
-                                message: _updateNotice!,
-                                buttonLabel: strings.updateNow,
+                                buttonLabel:
+                                    '${strings.updateNow} — v$_availableUpdateVersion',
                                 onUpdate: _openUpdateDownload,
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 10),
                             ],
                             _BrandHeader(strings: strings),
                             const SizedBox(height: 18),
@@ -1625,7 +1597,7 @@ class _FloatingHeroIllustrationState extends State<_FloatingHeroIllustration>
             ),
           ),
           Image.asset(
-            'assets/illustrations/docx-repair-hero.png',
+            'assets/illustrations/docx-repair-hero.webp',
             width: 330,
             height: 300,
             fit: BoxFit.contain,
@@ -1687,12 +1659,10 @@ class _PageEntrance extends StatelessWidget {
 
 class _AnimatedUpdateBanner extends StatefulWidget {
   const _AnimatedUpdateBanner({
-    required this.message,
     required this.buttonLabel,
     required this.onUpdate,
   });
 
-  final String message;
   final String buttonLabel;
   final VoidCallback onUpdate;
 
@@ -1717,42 +1687,54 @@ class _AnimatedUpdateBannerState extends State<_AnimatedUpdateBanner>
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return ScaleTransition(
-      scale: _controller,
-      child: Material(
-        elevation: 8,
-        color: colors.errorContainer,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Wrap(
-            spacing: 16,
-            runSpacing: 12,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Icon(
-                Icons.notification_important,
-                size: 34,
-                color: colors.onErrorContainer,
-              ),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 680),
-                child: Text(
-                  widget.message,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: colors.onErrorContainer,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              FilledButton.icon(
-                onPressed: widget.onUpdate,
-                icon: const Icon(Icons.download),
-                label: Text(widget.buttonLabel),
+    return Align(
+      alignment: Alignment.centerRight,
+      child: ScaleTransition(
+        scale: _controller,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF008B95), Color(0xFF005B65)],
+            ),
+            borderRadius: BorderRadius.circular(999),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x55008B95),
+                blurRadius: 18,
+                offset: Offset(0, 7),
               ),
             ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: widget.onUpdate,
+              borderRadius: BorderRadius.circular(999),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 13,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.system_update_alt_rounded,
+                      color: Colors.white,
+                      size: 21,
+                    ),
+                    const SizedBox(width: 9),
+                    Text(
+                      widget.buttonLabel,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -1770,7 +1752,7 @@ class _BrandMark extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: Image.asset(
-        'assets/brand/dnts-document.png',
+        'assets/brand/dnts-document.webp',
         width: size,
         height: size,
         fit: BoxFit.cover,

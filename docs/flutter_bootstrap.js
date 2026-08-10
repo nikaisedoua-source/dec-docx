@@ -37,10 +37,4 @@ if (!window._flutter) {
 _flutter.buildConfig = {"engineRevision":"461ce17941ae46ed656b187fe5e627d660608d05","builds":[{"compileTarget":"dart2js","renderer":"canvaskit","mainJsPath":"main.dart.js"},{}]};
 
 
-for (const build of _flutter.buildConfig.builds) {
-  if (build.mainJsPath) {
-    build.mainJsPath = `${build.mainJsPath}?v=1.8.0`;
-  }
-}
-
 _flutter.loader.load();
