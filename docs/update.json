@@ -1,7 +1,7 @@
 {
-  "version": "1.8.2",
-  "message": "La comparaison Web reconnait maintenant tous les paragraphes numerotes en gras, meme lorsque leur texte commence par un lien ou une mise en forme Markdown. Kacou 181 est valide a 218 sur 218.\n\nPour effectuer la mise a jour, ouvre le lien ci-dessous dans ton navigateur, telecharge le fichier APK, puis ouvre-le pour lancer l'installation.",
-  "downloadUrl": "https://nikaisedoua-source.github.io/dec-docx/DEC_DOCX-1.8.2.apk",
+  "version": "1.8.3",
+  "message": "L'import DOCX ignore maintenant les paragraphes et caracteres invisibles ajoutes par Word. Le fichier Kacou 181 et ses 218 paragraphes sont pris en charge correctement.\n\nPour effectuer la mise a jour, ouvre le lien ci-dessous dans ton navigateur, telecharge le fichier APK, puis ouvre-le pour lancer l'installation.",
+  "downloadUrl": "https://nikaisedoua-source.github.io/dec-docx/DEC_DOCX-1.8.3.apk",
   "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.8.2/DEC_DOCX-mac.zip",
   "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.7.4/DEC_DOCX-windows.zip",
   "webUrl": "https://nikaisedoua-source.github.io/dec-docx/"
