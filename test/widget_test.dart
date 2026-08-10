@@ -15,7 +15,7 @@ void main() {
     await tester.pumpWidget(const DocxGeneratorApp());
 
     expect(find.text('DEC DOCX'), findsWidgets);
-    expect(find.text('Version 1.8.2'), findsOneWidget);
+    expect(find.text('Version 1.8.3'), findsOneWidget);
     expect(find.text('Titre du chapitre'), findsOneWidget);
     expect(
       find.text(
@@ -129,6 +129,32 @@ void main() {
       extracted,
       'KACOU 112 : Exemple\nSous titre\n1 Premier paragraphe\n2 Deuxieme paragraphe',
     );
+  });
+
+  test('ignores invisible Word spacer paragraphs when importing a docx', () {
+    final bytes = _minimalDocx('''
+<w:p><w:r><w:t>KACOU 181 : Har Meguiddo</w:t></w:r></w:p>
+<w:p><w:r><w:t>\u200B1 Premier paragraphe</w:t></w:r></w:p>
+<w:p><w:r><w:t>\u200B</w:t></w:r></w:p>
+<w:p><w:r><w:t>2 Deuxieme paragraphe</w:t></w:r></w:p>
+''');
+
+    final extracted = DocxBuilder.extractTextFromDocx(bytes);
+    final validation = DocxBuilder.validateChapter(
+      ChapterInput(
+        title: 'KACOU 181 : Har Meguiddo',
+        subtitle: '',
+        similarChapters: '',
+        sources: [DocumentSource(name: 'Kacou 181', text: extracted)],
+      ),
+    );
+
+    expect(
+      extracted,
+      'KACOU 181 : Har Meguiddo\n1 Premier paragraphe\n2 Deuxieme paragraphe',
+    );
+    expect(validation.hasErrors, isFalse);
+    expect(validation.documents.first.paragraphs, hasLength(2));
   });
 
   test(

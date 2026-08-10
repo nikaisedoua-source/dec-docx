@@ -256,7 +256,7 @@ class DocxBuilder {
     var lineBuffer = StringBuffer();
 
     void flushLine() {
-      final line = lineBuffer.toString().trim();
+      final line = _removeInvisibleWordFormatting(lineBuffer.toString()).trim();
       if (line.isNotEmpty) {
         lines.add(line);
       }
@@ -293,6 +293,10 @@ class DocxBuilder {
     flushLine();
 
     return lines;
+  }
+
+  static String _removeInvisibleWordFormatting(String value) {
+    return value.replaceAll(RegExp(r'[\u200B\u2060\uFEFF]'), '');
   }
 
   static Uint8List _buildArchive(List<ParsedDocument> documents) {
