@@ -13,7 +13,7 @@ import 'docx_builder.dart';
 import 'sermon_reference.dart';
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.8.3';
+const _appVersion = '1.8.4';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -430,16 +430,16 @@ class DocxGeneratorApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF075E68),
+          seedColor: const Color(0xFF6157F5),
           brightness: Brightness.light,
           surface: Colors.white,
         ),
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFF3F6F8),
+        scaffoldBackgroundColor: const Color(0xFFF3F5FA),
         fontFamily: 'Roboto',
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: Color(0xFF102A2E),
+          backgroundColor: Color(0xFFF3F5FA),
+          foregroundColor: Color(0xFF20243A),
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           scrolledUnderElevation: 1,
@@ -450,36 +450,36 @@ class DocxGeneratorApp extends StatelessWidget {
           elevation: 0,
           margin: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-            side: const BorderSide(color: Color(0xFFE3EAEC)),
+            borderRadius: BorderRadius.circular(26),
+            side: const BorderSide(color: Color(0xFFE7E9F2)),
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: const Color(0xFFF7F9FA),
+          fillColor: const Color(0xFFF7F8FC),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 18,
             vertical: 17,
           ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFFDCE5E7)),
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFE2E5EF)),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFFDCE5E7)),
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFE2E5EF)),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFF087F8C), width: 2),
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFF6157F5), width: 2),
           ),
-          helperStyle: const TextStyle(color: Color(0xFF60777B), height: 1.35),
+          helperStyle: const TextStyle(color: Color(0xFF74798D), height: 1.35),
         ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
             minimumSize: const Size(0, 54),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
             ),
             textStyle: const TextStyle(
               fontSize: 15,
@@ -489,11 +489,12 @@ class DocxGeneratorApp extends StatelessWidget {
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.white,
             minimumSize: const Size(0, 54),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
             ),
-            side: const BorderSide(color: Color(0xFFB7CDD0)),
+            side: BorderSide(color: Colors.white.withValues(alpha: 0.34)),
             textStyle: const TextStyle(fontWeight: FontWeight.w700),
           ),
         ),
@@ -529,7 +530,8 @@ class GeneratorPage extends StatefulWidget {
   State<GeneratorPage> createState() => _GeneratorPageState();
 }
 
-class _GeneratorPageState extends State<GeneratorPage> {
+class _GeneratorPageState extends State<GeneratorPage>
+    with SingleTickerProviderStateMixin {
   final _chapterTitleController = TextEditingController();
   final _subtitleController = TextEditingController();
   final _similarChaptersController = TextEditingController();
@@ -546,12 +548,17 @@ class _GeneratorPageState extends State<GeneratorPage> {
   String? _status;
   String? _updateNotice;
   String? _updateDownloadUrl;
+  late final AnimationController _ambientController;
 
   AppStrings get _strings => AppStrings(_language);
 
   @override
   void initState() {
     super.initState();
+    _ambientController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 12),
+    )..repeat(reverse: true);
     _chapterTitleController.addListener(_syncAutomaticFileName);
     _documentLanguageController.addListener(_syncAutomaticFileName);
     _clearRuntimeCache();
@@ -560,6 +567,7 @@ class _GeneratorPageState extends State<GeneratorPage> {
 
   @override
   void dispose() {
+    _ambientController.dispose();
     _chapterTitleController.removeListener(_syncAutomaticFileName);
     _documentLanguageController.removeListener(_syncAutomaticFileName);
     _chapterTitleController.dispose();
@@ -971,154 +979,474 @@ class _GeneratorPageState extends State<GeneratorPage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 68,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
+      backgroundColor: const Color(0xFF26005E),
+      body: SafeArea(
+        child: Stack(
           children: [
-            const _BrandMark(size: 36),
-            const SizedBox(width: 11),
-            Text(
-              strings.appTitle,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.4,
+            Positioned.fill(
+              child: _AuroraBackground(animation: _ambientController),
+            ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final showSidebar = constraints.maxWidth >= 1050;
+                final wide = constraints.maxWidth >= 920;
+                final editor = _InputPanel(
+                  strings: strings,
+                  chapterTitleController: _chapterTitleController,
+                  subtitleController: _subtitleController,
+                  similarChaptersController: _similarChaptersController,
+                  manualTextController: _manualTextController,
+                  downloadUrlController: _downloadUrlController,
+                  isDownloading: _isDownloading,
+                  onPickFiles: _pickFiles,
+                  onDownloadText: _downloadTextFromUrl,
+                );
+                final settings = _SettingsPanel(
+                  strings: strings,
+                  fileNameController: _fileNameController,
+                  documentLanguageController: _documentLanguageController,
+                  selectedDocumentLanguage: _selectedDocumentLanguage,
+                  onLanguageSelected: (language) {
+                    setState(() {
+                      _selectedDocumentLanguage = language;
+                      _documentLanguageController.text = language?.name ?? '';
+                    });
+                  },
+                  sources: _fileSources,
+                  status: _status,
+                  isGenerating: _isGenerating,
+                  onGenerate: _generate,
+                  onRemoveSource: _removeSource,
+                );
+
+                final horizontalPadding = constraints.maxWidth < 600
+                    ? 14.0
+                    : 28.0;
+                final content = SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    22,
+                    horizontalPadding,
+                    30,
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1180),
+                      child: _PageEntrance(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (!showSidebar) ...[
+                              _CompactTopBar(
+                                strings: strings,
+                                language: _language,
+                                onLanguageChanged: (language) =>
+                                    setState(() => _language = language),
+                                onClear: _clearAll,
+                              ),
+                              const SizedBox(height: 18),
+                            ],
+                            if (_updateNotice != null) ...[
+                              _AnimatedUpdateBanner(
+                                message: _updateNotice!,
+                                buttonLabel: strings.updateNow,
+                                onUpdate: _openUpdateDownload,
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                            _BrandHeader(strings: strings),
+                            const SizedBox(height: 18),
+                            if (wide)
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(flex: 3, child: editor),
+                                  const SizedBox(width: 20),
+                                  Expanded(flex: 2, child: settings),
+                                ],
+                              )
+                            else ...[
+                              editor,
+                              const SizedBox(height: 16),
+                              settings,
+                            ],
+                            const SizedBox(height: 22),
+                            Text(
+                              strings.footer,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: const Color(0xFFD5BFE6),
+                                height: 1.45,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+
+                if (!showSidebar) return content;
+                return Row(
+                  children: [
+                    _CleanSidebar(
+                      strings: strings,
+                      language: _language,
+                      onLanguageChanged: (language) =>
+                          setState(() => _language = language),
+                      onClear: _clearAll,
+                    ),
+                    Expanded(child: content),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AuroraBackground extends StatelessWidget {
+  const _AuroraBackground({required this.animation});
+
+  final Animation<double> animation;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, _) {
+        final value = animation.value;
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment(-1 + value * 0.35, -1),
+              end: Alignment(1 - value * 0.2, 1),
+              colors: const [
+                Color(0xFF18003D),
+                Color(0xFF4A007C),
+                Color(0xFF8A087D),
+                Color(0xFF3B087E),
+              ],
+              stops: const [0, 0.34, 0.7, 1],
+            ),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                left: -120 + value * 90,
+                bottom: -180 + value * 50,
+                child: _GlowOrb(
+                  size: 520,
+                  color: const Color(0xFFFC28C8).withValues(alpha: 0.28),
+                ),
+              ),
+              Positioned(
+                right: -150 + value * 70,
+                top: -130 + value * 55,
+                child: _GlowOrb(
+                  size: 500,
+                  color: const Color(0xFF7226FF).withValues(alpha: 0.3),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _GlowOrb extends StatelessWidget {
+  const _GlowOrb({required this.size, required this.color});
+
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
+      ),
+    );
+  }
+}
+
+class _CleanSidebar extends StatelessWidget {
+  const _CleanSidebar({
+    required this.strings,
+    required this.language,
+    required this.onLanguageChanged,
+    required this.onClear,
+  });
+
+  final AppStrings strings;
+  final AppLanguage language;
+  final ValueChanged<AppLanguage> onLanguageChanged;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 244,
+      margin: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1B003D).withValues(alpha: 0.58),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x260F1020),
+            blurRadius: 30,
+            offset: Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const _BrandMark(size: 42),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Text(
+                  strings.appTitle,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 30),
+          const _SidebarItem(
+            icon: Icons.auto_awesome_rounded,
+            label: 'Smart DOCX',
+            selected: true,
+          ),
+          _SidebarItem(
+            icon: Icons.edit_note_rounded,
+            label: strings.chapterDetails,
+          ),
+          _SidebarItem(icon: Icons.article_outlined, label: strings.inputTitle),
+          _SidebarItem(icon: Icons.ios_share_rounded, label: strings.output),
+          const Spacer(),
+          Text(
+            strings.versionLabel,
+            style: const TextStyle(color: Color(0xFF858A9F), fontSize: 12),
+          ),
+          const SizedBox(height: 12),
+          _LanguageControl(
+            language: language,
+            onChanged: onLanguageChanged,
+            dark: true,
+          ),
+          const SizedBox(height: 8),
+          TextButton.icon(
+            onPressed: onClear,
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFB9BDCE),
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+            ),
+            icon: const Icon(Icons.restart_alt_rounded, size: 20),
+            label: Text(strings.clear),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SidebarItem extends StatelessWidget {
+  const _SidebarItem({
+    required this.icon,
+    required this.label,
+    this.selected = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return _HoverSidebarItem(icon: icon, label: label, selected: selected);
+  }
+}
+
+class _HoverSidebarItem extends StatefulWidget {
+  const _HoverSidebarItem({
+    required this.icon,
+    required this.label,
+    required this.selected,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+
+  @override
+  State<_HoverSidebarItem> createState() => _HoverSidebarItemState();
+}
+
+class _HoverSidebarItemState extends State<_HoverSidebarItem> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final active = widget.selected || _hovered;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: EdgeInsets.fromLTRB(active ? 16 : 13, 12, 13, 12),
+        decoration: BoxDecoration(
+          gradient: active
+              ? const LinearGradient(
+                  colors: [Color(0x996D3AF2), Color(0x885A1AB7)],
+                )
+              : null,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: active
+                ? Colors.white.withValues(alpha: 0.18)
+                : Colors.transparent,
+          ),
+          boxShadow: widget.selected
+              ? const [BoxShadow(color: Color(0x595F18D0), blurRadius: 18)]
+              : null,
+        ),
+        child: Row(
+          children: [
+            AnimatedScale(
+              duration: const Duration(milliseconds: 220),
+              scale: active ? 1.08 : 1,
+              child: Icon(
+                widget.icon,
+                color: active ? Colors.white : const Color(0xFFC4A9E5),
+                size: 21,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                widget.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: active ? Colors.white : const Color(0xFFE1CFF3),
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                ),
               ),
             ),
           ],
         ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            padding: const EdgeInsets.only(left: 12, right: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0F6F6),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<AppLanguage>(
-                value: _language,
-                borderRadius: BorderRadius.circular(16),
-                icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                style: const TextStyle(
-                  color: Color(0xFF174B52),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
-                items: AppLanguage.values
-                    .map(
-                      (language) => DropdownMenuItem(
-                        value: language,
-                        child: Text(language.label),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (language) {
-                  if (language != null) {
-                    setState(() => _language = language);
-                  }
-                },
-              ),
-            ),
-          ),
-          const SizedBox(width: 4),
-          IconButton(
-            tooltip: strings.clear,
-            onPressed: _clearAll,
-            icon: const Icon(Icons.restart_alt_rounded),
-          ),
-          const SizedBox(width: 6),
-        ],
       ),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final wide = constraints.maxWidth >= 900;
-            final editor = _InputPanel(
-              strings: strings,
-              chapterTitleController: _chapterTitleController,
-              subtitleController: _subtitleController,
-              similarChaptersController: _similarChaptersController,
-              manualTextController: _manualTextController,
-              downloadUrlController: _downloadUrlController,
-              isDownloading: _isDownloading,
-              onPickFiles: _pickFiles,
-              onDownloadText: _downloadTextFromUrl,
-            );
-            final settings = _SettingsPanel(
-              strings: strings,
-              fileNameController: _fileNameController,
-              documentLanguageController: _documentLanguageController,
-              selectedDocumentLanguage: _selectedDocumentLanguage,
-              onLanguageSelected: (language) {
-                setState(() {
-                  _selectedDocumentLanguage = language;
-                  _documentLanguageController.text = language?.name ?? '';
-                });
-              },
-              sources: _fileSources,
-              status: _status,
-              isGenerating: _isGenerating,
-              onGenerate: _generate,
-              onRemoveSource: _removeSource,
-            );
+    );
+  }
+}
 
-            final horizontalPadding = constraints.maxWidth < 600 ? 14.0 : 24.0;
+class _CompactTopBar extends StatelessWidget {
+  const _CompactTopBar({
+    required this.strings,
+    required this.language,
+    required this.onLanguageChanged,
+    required this.onClear,
+  });
 
-            return SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                horizontalPadding,
-                18,
-                horizontalPadding,
-                30,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1180),
-                  child: _PageEntrance(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (_updateNotice != null) ...[
-                          _AnimatedUpdateBanner(
-                            message: _updateNotice!,
-                            buttonLabel: strings.updateNow,
-                            onUpdate: _openUpdateDownload,
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                        _BrandHeader(strings: strings),
-                        const SizedBox(height: 18),
-                        if (wide)
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(flex: 3, child: editor),
-                              const SizedBox(width: 20),
-                              Expanded(flex: 2, child: settings),
-                            ],
-                          )
-                        else ...[
-                          editor,
-                          const SizedBox(height: 16),
-                          settings,
-                        ],
-                        const SizedBox(height: 22),
-                        Text(
-                          strings.footer,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: const Color(0xFF6B7F82),
-                            height: 1.45,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            );
+  final AppStrings strings;
+  final AppLanguage language;
+  final ValueChanged<AppLanguage> onLanguageChanged;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const _BrandMark(size: 40),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            strings.appTitle,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        _LanguageControl(language: language, onChanged: onLanguageChanged),
+        const SizedBox(width: 4),
+        IconButton(
+          tooltip: strings.clear,
+          onPressed: onClear,
+          icon: const Icon(Icons.restart_alt_rounded),
+        ),
+      ],
+    );
+  }
+}
+
+class _LanguageControl extends StatelessWidget {
+  const _LanguageControl({
+    required this.language,
+    required this.onChanged,
+    this.dark = false,
+  });
+
+  final AppLanguage language;
+  final ValueChanged<AppLanguage> onChanged;
+  final bool dark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.only(left: 11, right: 4),
+      decoration: BoxDecoration(
+        color: dark ? const Color(0xFF303347) : Colors.white,
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(
+          color: dark ? const Color(0xFF3C4055) : const Color(0xFFE2E5EF),
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<AppLanguage>(
+          value: language,
+          dropdownColor: dark ? const Color(0xFF303347) : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: dark ? Colors.white70 : const Color(0xFF555A70),
+          ),
+          style: TextStyle(
+            color: dark ? Colors.white : const Color(0xFF30344A),
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+          items: AppLanguage.values
+              .map(
+                (item) =>
+                    DropdownMenuItem(value: item, child: Text(item.label)),
+              )
+              .toList(),
+          onChanged: (value) {
+            if (value != null) onChanged(value);
           },
         ),
       ),
@@ -1136,62 +1464,173 @@ class _BrandHeader extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF073E47), Color(0xFF087F8C)],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x26075E68),
-            blurRadius: 24,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
+      constraints: const BoxConstraints(minHeight: 330),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final compact = constraints.maxWidth < 520;
-          return Row(
+          final compact = constraints.maxWidth < 650;
+          final illustration = const _FloatingHeroIllustration();
+          final copy = Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: compact
+                ? CrossAxisAlignment.center
+                : CrossAxisAlignment.start,
             children: [
-              _BrandMark(size: compact ? 58 : 72),
-              SizedBox(width: compact ? 14 : 18),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      strings.appTitle,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.6,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      strings.tagline,
-                      maxLines: compact ? 2 : 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFFD7F0F1),
-                        height: 1.35,
-                      ),
-                    ),
-                    if (compact) ...[
-                      const SizedBox(height: 10),
-                      _VersionPill(label: strings.versionLabel),
-                    ],
-                  ],
+              Text(
+                'Smart DOCX',
+                style: theme.textTheme.displaySmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: -1.4,
                 ),
               ),
-              if (!compact) _VersionPill(label: strings.versionLabel),
+              const SizedBox(height: 10),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 430),
+                child: Text(
+                  strings.tagline,
+                  textAlign: compact ? TextAlign.center : TextAlign.left,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: const Color(0xFFE9D8F4),
+                    fontWeight: FontWeight.w400,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 22),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const _FeatureChip(
+                    icon: Icons.find_in_page_rounded,
+                    label: 'Analyse du texte',
+                  ),
+                  if (!compact) ...[
+                    const SizedBox(width: 10),
+                    const _FeatureChip(
+                      icon: Icons.auto_fix_high_rounded,
+                      label: 'Réparation DOCX',
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 14),
+              _VersionPill(label: strings.versionLabel),
+            ],
+          );
+
+          if (compact) {
+            return Column(
+              children: [illustration, const SizedBox(height: 4), copy],
+            );
+          }
+          return Row(
+            children: [
+              Expanded(flex: 5, child: illustration),
+              const SizedBox(width: 20),
+              Expanded(flex: 5, child: copy),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _FeatureChip extends StatelessWidget {
+  const _FeatureChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFE05BFF), Color(0xFF7626E8)],
+            ),
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: const [
+              BoxShadow(color: Color(0x66E05BFF), blurRadius: 14),
+            ],
+          ),
+          child: Icon(icon, color: Colors.white, size: 18),
+        ),
+        const SizedBox(width: 9),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FloatingHeroIllustration extends StatefulWidget {
+  const _FloatingHeroIllustration();
+
+  @override
+  State<_FloatingHeroIllustration> createState() =>
+      _FloatingHeroIllustrationState();
+}
+
+class _FloatingHeroIllustrationState extends State<_FloatingHeroIllustration>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2800),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) => Transform.translate(
+        offset: Offset(0, -7 + _controller.value * 14),
+        child: child,
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 300,
+            height: 210,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(color: Color(0x99E82FD5), blurRadius: 90),
+                BoxShadow(color: Color(0x775B27F4), blurRadius: 130),
+              ],
+            ),
+          ),
+          Image.asset(
+            'assets/illustrations/docx-repair-hero.png',
+            width: 330,
+            height: 300,
+            fit: BoxFit.contain,
+          ),
+        ],
       ),
     );
   }
@@ -1358,9 +1797,21 @@ class _SectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF26004F).withValues(alpha: 0.48),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.13)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x330E001E),
+            blurRadius: 30,
+            offset: Offset(0, 16),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(22),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -1371,10 +1822,12 @@ class _SectionCard extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE3F4F4),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFD858FF), Color(0xFF7028E6)],
+                    ),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(icon, color: const Color(0xFF08717C)),
+                  child: Icon(icon, color: Colors.white),
                 ),
                 const SizedBox(width: 13),
                 Expanded(
@@ -1384,7 +1837,7 @@ class _SectionCard extends StatelessWidget {
                       Text(
                         '$step  •  $title',
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: const Color(0xFF12383D),
+                          color: Colors.white,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -1392,7 +1845,7 @@ class _SectionCard extends StatelessWidget {
                       Text(
                         description,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF6A7F82),
+                          color: const Color(0xFFD7C4E7),
                           height: 1.4,
                         ),
                       ),
@@ -1477,7 +1930,7 @@ class _InputPanel extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F7F7),
+                  color: const Color(0xFFF3F2FF),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
@@ -1486,14 +1939,14 @@ class _InputPanel extends StatelessWidget {
                     const Icon(
                       Icons.tips_and_updates_outlined,
                       size: 20,
-                      color: Color(0xFF08717C),
+                      color: Color(0xFF6157F5),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         strings.workflowTips,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF466368),
+                          color: const Color(0xFF5E6078),
                           height: 1.45,
                         ),
                       ),
@@ -1532,9 +1985,10 @@ class _InputPanel extends StatelessWidget {
               const SizedBox(height: 18),
               Text(
                 strings.download,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: 10),
               LayoutBuilder(
@@ -1656,39 +2110,10 @@ class _SettingsPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF087F8C), Color(0xFF075E68)],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x30075E68),
-                  blurRadius: 18,
-                  offset: Offset(0, 8),
-                ),
-              ],
-            ),
-            child: FilledButton.icon(
-              style: FilledButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                foregroundColor: Colors.white,
-                shadowColor: Colors.transparent,
-                minimumSize: const Size.fromHeight(58),
-              ),
-              onPressed: isGenerating ? null : onGenerate,
-              icon: isGenerating
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.auto_fix_high_rounded),
-              label: Text(strings.generate),
-            ),
+          _PulsingGenerateButton(
+            isGenerating: isGenerating,
+            label: strings.generate,
+            onPressed: onGenerate,
           ),
           const SizedBox(height: 22),
           Row(
@@ -1696,6 +2121,7 @@ class _SettingsPanel extends StatelessWidget {
               Text(
                 strings.sources,
                 style: theme.textTheme.titleSmall?.copyWith(
+                  color: Colors.white,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -1703,13 +2129,13 @@ class _SettingsPanel extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8F3F3),
+                  color: const Color(0xFFEDEBFF),
                   borderRadius: BorderRadius.circular(99),
                 ),
                 child: Text(
                   '${sources.length}',
                   style: const TextStyle(
-                    color: Color(0xFF075E68),
+                    color: Color(0xFF6157F5),
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -1721,13 +2147,13 @@ class _SettingsPanel extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFF7F9FA),
+                color: const Color(0xFFF7F8FC),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Text(
                 strings.noSources,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF718487),
+                  color: const Color(0xFF7A7F92),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -1738,13 +2164,13 @@ class _SettingsPanel extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
                   dense: true,
-                  tileColor: const Color(0xFFF4F8F8),
+                  tileColor: const Color(0xFFF7F8FC),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
                   leading: const Icon(
                     Icons.article_outlined,
-                    color: Color(0xFF08717C),
+                    color: Color(0xFF6157F5),
                   ),
                   title: Text(
                     source.name,
@@ -1765,6 +2191,90 @@ class _SettingsPanel extends StatelessWidget {
             _StatusMessage(text: status!),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _PulsingGenerateButton extends StatefulWidget {
+  const _PulsingGenerateButton({
+    required this.isGenerating,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final bool isGenerating;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  State<_PulsingGenerateButton> createState() => _PulsingGenerateButtonState();
+}
+
+class _PulsingGenerateButtonState extends State<_PulsingGenerateButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _pulse,
+      builder: (context, child) => Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFE53DE4), Color(0xFF8B20E5)],
+          ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.55)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(
+                0xFFEF3DD7,
+              ).withValues(alpha: 0.28 + _pulse.value * 0.32),
+              blurRadius: 18 + _pulse.value * 18,
+              spreadRadius: _pulse.value * 3,
+            ),
+          ],
+        ),
+        child: child,
+      ),
+      child: FilledButton.icon(
+        style: FilledButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          minimumSize: const Size.fromHeight(60),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+        ),
+        onPressed: widget.isGenerating ? null : widget.onPressed,
+        icon: widget.isGenerating
+            ? const SizedBox.square(
+                dimension: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(Icons.auto_fix_high_rounded),
+        label: Text(widget.label),
       ),
     );
   }
