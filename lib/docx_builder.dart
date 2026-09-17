@@ -126,7 +126,7 @@ class DocxBuilder {
       }
 
       hasAnyText = true;
-      final result = _parseContent(source.name, source.text);
+      final result = _parseContent(source.name, source.text, input.language);
       blocks.addAll(result.blocks);
       errors.addAll(result.errors);
       similarChapters ??= result.similarChapters;
@@ -373,20 +373,40 @@ class DocxBuilder {
     ).hasMatch(value.trim());
   }
 
-  static _ContentParseResult _parseContent(String sourceName, String text) {
+  static _ContentParseResult _parseContent(String sourceName, String text, [String language = '']) {
     final lines = text
         .replaceAll('\r\n', '\n')
         .split('\n')
         .map((line) => line.trim())
         .toList();
-    final contentLines = <_ContentLine>[];
 
+    final isChinese = language.toLowerCase().contains('chinois') || language.toLowerCase().contains('chinese') || language.toLowerCase().contains('zh');
+    final mergedLines = <String>[];
     for (var index = 0; index < lines.length; index++) {
       final line = lines[index];
       if (line.isEmpty) {
         continue;
       }
-      final nextLine = index + 1 < lines.length ? lines[index + 1] : null;
+      if (isChinese && _isPinyinLine(line)) {
+        continue;
+      }
+      if (isChinese && index + 1 < lines.length && _isPinyinLine(lines[index + 1])) {
+        final pinyinLine = lines[index + 1];
+        mergedLines.add('$line\n$pinyinLine');
+        index++;
+      } else {
+        mergedLines.add(line);
+      }
+    }
+
+    final contentLines = <_ContentLine>[];
+
+    for (var index = 0; index < mergedLines.length; index++) {
+      final line = mergedLines[index];
+      if (line.isEmpty) {
+        continue;
+      }
+      final nextLine = index + 1 < mergedLines.length ? mergedLines[index + 1] : null;
       if (!_isConversationNoise(line, nextLine)) {
         contentLines.add(_ContentLine(text: line, number: index + 1));
       }
@@ -761,16 +781,31 @@ class DocxBuilder {
     ).allMatches(text).toList();
 
     if (matches.isEmpty) {
-      return '<w:r><w:rPr><w:sz w:val="24"/></w:rPr><w:t>${_escape(text)}</w:t></w:r>';
+      final parts = text.split('\n');
+      for (var i = 0; i < parts.length; i++) {
+        if (i > 0) {
+          buffer.write('<w:r><w:rPr><w:sz w:val="24"/></w:rPr><w:br/></w:r>');
+        }
+        buffer.write(
+          '<w:r><w:rPr><w:sz w:val="24"/></w:rPr><w:t>${_escape(parts[i])}</w:t></w:r>',
+        );
+      }
+      return buffer.toString();
     }
 
     var index = 0;
     for (final match in matches) {
       if (match.start > index) {
         final plain = text.substring(index, match.start);
-        buffer.write(
-          '<w:r><w:rPr><w:sz w:val="24"/></w:rPr><w:t>${_escape(plain)}</w:t></w:r>',
-        );
+        final parts = plain.split('\n');
+        for (var i = 0; i < parts.length; i++) {
+          if (i > 0 || index > 0) {
+            buffer.write('<w:r><w:rPr><w:sz w:val="24"/></w:rPr><w:br/></w:r>');
+          }
+          buffer.write(
+            '<w:r><w:rPr><w:sz w:val="24"/></w:rPr><w:t>${_escape(parts[i])}</w:t></w:r>',
+          );
+        }
       }
       final concordance = text.substring(match.start, match.end);
       buffer.write(
@@ -781,9 +816,15 @@ class DocxBuilder {
 
     if (index < text.length) {
       final plain = text.substring(index);
-      buffer.write(
-        '<w:r><w:rPr><w:sz w:val="24"/></w:rPr><w:t>${_escape(plain)}</w:t></w:r>',
-      );
+      final parts = plain.split('\n');
+      for (var i = 0; i < parts.length; i++) {
+        if (i > 0 || index > 0) {
+          buffer.write('<w:r><w:rPr><w:sz w:val="24"/></w:rPr><w:br/></w:r>');
+        }
+        buffer.write(
+          '<w:r><w:rPr><w:sz w:val="24"/></w:rPr><w:t>${_escape(parts[i])}</w:t></w:r>',
+        );
+      }
     }
 
     return buffer.toString();
@@ -890,6 +931,10 @@ class DocxBuilder {
     r'^[^\p{L}\p{N}\r\n]{0,8}\s*(\d{1,3})[^\p{L}\p{N}\r\n]{0,8}$',
     unicode: true,
   );
+
+  static bool _isPinyinLine(String line) {
+    return RegExp(r'^Pinyin\s+\d+\s*:', caseSensitive: false).hasMatch(line.trim());
+  }
 }
 
 class _ParseResult {
