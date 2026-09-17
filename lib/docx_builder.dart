@@ -382,20 +382,33 @@ class DocxBuilder {
 
     final isChinese = language.toLowerCase().contains('chinois') || language.toLowerCase().contains('chinese') || language.toLowerCase().contains('zh');
     final mergedLines = <String>[];
+    var pendingParagraph = false;
     for (var index = 0; index < lines.length; index++) {
       final line = lines[index];
       if (line.isEmpty) {
         continue;
       }
-      if (isChinese && _isPinyinLine(line)) {
+      final startsParagraph = _parseNumberedParagraph(line) != null;
+      final keepSeparate =
+          _isConcordanceLine(line) ||
+          _looksLikeSimilarChaptersLine(line) ||
+          _standaloneNumberPattern.hasMatch(line);
+      if (isChinese &&
+          !startsParagraph &&
+          !keepSeparate &&
+          pendingParagraph &&
+          mergedLines.isNotEmpty) {
+        mergedLines[mergedLines.length - 1] = '${mergedLines.last}\n$line';
+      } else if (isChinese &&
+          pendingParagraph &&
+          _standaloneNumberPattern.hasMatch(line) &&
+          _nextStartsParagraph(lines, index)) {
         continue;
-      }
-      if (isChinese && index + 1 < lines.length && _isPinyinLine(lines[index + 1])) {
-        final pinyinLine = lines[index + 1];
-        mergedLines.add('$line\n$pinyinLine');
-        index++;
       } else {
         mergedLines.add(line);
+        if (startsParagraph) {
+          pendingParagraph = true;
+        }
       }
     }
 
@@ -933,8 +946,15 @@ class DocxBuilder {
     unicode: true,
   );
 
-  static bool _isPinyinLine(String line) {
-    return RegExp(r'^Pinyin\s+\d+\s*:', caseSensitive: false).hasMatch(line.trim());
+  static bool _nextStartsParagraph(List<String> lines, int index) {
+    for (var next = index + 1; next < lines.length; next++) {
+      final candidate = lines[next].trim();
+      if (candidate.isEmpty) {
+        continue;
+      }
+      return _parseNumberedParagraph(candidate) != null;
+    }
+    return false;
   }
 }
 

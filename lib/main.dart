@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'docx_builder.dart';
@@ -18,8 +19,15 @@ const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
 );
+const _syncfusionLicenseKey = String.fromEnvironment(
+  'SYNCFUSION_LICENSE_KEY',
+  defaultValue: '',
+);
 
 void main() {
+  if (_syncfusionLicenseKey.isNotEmpty) {
+    SyncfusionLicense.registerLicense(_syncfusionLicenseKey);
+  }
   runApp(const DocxGeneratorApp());
 }
 
@@ -194,10 +202,16 @@ class AppStrings {
     'Nome automatico: KACOU <numero> <idioma>.docx',
   );
   String get addFiles => _text(
-    'Importer et reparer TXT, MD ou DOCX',
-    'Import and repair TXT, MD or DOCX',
-    'Importar y reparar TXT, MD o DOCX',
-    'Importar e reparar TXT, MD ou DOCX',
+    'Importer et reparer TXT, MD, DOCX ou PDF',
+    'Import and repair TXT, MD, DOCX or PDF',
+    'Importar y reparar TXT, MD, DOCX o PDF',
+    'Importar e reparar TXT, MD, DOCX ou PDF',
+  );
+  String get pdfReadFailed => _text(
+    'PDF illisible : vérifie la clé de licence Syncfusion (SYNCFUSION_LICENSE_KEY) ou convertis le fichier en TXT.',
+    'Unreadable PDF: check the Syncfusion license key (SYNCFUSION_LICENSE_KEY) or convert the file to TXT.',
+    'PDF ilegible: verifica la clave de licencia de Syncfusion (SYNCFUSION_LICENSE_KEY) o convierte el archivo a TXT.',
+    'PDF ilegível: verifique a chave de licença da Syncfusion (SYNCFUSION_LICENSE_KEY) ou converta o arquivo para TXT.',
   );
   String get download =>
       _text('Telechargement', 'Download', 'Descarga', 'Download');
@@ -661,7 +675,7 @@ class _GeneratorPageState extends State<GeneratorPage>
     final result = await FilePicker.pickFiles(
       allowMultiple: true,
       type: FileType.custom,
-      allowedExtensions: const ['txt', 'md', 'docx'],
+      allowedExtensions: const ['txt', 'md', 'docx', 'pdf'],
       withData: true,
     );
 
@@ -670,6 +684,7 @@ class _GeneratorPageState extends State<GeneratorPage>
     }
 
     final imported = <DocumentSource>[];
+    var pdfError = false;
     for (final file in result.files) {
       final bytes = await _readPlatformFile(file);
       if (bytes == null) {
@@ -677,9 +692,25 @@ class _GeneratorPageState extends State<GeneratorPage>
       }
 
       final extension = file.extension?.toLowerCase();
-      final rawText = extension == 'docx'
-          ? DocxBuilder.extractTextFromDocx(bytes)
-          : utf8.decode(bytes, allowMalformed: true);
+      late final String rawText;
+      try {
+        rawText = extension == 'pdf'
+            ? _extractPdfText(bytes)
+            : extension == 'docx'
+            ? DocxBuilder.extractTextFromDocx(bytes)
+            : utf8.decode(bytes, allowMalformed: true);
+      } catch (_) {
+        if (extension == 'pdf') {
+          pdfError = true;
+        }
+        continue;
+      }
+      if (rawText.trim().isEmpty) {
+        if (extension == 'pdf') {
+          pdfError = true;
+        }
+        continue;
+      }
       final text = _normalizeWebText(rawText);
 
       imported.add(DocumentSource(name: _fileTitle(file.name), text: text));
@@ -688,9 +719,18 @@ class _GeneratorPageState extends State<GeneratorPage>
     setState(() {
       _fileSources.addAll(imported);
       _status = imported.isEmpty
-          ? _strings.unreadableFile
+          ? (pdfError ? _strings.pdfReadFailed : _strings.unreadableFile)
           : _strings.filesAdded(imported.length);
     });
+  }
+
+  String _extractPdfText(Uint8List bytes) {
+    final document = PdfDocument(inputBytes: bytes);
+    try {
+      return PdfTextExtractor(document).extractText();
+    } finally {
+      document.dispose();
+    }
   }
 
   Future<void> _downloadTextFromUrl() async {
