@@ -925,6 +925,7 @@ class DocxBuilder {
   static final RegExp _numberedParagraphPattern = RegExp(
     r'^[^\p{L}\p{N}\r\n]{0,8}\s*(\d{1,3})[\s.)-]+(.+)$',
     unicode: true,
+    dotAll: true,
   );
 
   static final RegExp _standaloneNumberPattern = RegExp(
