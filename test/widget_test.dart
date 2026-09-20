@@ -15,17 +15,108 @@ void main() {
     await tester.pumpWidget(const DocxGeneratorApp());
 
     expect(find.text('DEC DOCX'), findsWidgets);
-    expect(find.text('Version 1.8.5'), findsOneWidget);
+    expect(find.text('Version 1.9.0'), findsOneWidget);
     expect(find.text('Titre du chapitre'), findsOneWidget);
     expect(
-      find.text(
-        'Écris le titre normalement, pas tout en majuscules. Les débuts de phrase et les noms propres peuvent avoir une majuscule.',
-      ),
+      find.byTooltip(AppStrings(AppLanguage.fr).chapterTitleLowercaseHelp),
       findsOneWidget,
     );
-    expect(find.text('Sous-titre optionnel'), findsOneWidget);
-    expect(find.text('Chapitres similaires finaux'), findsOneWidget);
+    expect(find.text('Langue du document'), findsOneWidget);
+    expect(find.text('Langue du site'), findsNothing);
+    expect(find.text('Sous-titre optionnel'), findsNothing);
+    expect(find.text('Chapitres similaires finaux'), findsNothing);
+    expect(find.text('Corriger et générer'), findsOneWidget);
   });
+
+  testWidgets('retains optional chapter details after collapsing the section', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const DocxGeneratorApp());
+    final options = find.text('Sous-titre et chapitres similaires');
+    await tester.tap(options);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Sous-titre optionnel'),
+      'Sous-titre conservé',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Chapitres similaires finaux'),
+      'Kacou 2, 3',
+    );
+    await tester.tap(options);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Sous-titre optionnel'), findsNothing);
+    await tester.tap(options);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Sous-titre conservé'), findsOneWidget);
+    expect(find.text('Kacou 2, 3'), findsOneWidget);
+  });
+
+  testWidgets(
+    'uses a suggested or custom document language in the output name',
+    (tester) async {
+      await tester.pumpWidget(const DocxGeneratorApp());
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Titre du chapitre'),
+        'KACOU 181 : Har Meguiddo',
+      );
+      await tester.tap(find.byTooltip('Choisir une langue'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.tap(find.text('francais'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      final nameField = tester.widget<TextField>(
+        find.widgetWithText(TextField, 'Nom du fichier'),
+      );
+      expect(nameField.controller!.text, 'KACOU 181 francais.docx');
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Langue du document'),
+        'swahili RDC',
+      );
+      expect(nameField.controller!.text, 'KACOU 181 swahili rdc.docx');
+      await tester.tap(find.byTooltip('Vider'));
+      await tester.pump();
+      expect(
+        tester
+            .widget<TextField>(
+              find.widgetWithText(TextField, 'Langue du document'),
+            )
+            .controller!
+            .text,
+        isEmpty,
+      );
+    },
+  );
+
+  for (final size in [const Size(320, 710), const Size(1280, 900)]) {
+    testWidgets('keeps generation accessible at $size', (tester) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(const DocxGeneratorApp());
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Corriger et générer').hitTestable(), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      for (final mode in [
+        'Édition · Papier éditorial',
+        'Nocturne · Studio sombre',
+      ]) {
+        await tester.tap(find.byTooltip('Changer de style'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.tap(find.text(mode));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(tester.takeException(), isNull);
+        expect(find.text('Corriger et générer').hitTestable(), findsOneWidget);
+      }
+    });
+  }
 
   testWidgets('preserves normal capitals in the chapter title', (tester) async {
     await tester.pumpWidget(const DocxGeneratorApp());
@@ -271,6 +362,121 @@ PARTIE 2 : SUITE
     expect(extracted, contains('1 Premier paragraphe'));
     expect(extracted, contains('PARTIE 2 : SUITE'));
     expect(extracted, contains('2 Deuxieme paragraphe'));
+  });
+
+  test('renders chapter section headings in bold', () {
+    final bytes = DocxBuilder.build(const [
+      DocumentSource(
+        name: 'Kacou 169',
+        text: '''
+KACOU : Titre du document
+PARTIE 1 : INTRODUCTION
+1 Premier paragraphe
+AVEUGLE D’UN ŒIL GUÉRIE
+2 Deuxieme paragraphe
+''',
+      ),
+    ]);
+
+    final archive = ZipDecoder().decodeBytes(bytes);
+    final documentXml = utf8.decode(
+      archive.findFile('word/document.xml')!.content as List<int>,
+    );
+
+    expect(
+      documentXml,
+      contains('<w:b/><w:sz w:val="24"/></w:rPr><w:t>PARTIE 1 : INTRODUCTION'),
+    );
+    expect(
+      documentXml,
+      contains('<w:b/><w:sz w:val="24"/></w:rPr><w:t>AVEUGLE D’UN ŒIL GUÉRIE'),
+    );
+  });
+
+  test('keeps consecutive Chinese lines inside one numbered verse', () {
+    final validation = DocxBuilder.validateChapter(
+      const ChapterInput(
+        title: 'KACOU 169 : 中文章节',
+        subtitle: '',
+        similarChapters: '',
+        language: 'chinois',
+        sources: [
+          DocumentSource(
+            name: 'Kacou 169 chinois',
+            text: '''
+KACOU 169 : 中文章节
+1 第一行经文
+第二行经文仍属于同一节
+2 第二节经文
+''',
+          ),
+        ],
+      ),
+    );
+
+    expect(validation.hasErrors, isFalse);
+    expect(validation.documents.first.paragraphs, hasLength(2));
+    expect(
+      validation.documents.first.paragraphs.first.text,
+      '第一行经文\n第二行经文仍属于同一节',
+    );
+  });
+
+  group('Chinese and pinyin pairs', () {
+    ChapterInput chinese(String text) => ChapterInput(
+      title: 'Kacou 182 : 中文 (Zhōngwén)',
+      subtitle: '',
+      similarChapters: '',
+      language: 'chinois',
+      sources: [DocumentSource(name: 'Chinese source', text: text)],
+    );
+
+    test('accepts both label styles and dates wrapped across lines', () {
+      final input = chinese(
+        '1 中文\n27 日仍是同一节。\nPinyin : 1 Zhōngwén\n27 rì.\n2 第二节\nPinyin 2 : Dì èr jié.',
+      );
+      final result = DocxBuilder.validateChapter(input);
+      expect(result.errors, isEmpty);
+      expect(result.documents.single.paragraphs, hasLength(2));
+      final archive = ZipDecoder().decodeBytes(DocxBuilder.buildChapter(input));
+      final xml = utf8.decode(
+        archive.findFile('word/document.xml')!.content as List<int>,
+      );
+      expect('<w:keepNext/>'.allMatches(xml), hasLength(2));
+      expect(xml, contains('Pinyin : 1'));
+      expect(xml, contains('Pinyin 2 :'));
+      expect(xml, contains('Zhōngwén'));
+    });
+
+    test('indexes a mismatched pinyin at its original source line', () {
+      final result = DocxBuilder.validateChapter(
+        chinese('1 中文\n续文\n\nPinyin : 2 Zhōngwén'),
+      );
+      expect(result.errors, contains(contains('ligne 4 : [ZH-PINYIN-NUMBER]')));
+      expect(
+        () => DocxBuilder.buildChapter(chinese('1 中文\nPinyin : 2 Zhōngwén')),
+        throwsFormatException,
+      );
+    });
+
+    test('reports missing, duplicated and orphan transcriptions', () {
+      expect(
+        DocxBuilder.validateChapter(
+          chinese('1 中文\n2 中文\nPinyin 2 : Èr'),
+        ).errors,
+        contains(contains('[ZH-PINYIN-MISSING]')),
+      );
+      expect(
+        DocxBuilder.validateChapter(
+          chinese('1 中文\nPinyin 1 : Yī\nPinyin : 1 Yī'),
+        ).errors,
+        contains(contains('[ZH-PINYIN-DUPLICATE]')),
+      );
+      expect(
+        DocxBuilder.validateChapter(chinese('Pinyin : 1 Yī\n1 中文')).errors,
+        contains(contains('[ZH-PINYIN-ORPHAN]')),
+      );
+    });
   });
 
   test('repairs numbered paragraphs pasted on one line', () {

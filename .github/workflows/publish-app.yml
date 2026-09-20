@@ -1,0 +1,110 @@
+name: Publish verified application
+on:
+  push:
+    branches: [main]
+    paths: ['lib/**', 'pubspec.yaml', 'web/**', 'tool/prepare_release_assets.py', '.github/workflows/publish-app.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: publish-application
+  cancel-in-progress: false
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: stable
+      - run: python3 tool/prepare_release_assets.py
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test test/widget_test.dart test/cloud_storage_test.dart
+      - run: node --test test/cloud_storage_web_test.mjs
+      - run: flutter build web --release --base-href /dec-docx/
+      - run: |
+          cp -R public/. build/web/
+          cd build/web && zip -qr ../../DEC-DOCX-Web.zip .
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.9.0-preview
+          name: DEC DOCX 1.9.0 — aperçu
+          prerelease: true
+          body: |
+            Interface Inter, trois thèmes, chinois/pinyin et sauvegarde par dossier cloud synchronisé.
+            Le site web est utilisable sans installation. Les archives natives sont des versions de test.
+            Android utilise une signature de test (ne remplace pas nécessairement une installation existante).
+            macOS est distribué sans notarisation Apple ; Windows sans signature de confiance.
+            Aucun document utilisateur n'est inclus dans ces fichiers.
+          files: DEC-DOCX-Web.zip
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+      - uses: actions/deploy-pages@v4
+        id: deploy
+  installers:
+    needs: web
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: apk
+          - os: macos-latest
+            target: macos
+          - os: windows-latest
+            target: windows
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        if: matrix.target == 'apk'
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: stable
+      - run: python tool/prepare_release_assets.py
+      - run: flutter pub get
+      - run: flutter build ${{ matrix.target }} --release
+      - name: Package Android
+        if: matrix.target == 'apk'
+        run: cp build/app/outputs/flutter-apk/app-release.apk DEC-DOCX-Android-preview.apk
+      - name: Package macOS
+        if: matrix.target == 'macos'
+        run: ditto -c -k --keepParent 'build/macos/Build/Products/Release/DEC DOCX.app' DEC-DOCX-macOS-preview.zip
+      - name: Package Windows
+        if: matrix.target == 'windows'
+        shell: pwsh
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath DEC-DOCX-Windows-preview.zip
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.9.0-preview
+          prerelease: true
+          files: |
+            DEC-DOCX-Android-preview.apk
+            DEC-DOCX-macOS-preview.zip
+            DEC-DOCX-Windows-preview.zip

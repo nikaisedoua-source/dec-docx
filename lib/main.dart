@@ -11,23 +11,116 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'docx_builder.dart';
+import 'cloud/cloud_models.dart';
+import 'cloud/cloud_panel.dart';
+import 'pdf_web_stub.dart' if (dart.library.js_interop) 'pdf_web.dart';
+import 'ai_assistant.dart';
 import 'sermon_reference.dart';
 
+enum DesignMode {
+  aura,
+  edition,
+  nocturne;
+
+  String get label => switch (this) {
+    DesignMode.aura => 'Aura',
+    DesignMode.edition => 'Édition',
+    DesignMode.nocturne => 'Nocturne',
+  };
+
+  String get description => switch (this) {
+    DesignMode.aura => 'Violet lumineux',
+    DesignMode.edition => 'Papier éditorial',
+    DesignMode.nocturne => 'Studio sombre',
+  };
+}
+
+class DesignPalette {
+  const DesignPalette({
+    required this.background,
+    required this.backgroundSecondary,
+    required this.surface,
+    required this.surfaceStrong,
+    required this.accent,
+    required this.accentSecondary,
+    required this.accentText,
+    required this.text,
+    required this.mutedText,
+    required this.input,
+    required this.border,
+  });
+
+  final Color background;
+  final Color backgroundSecondary;
+  final Color surface;
+  final Color surfaceStrong;
+  final Color accent;
+  final Color accentSecondary;
+  final Color accentText;
+  final Color text;
+  final Color mutedText;
+  final Color input;
+  final Color border;
+
+  Color get inputText =>
+      input.computeLuminance() > 0.5 ? const Color(0xFF20243A) : text;
+
+  Color get inputHint => input.computeLuminance() > 0.5
+      ? const Color(0xFF606578)
+      : const Color(0xFFBDB2CB);
+
+  static DesignPalette forMode(DesignMode mode) => switch (mode) {
+    DesignMode.aura => const DesignPalette(
+      background: Color(0xFF26005E),
+      backgroundSecondary: Color(0xFF8A087D),
+      surface: Color(0x6626004F),
+      surfaceStrong: Color(0xFF4B176F),
+      accent: Color(0xFFE13DE7),
+      accentSecondary: Color(0xFF7A35E8),
+      accentText: Colors.white,
+      text: Colors.white,
+      mutedText: Color(0xFFD7C4E7),
+      input: Color(0xFFF9F8FC),
+      border: Color(0x44FFFFFF),
+    ),
+    DesignMode.edition => const DesignPalette(
+      background: Color(0xFFE8E1D8),
+      backgroundSecondary: Color(0xFFF4ECE1),
+      surface: Color(0xFFF7F1E8),
+      surfaceStrong: Color(0xFFFFFCF6),
+      accent: Color(0xFF765D75),
+      accentSecondary: Color(0xFFB48A65),
+      accentText: Colors.white,
+      text: Color(0xFF3E3937),
+      mutedText: Color(0xFF695F59),
+      input: Color(0xFFFFFCF6),
+      border: Color(0xFFD9CDBC),
+    ),
+    DesignMode.nocturne => const DesignPalette(
+      background: Color(0xFF110D17),
+      backgroundSecondary: Color(0xFF362249),
+      surface: Color(0xE61B1721),
+      surfaceStrong: Color(0xFF241C2E),
+      accent: Color(0xFFC2A0FF),
+      accentSecondary: Color(0xFF8B6BD0),
+      accentText: Color(0xFF241235),
+      text: Color(0xFFF1EAF8),
+      mutedText: Color(0xFFB6A9C2),
+      input: Color(0xFF211C29),
+      border: Color(0x66352B40),
+    ),
+  };
+}
+
 const _appName = 'DEC DOCX';
-const _appVersion = '1.8.5';
+const _appVersion = '1.9.0';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
 );
-const _syncfusionLicenseKey = String.fromEnvironment(
-  'SYNCFUSION_LICENSE_KEY',
-  defaultValue: '',
-);
-
+// Syncfusion Flutter 18.3+ no longer exposes license-key registration.
+// https://help.syncfusion.com/flutter/licensing/overview
 void main() {
-  if (_syncfusionLicenseKey.isNotEmpty) {
-    SyncfusionLicense.registerLicense(_syncfusionLicenseKey);
-  }
   runApp(const DocxGeneratorApp());
 }
 
@@ -74,6 +167,116 @@ class AppStrings {
   final AppLanguage language;
 
   String get appTitle => _appName;
+  String get assistant => _text(
+    'Assistant de contrôle',
+    'Review assistant',
+    'Asistente de revisión',
+    'Assistente de revisão',
+  );
+  String get assistantDescription => _text(
+    'Analyse locale facultative : l’assistant ne modifie jamais ton texte.',
+    'Optional local review: the assistant never edits your text.',
+    'Revisión local opcional: el asistente nunca edita tu texto.',
+    'Revisão local opcional: o assistente nunca edita seu texto.',
+  );
+  String get assistantRun => _text(
+    'Analyser le chapitre',
+    'Review chapter',
+    'Analizar capítulo',
+    'Analisar capítulo',
+  );
+  String get assistantSetup => _text(
+    'Nécessite Ollama + gemma3:4b sur cet ordinateur.',
+    'Requires Ollama + gemma3:4b on this computer.',
+    'Requiere Ollama + gemma3:4b en este equipo.',
+    'Requer Ollama + gemma3:4b neste computador.',
+  );
+  String get issues => _text(
+    'Index des contrôles',
+    'Validation index',
+    'Índice de validación',
+    'Índice de validação',
+  );
+  String get openInWord => _text(
+    'Ouvrir dans Word',
+    'Open in Word',
+    'Abrir en Word',
+    'Abrir no Word',
+  );
+  String get shareDocument => _text(
+    'Partager le document',
+    'Share document',
+    'Compartir documento',
+    'Compartilhar documento',
+  );
+  String get openFolder =>
+      _text('Ouvrir le dossier', 'Open folder', 'Abrir carpeta', 'Abrir pasta');
+  String get personName => _text(
+    'Personne ou groupe',
+    'Person or group',
+    'Persona o grupo',
+    'Pessoa ou grupo',
+  );
+  String get personNameHint => _text(
+    'Exemple : Jean, équipe Chine...',
+    'Example: Jean, China team...',
+    'Ejemplo: Juan, equipo chino...',
+    'Exemplo: João, equipe chinesa...',
+  );
+  String get localLibrary => _text(
+    'Bibliothèque locale',
+    'Local library',
+    'Biblioteca local',
+    'Biblioteca local',
+  );
+  String get localLibraryDescription => _text(
+    'Une copie est conservée par langue et par personne sur cet appareil.',
+    'A copy is kept by language and person on this device.',
+    'Se conserva una copia por idioma y persona en este dispositivo.',
+    'Uma cópia é guardada por idioma e pessoa neste dispositivo.',
+  );
+  String savedInLibrary(String path) => _text(
+    'Copie conservée dans $path',
+    'Copy saved in $path',
+    'Copia guardada en $path',
+    'Cópia guardada em $path',
+  );
+  String get chineseStructureTitle => _text(
+    'Format chinois actif',
+    'Chinese format active',
+    'Formato chino activo',
+    'Formato chinês ativo',
+  );
+  String get chineseStructureDescription => _text(
+    'Chaque verset réunit le texte chinois et sa transcription pinyin, présentée juste en dessous. Les numéros pinyin sont vérifiés ; les titres de partie restent séparés et en gras.',
+    'Each verse groups Chinese text with its pinyin transcription directly below. Pinyin numbers are checked; section headings stay separate and bold.',
+    'Cada versículo reúne el texto chino y su pinyin justo debajo. Se verifican los números pinyin; los títulos quedan separados y en negrita.',
+    'Cada versículo reúne o texto chinês e o pinyin logo abaixo. Os números pinyin são verificados; os títulos ficam separados e em negrito.',
+  );
+  String get openDocumentFailed => _text(
+    'Impossible d’ouvrir le document avec l’application associée.',
+    'Could not open the document with the associated app.',
+    'No se pudo abrir el documento con la aplicación asociada.',
+    'Não foi possível abrir o documento com o aplicativo associado.',
+  );
+  String get optionalDetails => _text(
+    'Sous-titre et chapitres similaires',
+    'Subtitle and similar chapters',
+    'Subtítulo y capítulos similares',
+    'Subtítulo e capítulos semelhantes',
+  );
+  String get importLink => _text(
+    'Importer depuis un lien',
+    'Import from a link',
+    'Importar desde un enlace',
+    'Importar de um link',
+  );
+  String get chooseLanguage => _text(
+    'Choisir une langue',
+    'Choose a language',
+    'Elegir un idioma',
+    'Escolher um idioma',
+  );
   String get tagline => _text(
     'Corrige les DOCX mal formes sans inventer de versets',
     'Repairs malformed DOCX without inventing verses',
@@ -124,10 +327,10 @@ class AppStrings {
     'Cole o texto ou importe um arquivo existente.',
   );
   String get exportDescription => _text(
-    'Choisis la langue, vérifie le nom puis génère ton document.',
-    'Choose the language, check the name, then generate your document.',
-    'Elige el idioma, comprueba el nombre y genera tu documento.',
-    'Escolha o idioma, confira o nome e gere seu documento.',
+    'Vérifie le nom puis génère ton document.',
+    'Check the name, then generate your document.',
+    'Comprueba el nombre y genera tu documento.',
+    'Confira o nome e gere seu documento.',
   );
   String get inputHint => _text(
     'Colle les paragraphes numerotes. Les numeros seuls seront rattaches au texte suivant; un verset manquant reste une erreur.',
@@ -202,16 +405,16 @@ class AppStrings {
     'Nome automatico: KACOU <numero> <idioma>.docx',
   );
   String get addFiles => _text(
-    'Importer et reparer TXT, MD, DOCX ou PDF',
-    'Import and repair TXT, MD, DOCX or PDF',
+    'Importer un fichier',
+    'Import a file',
     'Importar y reparar TXT, MD, DOCX o PDF',
     'Importar e reparar TXT, MD, DOCX ou PDF',
   );
   String get pdfReadFailed => _text(
-    'PDF illisible : vérifie la clé de licence Syncfusion (SYNCFUSION_LICENSE_KEY) ou convertis le fichier en TXT.',
-    'Unreadable PDF: check the Syncfusion license key (SYNCFUSION_LICENSE_KEY) or convert the file to TXT.',
-    'PDF ilegible: verifica la clave de licencia de Syncfusion (SYNCFUSION_LICENSE_KEY) o convierte el archivo a TXT.',
-    'PDF ilegível: verifique a chave de licença da Syncfusion (SYNCFUSION_LICENSE_KEY) ou converta o arquivo para TXT.',
+    'PDF illisible : utilise un PDF contenant du texte sélectionnable ou convertis le fichier en TXT.',
+    'Unreadable PDF: use a PDF with selectable text or convert the file to TXT.',
+    'PDF ilegible: usa un PDF con texto seleccionable o convierte el archivo a TXT.',
+    'PDF ilegível: use um PDF com texto selecionável ou converta o arquivo para TXT.',
   );
   String get download =>
       _text('Telechargement', 'Download', 'Descarga', 'Download');
@@ -227,7 +430,7 @@ class AppStrings {
     'Nome do arquivo',
   );
   String get generate => _text(
-    'Corriger et generer',
+    'Corriger et générer',
     'Repair and generate',
     'Reparar y generar',
     'Reparar e gerar',
@@ -446,7 +649,8 @@ class DocxGeneratorApp extends StatelessWidget {
         ),
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFFF3F5FA),
-        fontFamily: 'Roboto',
+        fontFamily: 'Inter',
+        fontFamilyFallback: const ['Arial', 'sans-serif'],
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFFF3F5FA),
           foregroundColor: Color(0xFF20243A),
@@ -549,18 +753,27 @@ class _GeneratorPageState extends State<GeneratorPage>
   final _downloadUrlController = TextEditingController();
   final _fileNameController = TextEditingController(text: 'document_genere');
   final _documentLanguageController = TextEditingController();
+  final _personNameController = TextEditingController();
   final _referenceService = const SermonReferenceService();
+  final _aiAssistant = const LocalAiAssistant();
   final List<DocumentSource> _fileSources = [];
   AppLanguage _language = AppLanguage.fr;
-  KacouLanguage? _selectedDocumentLanguage;
+  DesignMode _designMode = DesignMode.aura;
   bool _isGenerating = false;
   bool _isDownloading = false;
+  bool _isAiReviewing = false;
   String? _status;
+  String? _generatedPath;
+  String? _libraryPath;
+  CloudDocument? _cloudDocument;
+  String? _aiReview;
+  List<String> _issueMessages = const [];
   String? _availableUpdateVersion;
   String? _updateDownloadUrl;
   late final AnimationController _ambientController;
 
   AppStrings get _strings => AppStrings(_language);
+  DesignPalette get _palette => DesignPalette.forMode(_designMode);
 
   @override
   void initState() {
@@ -586,6 +799,7 @@ class _GeneratorPageState extends State<GeneratorPage>
     _downloadUrlController.dispose();
     _fileNameController.dispose();
     _documentLanguageController.dispose();
+    _personNameController.dispose();
     super.dispose();
   }
 
@@ -604,6 +818,61 @@ class _GeneratorPageState extends State<GeneratorPage>
     );
     if (_fileNameController.text != nextName) {
       _fileNameController.text = nextName;
+    }
+  }
+
+  void _setStatus(String? value, {List<String>? issues}) {
+    if (!mounted) return;
+    setState(() {
+      _status = value;
+      _issueMessages =
+          issues ??
+          (value != null &&
+                  RegExp(
+                    r'(erreur|error|erro|manquant|missing|incorrect|impossible)',
+                    caseSensitive: false,
+                  ).hasMatch(value)
+              ? _extractIssueMessages(value)
+              : const []);
+    });
+  }
+
+  List<String> _extractIssueMessages(String? value) {
+    if (value == null || value.trim().isEmpty) return const [];
+    final lines = value
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList(growable: false);
+    if (lines.length <= 1) return lines;
+    return lines.skip(1).toList(growable: false);
+  }
+
+  Future<void> _reviewWithAi() async {
+    if (_manualTextController.text.trim().isEmpty && _fileSources.isEmpty) {
+      _setStatus(_strings.assistantSetup);
+      return;
+    }
+    setState(() {
+      _isAiReviewing = true;
+      _aiReview = null;
+    });
+    try {
+      final text = [
+        if (_manualTextController.text.trim().isNotEmpty)
+          _manualTextController.text,
+        ..._fileSources.map((source) => source.text),
+      ].join('\n\n');
+      final review = await _aiAssistant.reviewChapter(
+        title: _chapterTitleController.text,
+        language: _documentLanguageController.text,
+        text: text,
+      );
+      if (mounted) setState(() => _aiReview = review);
+    } catch (error) {
+      _setStatus('${_strings.assistantSetup}\n$error');
+    } finally {
+      if (mounted) setState(() => _isAiReviewing = false);
     }
   }
 
@@ -666,8 +935,72 @@ class _GeneratorPageState extends State<GeneratorPage>
               : LaunchMode.externalApplication,
         )) {
       if (mounted) {
-        setState(() => _status = _strings.updateDownloadFailed);
+        _setStatus(_strings.updateDownloadFailed);
       }
+    }
+  }
+
+  Future<void> _openGeneratedDocument() async {
+    final path = _generatedPath ?? _libraryPath;
+    if (path == null || kIsWeb) return;
+    final opened = await launchUrl(
+      Uri.file(path),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!opened) {
+      _setStatus(
+        _strings.openDocumentFailed,
+        issues: [_strings.openDocumentFailed],
+      );
+    }
+  }
+
+  Future<String?> _saveInLibrary(String fileName, Uint8List bytes) async {
+    if (kIsWeb) return null;
+    final root = await getApplicationDocumentsDirectory();
+    final language = _safeFolderName(
+      _documentLanguageController.text,
+      fallback: 'sans-langue',
+    );
+    final person = _safeFolderName(
+      _personNameController.text,
+      fallback: 'sans-personne',
+    );
+    final directory = Directory('${root.path}/DEC DOCX/$language/$person');
+    await directory.create(recursive: true);
+    final file = File('${directory.path}/$fileName');
+    await file.writeAsBytes(bytes, flush: true);
+    return file.path;
+  }
+
+  String _safeFolderName(String value, {required String fallback}) {
+    final cleaned = value
+        .trim()
+        .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
+        .replaceAll(RegExp(r'\s+'), ' ');
+    return cleaned.isEmpty ? fallback : cleaned;
+  }
+
+  Future<void> _shareDocumentPath() async {
+    final path = _libraryPath ?? _generatedPath;
+    if (path == null || kIsWeb) return;
+    await SharePlus.instance.share(
+      ShareParams(
+        title: _strings.appTitle,
+        files: [XFile(path, mimeType: _docxMimeType)],
+      ),
+    );
+  }
+
+  Future<void> _openLibraryFolder() async {
+    final path = _libraryPath;
+    if (path == null || kIsWeb) return;
+    final opened = await launchUrl(
+      Uri.file(File(path).parent.path),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!opened) {
+      _setStatus(_strings.openDocumentFailed);
     }
   }
 
@@ -695,7 +1028,7 @@ class _GeneratorPageState extends State<GeneratorPage>
       late final String rawText;
       try {
         rawText = extension == 'pdf'
-            ? _extractPdfText(bytes)
+            ? await _extractPdfText(bytes)
             : extension == 'docx'
             ? DocxBuilder.extractTextFromDocx(bytes)
             : utf8.decode(bytes, allowMalformed: true);
@@ -721,10 +1054,12 @@ class _GeneratorPageState extends State<GeneratorPage>
       _status = imported.isEmpty
           ? (pdfError ? _strings.pdfReadFailed : _strings.unreadableFile)
           : _strings.filesAdded(imported.length);
+      _issueMessages = const [];
     });
   }
 
-  String _extractPdfText(Uint8List bytes) {
+  Future<String> _extractPdfText(Uint8List bytes) async {
+    if (kIsWeb) return extractWebPdfText(bytes);
     final document = PdfDocument(inputBytes: bytes);
     try {
       return PdfTextExtractor(document).extractText();
@@ -736,13 +1071,15 @@ class _GeneratorPageState extends State<GeneratorPage>
   Future<void> _downloadTextFromUrl() async {
     final uri = Uri.tryParse(_downloadUrlController.text.trim());
     if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
-      setState(() => _status = _strings.invalidUrl);
+      _setStatus(_strings.invalidUrl);
       return;
     }
 
     setState(() {
       _isDownloading = true;
       _status = null;
+      _generatedPath = null;
+      _issueMessages = const [];
     });
 
     final client = HttpClient();
@@ -769,9 +1106,10 @@ class _GeneratorPageState extends State<GeneratorPage>
         _fileSources.add(DocumentSource(name: title, text: text));
         _downloadUrlController.clear();
         _status = _strings.downloaded(uri);
+        _issueMessages = const [];
       });
     } catch (error) {
-      setState(() => _status = _strings.downloadFailed(error));
+      _setStatus(_strings.downloadFailed(error));
     } finally {
       client.close(force: true);
       if (mounted) {
@@ -797,25 +1135,35 @@ class _GeneratorPageState extends State<GeneratorPage>
     setState(() {
       _isGenerating = true;
       _status = _strings.comparingReference;
+      _issueMessages = const [];
+      _generatedPath = null;
+      _libraryPath = null;
     });
 
     try {
       if (documentLanguage.isEmpty) {
-        setState(() => _status = _strings.languageRequired);
+        _setStatus(
+          _strings.languageRequired,
+          issues: [_strings.languageRequired],
+        );
         return;
       }
 
       final validation = DocxBuilder.validateChapter(input);
       if (validation.hasErrors) {
-        setState(() => _status = _strings.validationErrors(validation.errors));
+        _setStatus(
+          _strings.validationErrors(validation.errors),
+          issues: validation.errors,
+        );
         return;
       }
 
       final document = validation.documents.first;
       final referenceCheck = await _compareWithFrenchReference(input, document);
       if (referenceCheck.errors.isNotEmpty) {
-        setState(
-          () => _status = _strings.validationErrors(referenceCheck.errors),
+        _setStatus(
+          _strings.validationErrors(referenceCheck.errors),
+          issues: referenceCheck.errors,
         );
         return;
       }
@@ -834,6 +1182,23 @@ class _GeneratorPageState extends State<GeneratorPage>
         language: documentLanguage,
       );
       _fileNameController.text = fileName;
+      setState(
+        () => _cloudDocument = CloudDocument(
+          bytes,
+          fileName,
+          documentLanguage,
+          _personNameController.text,
+        ),
+      );
+
+      String? libraryPath;
+      try {
+        libraryPath = await _saveInLibrary(fileName, bytes);
+      } catch (_) {
+        // The user-selected save location remains the source of truth if the
+        // app library is unavailable on a restricted device.
+      }
+      _libraryPath = libraryPath;
 
       final path = await FilePicker.saveFile(
         dialogTitle: _strings.generate,
@@ -844,13 +1209,24 @@ class _GeneratorPageState extends State<GeneratorPage>
       );
 
       if (path == null) {
-        await _shareGeneratedFile(fileName, bytes);
-        setState(() => _status = '$checkMessage\n${_strings.shared}');
+        if (libraryPath != null) {
+          await _shareDocumentPathOverride(libraryPath);
+        } else {
+          await _shareGeneratedFile(fileName, bytes);
+        }
+        final savedMessage = libraryPath == null
+            ? _strings.shared
+            : _strings.savedInLibrary(libraryPath);
+        _setStatus('$checkMessage\n$savedMessage');
       } else {
-        setState(() => _status = '$checkMessage\n${_strings.created(path)}');
+        _generatedPath = path;
+        final savedMessage = libraryPath == null
+            ? _strings.created(path)
+            : '${_strings.created(path)}\n${_strings.savedInLibrary(libraryPath)}';
+        _setStatus('$checkMessage\n$savedMessage');
       }
     } catch (error) {
-      setState(() => _status = _strings.error(error));
+      _setStatus(_strings.error(error));
     } finally {
       if (mounted) {
         setState(() => _isGenerating = false);
@@ -958,12 +1334,39 @@ class _GeneratorPageState extends State<GeneratorPage>
     final file = File('${directory.path}/$fileName');
     await file.writeAsBytes(bytes, flush: true);
 
+    await _shareDocumentPathOverride(file.path);
+  }
+
+  Future<void> _shareDocumentPathOverride(String path) async {
     await SharePlus.instance.share(
       ShareParams(
         title: _strings.appTitle,
-        files: [XFile(file.path, mimeType: _docxMimeType)],
+        files: [XFile(path, mimeType: _docxMimeType)],
       ),
     );
+  }
+
+  Future<void> _exportCloudCopy(String name, Uint8List bytes) async {
+    final path = await FilePicker.saveFile(
+      dialogTitle: 'Enregistrer dans mes fichiers ou mon cloud',
+      fileName: name,
+      type: FileType.custom,
+      allowedExtensions: const ['docx'],
+      bytes: bytes,
+    );
+    if (!kIsWeb && path != null) {
+      await File(path).writeAsBytes(bytes, flush: true);
+    }
+  }
+
+  void _importCloudCopy(String name, Uint8List bytes) {
+    final text = DocxBuilder.extractTextFromDocx(bytes);
+    if (text.trim().isEmpty) {
+      throw const FormatException(
+        'Ce fichier Word ne contient pas de texte exploitable.',
+      );
+    }
+    setState(() => _fileSources.add(DocumentSource(name: name, text: text)));
   }
 
   void _removeSource(DocumentSource source) {
@@ -976,12 +1379,17 @@ class _GeneratorPageState extends State<GeneratorPage>
       _subtitleController.clear();
       _similarChaptersController.clear();
       _documentLanguageController.clear();
+      _personNameController.clear();
       _fileNameController.text = 'document_genere';
-      _selectedDocumentLanguage = null;
       _manualTextController.clear();
       _downloadUrlController.clear();
       _fileSources.clear();
+      _cloudDocument = null;
       _status = null;
+      _aiReview = null;
+      _issueMessages = const [];
+      _generatedPath = null;
+      _libraryPath = null;
     });
   }
 
@@ -989,131 +1397,284 @@ class _GeneratorPageState extends State<GeneratorPage>
   Widget build(BuildContext context) {
     final strings = _strings;
     final theme = Theme.of(context);
+    final palette = _palette;
+    final pageTheme = theme.copyWith(
+      scaffoldBackgroundColor: palette.background,
+      textTheme: theme.textTheme.copyWith(
+        bodyLarge: theme.textTheme.bodyLarge?.copyWith(
+          color: palette.inputText,
+          fontSize: 15,
+          height: 1.45,
+        ),
+        bodyMedium: theme.textTheme.bodyMedium?.copyWith(
+          color: palette.inputText,
+          fontSize: 15,
+          height: 1.45,
+        ),
+      ),
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: TextStyle(color: palette.inputText, fontSize: 14),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: palette.text,
+          minimumSize: const Size(0, 44),
+          textStyle: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            height: 1.3,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: palette.text,
+          disabledForegroundColor: palette.mutedText.withValues(alpha: .65),
+          minimumSize: const Size(0, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          textStyle: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            height: 1.3,
+          ),
+          side: BorderSide(color: palette.border),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      ),
+      inputDecorationTheme: theme.inputDecorationTheme.copyWith(
+        filled: true,
+        fillColor: palette.input,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: palette.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: palette.accent, width: 2),
+        ),
+        labelStyle: TextStyle(
+          color: palette.inputHint,
+          fontSize: 14,
+          height: 1.4,
+        ),
+        hintStyle: TextStyle(
+          color: palette.inputHint,
+          fontSize: 14,
+          height: 1.4,
+        ),
+        prefixIconColor: palette.inputHint,
+        suffixIconColor: palette.inputHint,
+        helperMaxLines: 3,
+        helperStyle: TextStyle(
+          color: palette.mutedText,
+          fontSize: 12,
+          height: 1.5,
+        ),
+        floatingLabelStyle: TextStyle(
+          color: palette.text,
+          backgroundColor: palette.surfaceStrong,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF26005E),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: _AuroraBackground(animation: _ambientController),
-            ),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final showSidebar = constraints.maxWidth >= 1050;
-                final wide = constraints.maxWidth >= 920;
-                final editor = _InputPanel(
-                  strings: strings,
-                  chapterTitleController: _chapterTitleController,
-                  subtitleController: _subtitleController,
-                  similarChaptersController: _similarChaptersController,
-                  manualTextController: _manualTextController,
-                  downloadUrlController: _downloadUrlController,
-                  isDownloading: _isDownloading,
-                  onPickFiles: _pickFiles,
-                  onDownloadText: _downloadTextFromUrl,
-                );
-                final settings = _SettingsPanel(
-                  strings: strings,
-                  fileNameController: _fileNameController,
-                  documentLanguageController: _documentLanguageController,
-                  selectedDocumentLanguage: _selectedDocumentLanguage,
-                  onLanguageSelected: (language) {
-                    setState(() {
-                      _selectedDocumentLanguage = language;
-                      _documentLanguageController.text = language?.name ?? '';
-                    });
-                  },
-                  sources: _fileSources,
-                  status: _status,
-                  isGenerating: _isGenerating,
-                  onGenerate: _generate,
-                  onRemoveSource: _removeSource,
-                );
+    final compact = MediaQuery.sizeOf(context).width < 920;
+    final generateButton = _PulsingGenerateButton(
+      palette: palette,
+      isGenerating: _isGenerating,
+      label: strings.generate,
+      onPressed: _generate,
+    );
 
-                final horizontalPadding = constraints.maxWidth < 600
-                    ? 14.0
-                    : 28.0;
-                final content = SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    22,
-                    horizontalPadding,
-                    30,
+    return Theme(
+      data: pageTheme,
+      child: Scaffold(
+        backgroundColor: palette.background,
+        bottomNavigationBar: compact
+            ? SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (_status != null) ...[
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 120),
+                          child: SingleChildScrollView(
+                            child: _issueMessages.isNotEmpty
+                                ? _IssueIndex(
+                                    issues: _issueMessages,
+                                    title: strings.issues,
+                                    status: _status!,
+                                  )
+                                : _StatusMessage(text: _status!),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      generateButton,
+                    ],
                   ),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1180),
-                      child: _PageEntrance(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (!showSidebar) ...[
+                ),
+              )
+            : null,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: _AuroraBackground(
+                  animation: _ambientController,
+                  palette: palette,
+                ),
+              ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final wide = constraints.maxWidth >= 920;
+                  final editor = _InputPanel(
+                    strings: strings,
+                    chapterTitleController: _chapterTitleController,
+                    subtitleController: _subtitleController,
+                    similarChaptersController: _similarChaptersController,
+                    manualTextController: _manualTextController,
+                    downloadUrlController: _downloadUrlController,
+                    documentLanguageController: _documentLanguageController,
+                    onLanguageSelected: (language) {
+                      setState(() {
+                        _documentLanguageController.text = language?.name ?? '';
+                      });
+                    },
+                    isDownloading: _isDownloading,
+                    onPickFiles: _pickFiles,
+                    onDownloadText: _downloadTextFromUrl,
+                    palette: palette,
+                  );
+                  final settings = _SettingsPanel(
+                    strings: strings,
+                    fileNameController: _fileNameController,
+                    personNameController: _personNameController,
+                    sources: _fileSources,
+                    status: wide ? _status : null,
+                    isGenerating: _isGenerating,
+                    showGenerateButton: wide,
+                    aiReview: _aiReview,
+                    isAiReviewing: _isAiReviewing,
+                    onReviewWithAi: _reviewWithAi,
+                    issues: _issueMessages,
+                    generatedPath: _generatedPath,
+                    libraryPath: _libraryPath,
+                    cloudPanel: CloudPanel(
+                      document: _cloudDocument,
+                      onImport: _importCloudCopy,
+                      onPickFiles: _pickFiles,
+                      onExport: _exportCloudCopy,
+                      textColor: palette.text,
+                      mutedColor: palette.mutedText,
+                      accent: palette.accent,
+                      surface: palette.surfaceStrong,
+                    ),
+                    onOpenGenerated: _openGeneratedDocument,
+                    onShareGenerated: _shareDocumentPath,
+                    onOpenLibraryFolder: _openLibraryFolder,
+                    onGenerate: _generate,
+                    onRemoveSource: _removeSource,
+                    palette: palette,
+                  );
+
+                  final horizontalPadding = constraints.maxWidth < 600
+                      ? 14.0
+                      : 28.0;
+                  return SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      14,
+                      horizontalPadding,
+                      20,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1180),
+                        child: _PageEntrance(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
                               _CompactTopBar(
                                 strings: strings,
                                 language: _language,
                                 onLanguageChanged: (language) =>
                                     setState(() => _language = language),
                                 onClear: _clearAll,
+                                designMode: _designMode,
+                                onDesignModeChanged: (mode) =>
+                                    setState(() => _designMode = mode),
+                                palette: palette,
                               ),
-                              const SizedBox(height: 18),
-                            ],
-                            if (_availableUpdateVersion != null) ...[
-                              _AnimatedUpdateBanner(
-                                buttonLabel:
-                                    '${strings.updateNow} — v$_availableUpdateVersion',
-                                onUpdate: _openUpdateDownload,
-                              ),
-                              const SizedBox(height: 10),
-                            ],
-                            _BrandHeader(strings: strings),
-                            const SizedBox(height: 18),
-                            if (wide)
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(flex: 3, child: editor),
-                                  const SizedBox(width: 20),
-                                  Expanded(flex: 2, child: settings),
-                                ],
-                              )
-                            else ...[
-                              editor,
                               const SizedBox(height: 16),
-                              settings,
-                            ],
-                            const SizedBox(height: 22),
-                            Text(
-                              strings.footer,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: const Color(0xFFD5BFE6),
-                                height: 1.45,
+                              if (_availableUpdateVersion != null) ...[
+                                _AnimatedUpdateBanner(
+                                  buttonLabel:
+                                      '${strings.updateNow} — v$_availableUpdateVersion',
+                                  onUpdate: _openUpdateDownload,
+                                ),
+                                const SizedBox(height: 12),
+                              ],
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 420),
+                                reverseDuration: const Duration(
+                                  milliseconds: 220,
+                                ),
+                                switchInCurve: Curves.easeOutCubic,
+                                switchOutCurve: Curves.easeInCubic,
+                                layoutBuilder: (current, previous) => Stack(
+                                  alignment: Alignment.topCenter,
+                                  children: <Widget>[...previous, ?current],
+                                ),
+                                child: wide
+                                    ? Row(
+                                        key: ValueKey(_designMode),
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(flex: 7, child: editor),
+                                          const SizedBox(width: 20),
+                                          Expanded(flex: 3, child: settings),
+                                        ],
+                                      )
+                                    : Column(
+                                        key: ValueKey('mobile-$_designMode'),
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          editor,
+                                          const SizedBox(height: 16),
+                                          settings,
+                                        ],
+                                      ),
                               ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+                              const SizedBox(height: 16),
+                              Text(
+                                strings.versionLabel,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: const Color(0xFFD5BFE6),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-
-                if (!showSidebar) return content;
-                return Row(
-                  children: [
-                    _CleanSidebar(
-                      strings: strings,
-                      language: _language,
-                      onLanguageChanged: (language) =>
-                          setState(() => _language = language),
-                      onClear: _clearAll,
-                    ),
-                    Expanded(child: content),
-                  ],
-                );
-              },
-            ),
-          ],
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1121,9 +1682,10 @@ class _GeneratorPageState extends State<GeneratorPage>
 }
 
 class _AuroraBackground extends StatelessWidget {
-  const _AuroraBackground({required this.animation});
+  const _AuroraBackground({required this.animation, required this.palette});
 
   final Animation<double> animation;
+  final DesignPalette palette;
 
   @override
   Widget build(BuildContext context) {
@@ -1136,11 +1698,11 @@ class _AuroraBackground extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment(-1 + value * 0.35, -1),
               end: Alignment(1 - value * 0.2, 1),
-              colors: const [
-                Color(0xFF18003D),
-                Color(0xFF4A007C),
-                Color(0xFF8A087D),
-                Color(0xFF3B087E),
+              colors: [
+                palette.background,
+                palette.backgroundSecondary,
+                palette.accentSecondary,
+                palette.background,
               ],
               stops: const [0, 0.34, 0.7, 1],
             ),
@@ -1152,7 +1714,7 @@ class _AuroraBackground extends StatelessWidget {
                 bottom: -180 + value * 50,
                 child: _GlowOrb(
                   size: 520,
-                  color: const Color(0xFFFC28C8).withValues(alpha: 0.28),
+                  color: palette.accent.withValues(alpha: 0.28),
                 ),
               ),
               Positioned(
@@ -1160,7 +1722,7 @@ class _AuroraBackground extends StatelessWidget {
                 top: -130 + value * 55,
                 child: _GlowOrb(
                   size: 500,
-                  color: const Color(0xFF7226FF).withValues(alpha: 0.3),
+                  color: palette.accentSecondary.withValues(alpha: 0.3),
                 ),
               ),
             ],
@@ -1190,205 +1752,72 @@ class _GlowOrb extends StatelessWidget {
   }
 }
 
-class _CleanSidebar extends StatelessWidget {
-  const _CleanSidebar({
-    required this.strings,
-    required this.language,
-    required this.onLanguageChanged,
-    required this.onClear,
-  });
-
-  final AppStrings strings;
-  final AppLanguage language;
-  final ValueChanged<AppLanguage> onLanguageChanged;
-  final VoidCallback onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 244,
-      margin: const EdgeInsets.all(12),
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1B003D).withValues(alpha: 0.58),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x260F1020),
-            blurRadius: 30,
-            offset: Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              const _BrandMark(size: 42),
-              const SizedBox(width: 11),
-              Expanded(
-                child: Text(
-                  strings.appTitle,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.4,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 30),
-          const _SidebarItem(
-            icon: Icons.auto_awesome_rounded,
-            label: 'Smart DOCX',
-            selected: true,
-          ),
-          _SidebarItem(
-            icon: Icons.edit_note_rounded,
-            label: strings.chapterDetails,
-          ),
-          _SidebarItem(icon: Icons.article_outlined, label: strings.inputTitle),
-          _SidebarItem(icon: Icons.ios_share_rounded, label: strings.output),
-          const Spacer(),
-          Text(
-            strings.versionLabel,
-            style: const TextStyle(color: Color(0xFF858A9F), fontSize: 12),
-          ),
-          const SizedBox(height: 12),
-          _LanguageControl(
-            language: language,
-            onChanged: onLanguageChanged,
-            dark: true,
-          ),
-          const SizedBox(height: 8),
-          TextButton.icon(
-            onPressed: onClear,
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFFB9BDCE),
-              alignment: Alignment.centerLeft,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
-            ),
-            icon: const Icon(Icons.restart_alt_rounded, size: 20),
-            label: Text(strings.clear),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SidebarItem extends StatelessWidget {
-  const _SidebarItem({
-    required this.icon,
-    required this.label,
-    this.selected = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return _HoverSidebarItem(icon: icon, label: label, selected: selected);
-  }
-}
-
-class _HoverSidebarItem extends StatefulWidget {
-  const _HoverSidebarItem({
-    required this.icon,
-    required this.label,
-    required this.selected,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool selected;
-
-  @override
-  State<_HoverSidebarItem> createState() => _HoverSidebarItemState();
-}
-
-class _HoverSidebarItemState extends State<_HoverSidebarItem> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final active = widget.selected || _hovered;
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-        margin: const EdgeInsets.only(bottom: 6),
-        padding: EdgeInsets.fromLTRB(active ? 16 : 13, 12, 13, 12),
-        decoration: BoxDecoration(
-          gradient: active
-              ? const LinearGradient(
-                  colors: [Color(0x996D3AF2), Color(0x885A1AB7)],
-                )
-              : null,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: active
-                ? Colors.white.withValues(alpha: 0.18)
-                : Colors.transparent,
-          ),
-          boxShadow: widget.selected
-              ? const [BoxShadow(color: Color(0x595F18D0), blurRadius: 18)]
-              : null,
-        ),
-        child: Row(
-          children: [
-            AnimatedScale(
-              duration: const Duration(milliseconds: 220),
-              scale: active ? 1.08 : 1,
-              child: Icon(
-                widget.icon,
-                color: active ? Colors.white : const Color(0xFFC4A9E5),
-                size: 21,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                widget.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: active ? Colors.white : const Color(0xFFE1CFF3),
-                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _CompactTopBar extends StatelessWidget {
   const _CompactTopBar({
     required this.strings,
     required this.language,
     required this.onLanguageChanged,
     required this.onClear,
+    required this.designMode,
+    required this.onDesignModeChanged,
+    required this.palette,
   });
 
   final AppStrings strings;
   final AppLanguage language;
   final ValueChanged<AppLanguage> onLanguageChanged;
   final VoidCallback onClear;
+  final DesignMode designMode;
+  final ValueChanged<DesignMode> onDesignModeChanged;
+  final DesignPalette palette;
 
   @override
   Widget build(BuildContext context) {
+    if (MediaQuery.sizeOf(context).width < 420) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const _BrandMark(size: 36),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  strings.appTitle,
+                  style: TextStyle(
+                    color: palette.text,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: strings.clear,
+                onPressed: onClear,
+                icon: Icon(Icons.restart_alt_rounded, color: palette.text),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _DesignModeControl(
+                mode: designMode,
+                palette: palette,
+                onChanged: onDesignModeChanged,
+              ),
+              _LanguageControl(
+                language: language,
+                onChanged: onLanguageChanged,
+                palette: palette,
+              ),
+            ],
+          ),
+        ],
+      );
+    }
     return Row(
       children: [
         const _BrandMark(size: 40),
@@ -1396,19 +1825,31 @@ class _CompactTopBar extends StatelessWidget {
         Expanded(
           child: Text(
             strings.appTitle,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: palette.text,
               fontSize: 20,
               fontWeight: FontWeight.w800,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
-        _LanguageControl(language: language, onChanged: onLanguageChanged),
+        _DesignModeControl(
+          mode: designMode,
+          palette: palette,
+          onChanged: onDesignModeChanged,
+        ),
+        const SizedBox(width: 8),
+        _LanguageControl(
+          language: language,
+          onChanged: onLanguageChanged,
+          palette: palette,
+        ),
         const SizedBox(width: 4),
         IconButton(
           tooltip: strings.clear,
           onPressed: onClear,
-          icon: const Icon(Icons.restart_alt_rounded),
+          icon: Icon(Icons.restart_alt_rounded, color: palette.text),
         ),
       ],
     );
@@ -1419,35 +1860,33 @@ class _LanguageControl extends StatelessWidget {
   const _LanguageControl({
     required this.language,
     required this.onChanged,
-    this.dark = false,
+    required this.palette,
   });
 
   final AppLanguage language;
   final ValueChanged<AppLanguage> onChanged;
-  final bool dark;
+  final DesignPalette palette;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.only(left: 11, right: 4),
       decoration: BoxDecoration(
-        color: dark ? const Color(0xFF303347) : Colors.white,
+        color: palette.input,
         borderRadius: BorderRadius.circular(13),
-        border: Border.all(
-          color: dark ? const Color(0xFF3C4055) : const Color(0xFFE2E5EF),
-        ),
+        border: Border.all(color: palette.border),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<AppLanguage>(
           value: language,
-          dropdownColor: dark ? const Color(0xFF303347) : Colors.white,
+          dropdownColor: palette.input,
           borderRadius: BorderRadius.circular(14),
           icon: Icon(
             Icons.keyboard_arrow_down_rounded,
-            color: dark ? Colors.white70 : const Color(0xFF555A70),
+            color: palette.inputText,
           ),
           style: TextStyle(
-            color: dark ? Colors.white : const Color(0xFF30344A),
+            color: palette.inputText,
             fontSize: 13,
             fontWeight: FontWeight.w700,
           ),
@@ -1466,208 +1905,74 @@ class _LanguageControl extends StatelessWidget {
   }
 }
 
-class _BrandHeader extends StatelessWidget {
-  const _BrandHeader({required this.strings});
+class _DesignModeControl extends StatelessWidget {
+  const _DesignModeControl({
+    required this.mode,
+    required this.palette,
+    required this.onChanged,
+  });
 
-  final AppStrings strings;
+  final DesignMode mode;
+  final DesignPalette palette;
+  final ValueChanged<DesignMode> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      constraints: const BoxConstraints(minHeight: 330),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 650;
-          final illustration = const _FloatingHeroIllustration();
-          final copy = Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: compact
-                ? CrossAxisAlignment.center
-                : CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Smart DOCX',
-                style: theme.textTheme.displaySmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: -1.4,
-                ),
-              ),
-              const SizedBox(height: 10),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 430),
-                child: Text(
-                  strings.tagline,
-                  textAlign: compact ? TextAlign.center : TextAlign.left,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: const Color(0xFFE9D8F4),
-                    fontWeight: FontWeight.w400,
-                    height: 1.35,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 22),
-              Row(
+    return PopupMenuButton<DesignMode>(
+      tooltip: 'Changer de style',
+      color: palette.surfaceStrong,
+      onSelected: onChanged,
+      itemBuilder: (context) => DesignMode.values
+          .map(
+            (item) => PopupMenuItem(
+              value: item,
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const _FeatureChip(
-                    icon: Icons.find_in_page_rounded,
-                    label: 'Analyse du texte',
+                  Icon(
+                    item == mode
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
+                    color: palette.accent,
+                    size: 18,
                   ),
-                  if (!compact) ...[
-                    const SizedBox(width: 10),
-                    const _FeatureChip(
-                      icon: Icons.auto_fix_high_rounded,
-                      label: 'Réparation DOCX',
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      '${item.label} · ${item.description}',
+                      style: TextStyle(
+                        color: palette.text,
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
                     ),
-                  ],
+                  ),
                 ],
               ),
-              const SizedBox(height: 14),
-              _VersionPill(label: strings.versionLabel),
-            ],
-          );
-
-          if (compact) {
-            return Column(
-              children: [illustration, const SizedBox(height: 4), copy],
-            );
-          }
-          return Row(
-            children: [
-              Expanded(flex: 5, child: illustration),
-              const SizedBox(width: 20),
-              Expanded(flex: 5, child: copy),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _FeatureChip extends StatelessWidget {
-  const _FeatureChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFE05BFF), Color(0xFF7626E8)],
             ),
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: const [
-              BoxShadow(color: Color(0x66E05BFF), blurRadius: 14),
-            ],
-          ),
-          child: Icon(icon, color: Colors.white, size: 18),
+          )
+          .toList(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: palette.surfaceStrong,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: palette.border),
         ),
-        const SizedBox(width: 9),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _FloatingHeroIllustration extends StatefulWidget {
-  const _FloatingHeroIllustration();
-
-  @override
-  State<_FloatingHeroIllustration> createState() =>
-      _FloatingHeroIllustrationState();
-}
-
-class _FloatingHeroIllustrationState extends State<_FloatingHeroIllustration>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2800),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) => Transform.translate(
-        offset: Offset(0, -7 + _controller.value * 14),
-        child: child,
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            width: 300,
-            height: 210,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(color: Color(0x99E82FD5), blurRadius: 90),
-                BoxShadow(color: Color(0x775B27F4), blurRadius: 130),
-              ],
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.palette_outlined, color: palette.accent, size: 17),
+            const SizedBox(width: 6),
+            Text(
+              mode.label,
+              style: TextStyle(
+                color: palette.text,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          Image.asset(
-            'assets/illustrations/docx-repair-hero.webp',
-            width: 330,
-            height: 300,
-            fit: BoxFit.contain,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _VersionPill extends StatelessWidget {
-  const _VersionPill({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
+          ],
         ),
       ),
     );
@@ -1808,6 +2113,7 @@ class _SectionCard extends StatelessWidget {
     required this.title,
     required this.description,
     required this.child,
+    required this.palette,
   });
 
   final String step;
@@ -1815,15 +2121,16 @@ class _SectionCard extends StatelessWidget {
   final String title;
   final String description;
   final Widget child;
+  final DesignPalette palette;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF26004F).withValues(alpha: 0.48),
+        color: palette.surface,
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.13)),
+        border: Border.all(color: palette.border),
         boxShadow: const [
           BoxShadow(
             color: Color(0x330E001E),
@@ -1833,7 +2140,7 @@ class _SectionCard extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(22),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -1841,15 +2148,24 @@ class _SectionCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFD858FF), Color(0xFF7028E6)],
+                    gradient: LinearGradient(
+                      colors: [palette.accent, palette.accentSecondary],
                     ),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(icon, color: Colors.white),
+                  child: Center(
+                    child: Text(
+                      step,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 13),
                 Expanded(
@@ -1857,9 +2173,9 @@ class _SectionCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '$step  •  $title',
+                        title,
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
+                          color: palette.text,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -1867,8 +2183,9 @@ class _SectionCard extends StatelessWidget {
                       Text(
                         description,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFFD7C4E7),
-                          height: 1.4,
+                          color: palette.mutedText,
+                          fontSize: 13,
+                          height: 1.5,
                         ),
                       ),
                     ],
@@ -1876,7 +2193,7 @@ class _SectionCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 14),
             child,
           ],
         ),
@@ -1893,9 +2210,12 @@ class _InputPanel extends StatelessWidget {
     required this.similarChaptersController,
     required this.manualTextController,
     required this.downloadUrlController,
+    required this.documentLanguageController,
+    required this.onLanguageSelected,
     required this.isDownloading,
     required this.onPickFiles,
     required this.onDownloadText,
+    required this.palette,
   });
 
   final AppStrings strings;
@@ -1904,9 +2224,12 @@ class _InputPanel extends StatelessWidget {
   final TextEditingController similarChaptersController;
   final TextEditingController manualTextController;
   final TextEditingController downloadUrlController;
+  final TextEditingController documentLanguageController;
+  final ValueChanged<KacouLanguage?> onLanguageSelected;
   final bool isDownloading;
   final VoidCallback onPickFiles;
   final VoidCallback onDownloadText;
+  final DesignPalette palette;
 
   @override
   Widget build(BuildContext context) {
@@ -1918,63 +2241,102 @@ class _InputPanel extends StatelessWidget {
           icon: Icons.edit_note_rounded,
           title: strings.chapterDetails,
           description: strings.chapterDetailsDescription,
+          palette: palette,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TextField(
                 controller: chapterTitleController,
                 decoration: InputDecoration(
                   labelText: strings.chapterTitle,
                   hintText: strings.chapterTitleHint,
-                  helperText: strings.chapterTitleLowercaseHelp,
-                  helperMaxLines: 3,
-                  suffixIcon: const Icon(Icons.title_rounded),
+                  suffixIcon: Tooltip(
+                    message: strings.chapterTitleLowercaseHelp,
+                    triggerMode: TooltipTriggerMode.tap,
+                    child: const Icon(Icons.info_outline_rounded),
+                  ),
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               TextField(
-                controller: subtitleController,
+                controller: documentLanguageController,
                 decoration: InputDecoration(
-                  labelText: strings.subtitle,
-                  hintText: strings.subtitleHint,
-                  suffixIcon: const Icon(Icons.short_text_rounded),
+                  labelText: strings.documentLanguage,
+                  hintText: strings.documentLanguageHint,
+                  prefixIcon: const Icon(Icons.language_rounded),
+                  suffixIcon: PopupMenuButton<KacouLanguage>(
+                    tooltip: strings.chooseLanguage,
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                    onSelected: onLanguageSelected,
+                    itemBuilder: (context) => _kacouLanguages
+                        .map(
+                          (language) => PopupMenuItem(
+                            value: language,
+                            child: Text(language.name),
+                          ),
+                        )
+                        .toList(),
+                  ),
                 ),
               ),
-              const SizedBox(height: 14),
-              TextField(
-                controller: similarChaptersController,
-                decoration: InputDecoration(
-                  labelText: strings.similarChapters,
-                  hintText: strings.similarChaptersHint,
-                  suffixIcon: const Icon(Icons.hub_outlined),
-                ),
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: documentLanguageController,
+                builder: (context, value, child) {
+                  final language = value.text.toLowerCase();
+                  final isChinese =
+                      language.contains('chinois') ||
+                      language.contains('chinese') ||
+                      language.contains('zh');
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 260),
+                    child: isChinese
+                        ? _ChineseStructureCard(
+                            key: const ValueKey('chinese-format'),
+                            strings: strings,
+                            palette: palette,
+                          )
+                        : const SizedBox.shrink(key: ValueKey('other-format')),
+                  );
+                },
               ),
-              const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3F2FF),
-                  borderRadius: BorderRadius.circular(14),
+              const SizedBox(height: 8),
+              ExpansionTile(
+                key: const PageStorageKey('chapter-options'),
+                maintainState: true,
+                initiallyExpanded:
+                    subtitleController.text.isNotEmpty ||
+                    similarChaptersController.text.isNotEmpty,
+                tilePadding: EdgeInsets.zero,
+                childrenPadding: const EdgeInsets.only(top: 4, bottom: 4),
+                textColor: palette.text,
+                collapsedTextColor: palette.mutedText,
+                iconColor: palette.accent,
+                collapsedIconColor: palette.mutedText,
+                shape: const Border(),
+                collapsedShape: const Border(),
+                title: Text(
+                  strings.optionalDetails,
+                  style: TextStyle(fontSize: 14, color: palette.text),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.tips_and_updates_outlined,
-                      size: 20,
-                      color: Color(0xFF6157F5),
+                children: [
+                  TextField(
+                    controller: subtitleController,
+                    decoration: InputDecoration(
+                      labelText: strings.subtitle,
+                      hintText: strings.subtitleHint,
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        strings.workflowTips,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF5E6078),
-                          height: 1.45,
-                        ),
-                      ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: similarChaptersController,
+                    minLines: 1,
+                    maxLines: 4,
+                    decoration: InputDecoration(
+                      labelText: strings.similarChapters,
+                      hintText: strings.similarChaptersHint,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -1985,12 +2347,25 @@ class _InputPanel extends StatelessWidget {
           icon: Icons.article_outlined,
           title: strings.inputTitle,
           description: strings.contentDescription,
+          palette: palette,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: palette.text,
+                  side: BorderSide(
+                    color: palette.accent.withValues(alpha: .65),
+                  ),
+                ),
+                onPressed: onPickFiles,
+                icon: const Icon(Icons.upload_file_rounded),
+                label: Text(strings.addFiles, textAlign: TextAlign.center),
+              ),
+              const SizedBox(height: 12),
               TextField(
                 controller: manualTextController,
-                minLines: 12,
+                minLines: MediaQuery.sizeOf(context).width < 600 ? 6 : 12,
                 maxLines: 24,
                 textAlignVertical: TextAlignVertical.top,
                 decoration: InputDecoration(
@@ -1998,24 +2373,24 @@ class _InputPanel extends StatelessWidget {
                   alignLabelWithHint: true,
                 ),
               ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: onPickFiles,
-                icon: const Icon(Icons.upload_file_rounded),
-                label: Text(strings.addFiles),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                strings.download,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
+              const SizedBox(height: 8),
+              ExpansionTile(
+                key: const PageStorageKey('import-link'),
+                maintainState: true,
+                tilePadding: EdgeInsets.zero,
+                childrenPadding: const EdgeInsets.only(top: 4, bottom: 4),
+                textColor: palette.text,
+                collapsedTextColor: palette.mutedText,
+                iconColor: palette.accent,
+                collapsedIconColor: palette.mutedText,
+                shape: const Border(),
+                collapsedShape: const Border(),
+                title: Text(
+                  strings.importLink,
+                  style: TextStyle(fontSize: 14, color: palette.text),
                 ),
-              ),
-              const SizedBox(height: 10),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final field = TextField(
+                children: [
+                  TextField(
                     controller: downloadUrlController,
                     keyboardType: TextInputType.url,
                     decoration: InputDecoration(
@@ -2023,32 +2398,26 @@ class _InputPanel extends StatelessWidget {
                       hintText: 'https://example.com/text.txt',
                       prefixIcon: const Icon(Icons.link_rounded),
                     ),
-                  );
-                  final button = FilledButton.icon(
-                    onPressed: isDownloading ? null : onDownloadText,
-                    icon: isDownloading
-                        ? const SizedBox.square(
-                            dimension: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.download_rounded),
-                    label: Text(strings.downloadButton),
-                  );
-                  if (constraints.maxWidth < 560) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [field, const SizedBox(height: 10), button],
-                    );
-                  }
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: field),
-                      const SizedBox(width: 10),
-                      button,
-                    ],
-                  );
-                },
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: palette.accent,
+                        foregroundColor: palette.accentText,
+                      ),
+                      onPressed: isDownloading ? null : onDownloadText,
+                      icon: isDownloading
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.download_rounded),
+                      label: Text(strings.downloadButton),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -2058,30 +2427,104 @@ class _InputPanel extends StatelessWidget {
   }
 }
 
+class _ChineseStructureCard extends StatelessWidget {
+  const _ChineseStructureCard({
+    super.key,
+    required this.strings,
+    required this.palette,
+  });
+
+  final AppStrings strings;
+  final DesignPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: palette.accent.withValues(alpha: .12),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: palette.accent.withValues(alpha: .4)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.translate_rounded, color: palette.accent, size: 20),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  strings.chineseStructureTitle,
+                  style: TextStyle(
+                    color: palette.text,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  strings.chineseStructureDescription,
+                  style: TextStyle(
+                    color: palette.mutedText,
+                    fontSize: 12,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SettingsPanel extends StatelessWidget {
   const _SettingsPanel({
     required this.strings,
     required this.fileNameController,
-    required this.documentLanguageController,
-    required this.selectedDocumentLanguage,
-    required this.onLanguageSelected,
+    required this.personNameController,
     required this.sources,
     required this.status,
     required this.isGenerating,
+    required this.showGenerateButton,
     required this.onGenerate,
     required this.onRemoveSource,
+    required this.palette,
+    required this.aiReview,
+    required this.isAiReviewing,
+    required this.onReviewWithAi,
+    required this.issues,
+    required this.generatedPath,
+    required this.libraryPath,
+    required this.cloudPanel,
+    required this.onOpenGenerated,
+    required this.onShareGenerated,
+    required this.onOpenLibraryFolder,
   });
 
   final AppStrings strings;
   final TextEditingController fileNameController;
-  final TextEditingController documentLanguageController;
-  final KacouLanguage? selectedDocumentLanguage;
-  final ValueChanged<KacouLanguage?> onLanguageSelected;
+  final TextEditingController personNameController;
   final List<DocumentSource> sources;
   final String? status;
   final bool isGenerating;
+  final bool showGenerateButton;
   final VoidCallback onGenerate;
   final ValueChanged<DocumentSource> onRemoveSource;
+  final DesignPalette palette;
+  final String? aiReview;
+  final bool isAiReviewing;
+  final VoidCallback onReviewWithAi;
+  final List<String> issues;
+  final String? generatedPath;
+  final String? libraryPath;
+  final Widget cloudPanel;
+  final VoidCallback onOpenGenerated;
+  final VoidCallback onShareGenerated;
+  final VoidCallback onOpenLibraryFolder;
 
   @override
   Widget build(BuildContext context) {
@@ -2092,72 +2535,69 @@ class _SettingsPanel extends StatelessWidget {
       icon: Icons.auto_awesome_rounded,
       title: strings.output,
       description: strings.exportDescription,
+      palette: palette,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          DropdownButtonFormField<KacouLanguage>(
-            initialValue: selectedDocumentLanguage,
-            borderRadius: BorderRadius.circular(16),
-            decoration: InputDecoration(
-              labelText: strings.siteLanguage,
-              prefixIcon: const Icon(Icons.language_rounded),
-            ),
-            items: _kacouLanguages
-                .map(
-                  (language) => DropdownMenuItem(
-                    value: language,
-                    child: Text(language.name),
-                  ),
-                )
-                .toList(),
-            onChanged: onLanguageSelected,
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: documentLanguageController,
-            decoration: InputDecoration(
-              labelText: strings.documentLanguage,
-              hintText: strings.documentLanguageHint,
-              prefixIcon: const Icon(Icons.translate_rounded),
-            ),
-          ),
-          const SizedBox(height: 12),
           TextField(
             controller: fileNameController,
             readOnly: true,
             decoration: InputDecoration(
               labelText: strings.fileName,
               helperText: strings.fileNameRule,
+              helperMaxLines: 3,
+              helperStyle: TextStyle(color: palette.mutedText),
+              floatingLabelStyle: TextStyle(
+                color: palette.text,
+                backgroundColor: palette.surfaceStrong,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
               prefixIcon: const Icon(Icons.description_outlined),
             ),
           ),
-          const SizedBox(height: 16),
-          _PulsingGenerateButton(
-            isGenerating: isGenerating,
-            label: strings.generate,
-            onPressed: onGenerate,
+          const SizedBox(height: 12),
+          TextField(
+            controller: personNameController,
+            decoration: InputDecoration(
+              labelText: strings.personName,
+              hintText: strings.personNameHint,
+              prefixIcon: const Icon(Icons.person_outline_rounded),
+            ),
           ),
+          const SizedBox(height: 16),
+          if (showGenerateButton)
+            _PulsingGenerateButton(
+              palette: palette,
+              isGenerating: isGenerating,
+              label: strings.generate,
+              onPressed: onGenerate,
+            ),
           const SizedBox(height: 22),
           Row(
             children: [
-              Text(
-                strings.sources,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
+              Expanded(
+                child: Text(
+                  strings.sources,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: palette.text,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 12),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEDEBFF),
+                  color: palette.accent.withValues(alpha: .14),
                   borderRadius: BorderRadius.circular(99),
                 ),
                 child: Text(
                   '${sources.length}',
-                  style: const TextStyle(
-                    color: Color(0xFF6157F5),
+                  style: TextStyle(
+                    color: palette.accent,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -2169,13 +2609,13 @@ class _SettingsPanel extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFF7F8FC),
+                color: palette.surfaceStrong,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Text(
                 strings.noSources,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF7A7F92),
+                  color: palette.mutedText,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -2186,32 +2626,315 @@ class _SettingsPanel extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
                   dense: true,
-                  tileColor: const Color(0xFFF7F8FC),
+                  tileColor: palette.surfaceStrong,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  leading: const Icon(
-                    Icons.article_outlined,
-                    color: Color(0xFF6157F5),
-                  ),
+                  leading: Icon(Icons.article_outlined, color: palette.accent),
                   title: Text(
                     source.name,
+                    style: TextStyle(color: palette.text),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  subtitle: Text(strings.words(_wordCount(source.text))),
+                  subtitle: Text(
+                    strings.words(_wordCount(source.text)),
+                    style: TextStyle(color: palette.mutedText),
+                  ),
                   trailing: IconButton(
                     tooltip: strings.remove,
                     onPressed: () => onRemoveSource(source),
-                    icon: const Icon(Icons.close_rounded),
+                    icon: Icon(Icons.close_rounded, color: palette.mutedText),
                   ),
                 ),
               ),
             ),
           if (status != null) ...[
             const SizedBox(height: 14),
-            _StatusMessage(text: status!),
+            if (issues.isNotEmpty)
+              _IssueIndex(
+                issues: issues,
+                title: strings.issues,
+                status: status!,
+              )
+            else
+              _StatusMessage(text: status!),
           ],
+          const SizedBox(height: 14),
+          if ((generatedPath != null || libraryPath != null) && !kIsWeb) ...[
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: palette.text,
+                side: BorderSide(color: palette.accent.withValues(alpha: .65)),
+              ),
+              onPressed: onOpenGenerated,
+              icon: const Icon(Icons.open_in_new_rounded, size: 18),
+              label: Text(strings.openInWord),
+            ),
+            const SizedBox(height: 14),
+          ],
+          if (libraryPath != null && !kIsWeb) ...[
+            Container(
+              padding: const EdgeInsets.all(13),
+              decoration: BoxDecoration(
+                color: palette.surfaceStrong,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: palette.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.folder_copy_outlined, color: palette.accent),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          strings.localLibrary,
+                          style: TextStyle(
+                            color: palette.text,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    strings.localLibraryDescription,
+                    style: TextStyle(color: palette.mutedText, fontSize: 12),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    libraryPath!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: palette.mutedText, fontSize: 12),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: palette.text,
+                          side: BorderSide(
+                            color: palette.accent.withValues(alpha: .65),
+                          ),
+                        ),
+                        onPressed: onShareGenerated,
+                        icon: const Icon(Icons.share_outlined, size: 17),
+                        label: Text(strings.shareDocument),
+                      ),
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: palette.text,
+                          side: BorderSide(
+                            color: palette.accent.withValues(alpha: .65),
+                          ),
+                        ),
+                        onPressed: onOpenLibraryFolder,
+                        icon: const Icon(Icons.folder_open_outlined, size: 17),
+                        label: Text(strings.openFolder),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
+          cloudPanel,
+          const SizedBox(height: 14),
+          _AssistantPanel(
+            strings: strings,
+            palette: palette,
+            review: aiReview,
+            isReviewing: isAiReviewing,
+            onReview: onReviewWithAi,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IssueIndex extends StatelessWidget {
+  const _IssueIndex({
+    required this.issues,
+    required this.title,
+    required this.status,
+  });
+
+  final List<String> issues;
+  final String title;
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = issues.isEmpty ? [status] : issues;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF1F0),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xFFE11D48).withValues(alpha: .3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.rule_rounded,
+                color: Color(0xFF9F1239),
+                size: 19,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Color(0xFF9F1239),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Text(
+                '${entries.length}',
+                style: const TextStyle(
+                  color: Color(0xFF9F1239),
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...entries.asMap().entries.map(
+            (entry) => Padding(
+              padding: const EdgeInsets.only(top: 7),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${entry.key + 1}.',
+                    style: const TextStyle(
+                      color: Color(0xFF9F1239),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      entry.value,
+                      style: const TextStyle(
+                        color: Color(0xFF7F1D3C),
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AssistantPanel extends StatelessWidget {
+  const _AssistantPanel({
+    required this.strings,
+    required this.palette,
+    required this.review,
+    required this.isReviewing,
+    required this.onReview,
+  });
+
+  final AppStrings strings;
+  final DesignPalette palette;
+  final String? review;
+  final bool isReviewing;
+  final VoidCallback onReview;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: palette.surfaceStrong.withValues(alpha: .9),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: palette.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome_rounded, color: palette.accent, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  strings.assistant,
+                  style: TextStyle(
+                    color: palette.text,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Text(
+                'LOCAL',
+                style: TextStyle(
+                  color: palette.accent,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            strings.assistantDescription,
+            style: TextStyle(
+              color: palette.mutedText,
+              fontSize: 12,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: palette.text,
+              side: BorderSide(color: palette.accent.withValues(alpha: .65)),
+            ),
+            onPressed: isReviewing ? null : onReview,
+            icon: isReviewing
+                ? const SizedBox.square(
+                    dimension: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.manage_search_rounded, size: 18),
+            label: Text(strings.assistantRun),
+          ),
+          if (review != null) ...[
+            const SizedBox(height: 10),
+            SelectableText(
+              review!,
+              style: TextStyle(color: palette.text, fontSize: 12, height: 1.45),
+            ),
+          ] else
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                strings.assistantSetup,
+                style: TextStyle(color: palette.mutedText, fontSize: 12),
+              ),
+            ),
         ],
       ),
     );
@@ -2223,11 +2946,13 @@ class _PulsingGenerateButton extends StatefulWidget {
     required this.isGenerating,
     required this.label,
     required this.onPressed,
+    required this.palette,
   });
 
   final bool isGenerating;
   final String label;
   final VoidCallback onPressed;
+  final DesignPalette palette;
 
   @override
   State<_PulsingGenerateButton> createState() => _PulsingGenerateButtonState();
@@ -2258,16 +2983,16 @@ class _PulsingGenerateButtonState extends State<_PulsingGenerateButton>
       animation: _pulse,
       builder: (context, child) => Container(
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFE53DE4), Color(0xFF8B20E5)],
+          gradient: LinearGradient(
+            colors: [widget.palette.accent, widget.palette.accentSecondary],
           ),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: Colors.white.withValues(alpha: 0.55)),
           boxShadow: [
             BoxShadow(
-              color: const Color(
-                0xFFEF3DD7,
-              ).withValues(alpha: 0.28 + _pulse.value * 0.32),
+              color: widget.palette.accent.withValues(
+                alpha: 0.22 + _pulse.value * 0.26,
+              ),
               blurRadius: 18 + _pulse.value * 18,
               spreadRadius: _pulse.value * 3,
             ),

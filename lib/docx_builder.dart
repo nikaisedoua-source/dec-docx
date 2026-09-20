@@ -53,20 +53,30 @@ class NumberedParagraph {
 
 class DocumentBlock {
   const DocumentBlock.subtitle(String text)
-    : subtitle = text,
+    : sectionTitle = null,
+      subtitle = text,
+      paragraph = null,
+      concordance = null;
+
+  const DocumentBlock.sectionTitle(String text)
+    : sectionTitle = text,
+      subtitle = null,
       paragraph = null,
       concordance = null;
 
   const DocumentBlock.concordance(String text)
-    : concordance = text,
+    : sectionTitle = null,
+      concordance = text,
       subtitle = null,
       paragraph = null;
 
   const DocumentBlock.paragraph(NumberedParagraph value)
-    : paragraph = value,
+    : sectionTitle = null,
+      paragraph = value,
       subtitle = null,
       concordance = null;
 
+  final String? sectionTitle;
   final String? subtitle;
   final NumberedParagraph? paragraph;
   final String? concordance;
@@ -373,14 +383,36 @@ class DocxBuilder {
     ).hasMatch(value.trim());
   }
 
-  static _ContentParseResult _parseContent(String sourceName, String text, [String language = '']) {
+  static _ContentParseResult _parseContent(
+    String sourceName,
+    String text, [
+    String language = '',
+  ]) {
     final lines = text
         .replaceAll('\r\n', '\n')
         .split('\n')
         .map((line) => line.trim())
         .toList();
 
-    final isChinese = language.toLowerCase().contains('chinois') || language.toLowerCase().contains('chinese') || language.toLowerCase().contains('zh');
+    final isChinese =
+        language.toLowerCase().contains('chinois') ||
+        language.toLowerCase().contains('chinese') ||
+        language.toLowerCase().contains('zh');
+    final pairedChinese =
+        isChinese && lines.any((line) => _pinyinPrefix.hasMatch(line));
+    final pairingErrors = <String>[];
+    final mergedLineNumbers = <int>[];
+    int? currentVerse;
+    var pinyinCount = 0;
+    var verseLine = 0;
+    void checkPinyin() {
+      if (pairedChinese && currentVerse != null && pinyinCount == 0) {
+        pairingErrors.add(
+          '$sourceName, ligne $verseLine : [ZH-PINYIN-MISSING] verset $currentVerse : transcription pinyin manquante.',
+        );
+      }
+    }
+
     final mergedLines = <String>[];
     var pendingParagraph = false;
     for (var index = 0; index < lines.length; index++) {
@@ -388,10 +420,51 @@ class DocxBuilder {
       if (line.isEmpty) {
         continue;
       }
-      final startsParagraph = _parseNumberedParagraph(line) != null;
+      final parsedLine = _parseNumberedParagraph(line);
+      // PDF line wraps can begin with a day ("27 rì" or "27 日").
+      // Such continuations belong to the current verse.
+      final dateContinuation =
+          isChinese &&
+          pendingParagraph &&
+          parsedLine != null &&
+          RegExp(
+            r'^(?:(?:rì|yuè|nián)(?=[\s.,;:!?]|$)|[日⽇月⽉年])',
+            caseSensitive: false,
+          ).hasMatch(parsedLine.text);
+      final startsParagraph = parsedLine != null && !dateContinuation;
+      if (pairedChinese) {
+        if (startsParagraph) {
+          checkPinyin();
+          currentVerse = parsedLine.number;
+          verseLine = index + 1;
+          pinyinCount = 0;
+        } else if (_pinyinPrefix.hasMatch(line)) {
+          final match = _pinyinNumber.firstMatch(line);
+          final number = match == null ? null : int.parse(match.group(1)!);
+          if (currentVerse == null) {
+            pairingErrors.add(
+              '$sourceName, ligne ${index + 1} : [ZH-PINYIN-ORPHAN] pinyin sans verset chinois précédent.',
+            );
+          } else {
+            pinyinCount++;
+            if (number != currentVerse) {
+              pairingErrors.add(
+                '$sourceName, ligne ${index + 1} : [ZH-PINYIN-NUMBER] verset $currentVerse : numéro pinyin attendu $currentVerse, trouvé ${number ?? "illisible"}.',
+              );
+            }
+            if (pinyinCount > 1) {
+              pairingErrors.add(
+                '$sourceName, ligne ${index + 1} : [ZH-PINYIN-DUPLICATE] verset $currentVerse : transcription pinyin répétée.',
+              );
+            }
+          }
+        }
+      }
       final keepSeparate =
+          _isKacouTitle(line) ||
           _isConcordanceLine(line) ||
           _looksLikeSimilarChaptersLine(line) ||
+          _looksLikeSectionSubtitle(line) ||
           _standaloneNumberPattern.hasMatch(line);
       if (isChinese &&
           !startsParagraph &&
@@ -406,12 +479,16 @@ class DocxBuilder {
         continue;
       } else {
         mergedLines.add(line);
+        mergedLineNumbers.add(index + 1);
         if (startsParagraph) {
           pendingParagraph = true;
+        } else if (keepSeparate) {
+          pendingParagraph = false;
         }
       }
     }
 
+    checkPinyin();
     final contentLines = <_ContentLine>[];
 
     for (var index = 0; index < mergedLines.length; index++) {
@@ -419,19 +496,24 @@ class DocxBuilder {
       if (line.isEmpty) {
         continue;
       }
-      final nextLine = index + 1 < mergedLines.length ? mergedLines[index + 1] : null;
+      final nextLine = index + 1 < mergedLines.length
+          ? mergedLines[index + 1]
+          : null;
       if (!_isConversationNoise(line, nextLine)) {
-        contentLines.add(_ContentLine(text: line, number: index + 1));
+        contentLines.add(
+          _ContentLine(text: line, number: mergedLineNumbers[index]),
+        );
       }
     }
 
     final blocks = <DocumentBlock>[];
-    final errors = <String>[];
+    final errors = <String>[...pairingErrors];
     int? expectedNumber;
     var sawNumberedParagraph = false;
-    final normalizedLines = _splitEmbeddedNumberedParagraphs(
-      _attachStandaloneNumbers(contentLines, sourceName),
-    );
+    final attachedLines = _attachStandaloneNumbers(contentLines, sourceName);
+    final normalizedLines = isChinese
+        ? attachedLines
+        : _splitEmbeddedNumberedParagraphs(attachedLines);
     final similarChapters = _extractTrailingSimilarChapters(normalizedLines);
 
     for (final contentLine in similarChapters.lines) {
@@ -446,7 +528,11 @@ class DocxBuilder {
           : _parseNumberedParagraph(line);
       if (paragraph == null) {
         if (!sawNumberedParagraph || _looksLikeSectionSubtitle(line)) {
-          blocks.add(DocumentBlock.subtitle(line));
+          blocks.add(
+            _looksLikeSectionSubtitle(line)
+                ? DocumentBlock.sectionTitle(line)
+                : DocumentBlock.subtitle(line),
+          );
         } else {
           final expected = expectedNumber ?? 1;
           errors.add(
@@ -612,8 +698,14 @@ class DocxBuilder {
       return false;
     }
     if (RegExp(
-      r'^(PARTIE|CHAPITRE|SECTION)\b',
+      r'^(PARTIE|PART|CHAPITRE|SECTION)\b',
       caseSensitive: false,
+    ).hasMatch(trimmed)) {
+      return true;
+    }
+    if (RegExp(
+      r'^(?:第\s*[一二三四五六七八九十百0-9]+\s*[章节部分]|[一二三四五六七八九十百0-9]+\s*[章节部分])',
+      unicode: true,
     ).hasMatch(trimmed)) {
       return true;
     }
@@ -714,10 +806,13 @@ class DocxBuilder {
       body.write(_titleParagraph(document.title));
 
       for (final block in document.blocks) {
+        final sectionTitle = block.sectionTitle;
         final subtitle = block.subtitle;
         final paragraph = block.paragraph;
         final concordance = block.concordance;
-        if (subtitle != null && subtitle.isNotEmpty) {
+        if (sectionTitle != null && sectionTitle.isNotEmpty) {
+          body.write(_sectionTitleParagraph(sectionTitle));
+        } else if (subtitle != null && subtitle.isNotEmpty) {
           body.write(_subtitleParagraph(subtitle));
         } else if (concordance != null && concordance.isNotEmpty) {
           body.write(_concordanceParagraph(concordance));
@@ -753,7 +848,7 @@ class DocxBuilder {
   static String _titleParagraph(String text) {
     return '''<w:p>
       <w:pPr><w:spacing w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/><w:sz w:val="24"/></w:rPr><w:t>${_escape(text.toUpperCase())}</w:t></w:r>
+      <w:r><w:rPr><w:b/><w:sz w:val="24"/></w:rPr><w:t>${_escape(_hanCharacters.hasMatch(text) ? text : text.toUpperCase())}</w:t></w:r>
     </w:p>''';
   }
 
@@ -764,7 +859,29 @@ class DocxBuilder {
     </w:p>''';
   }
 
+  static String _sectionTitleParagraph(String text) {
+    return '''<w:p>
+      <w:pPr><w:spacing w:before="160" w:after="160"/></w:pPr>
+      <w:r><w:rPr><w:b/><w:sz w:val="24"/></w:rPr><w:t>${_escape(text)}</w:t></w:r>
+    </w:p>''';
+  }
+
   static String _numberedParagraph(int number, String text) {
+    final pinyin = RegExp(
+      r'\n(?=Pinyin\b)',
+      caseSensitive: false,
+    ).firstMatch(text);
+    if (pinyin != null &&
+        _hanCharacters.hasMatch(text.substring(0, pinyin.start))) {
+      return '''<w:p>
+        <w:pPr><w:keepNext/><w:spacing w:after="0"/></w:pPr>
+        <w:r><w:rPr><w:b/><w:sz w:val="24"/></w:rPr><w:t xml:space="preserve">$number </w:t></w:r>
+        ${_runsWithConcordances(text.substring(0, pinyin.start))}
+      </w:p><w:p>
+        <w:pPr><w:spacing w:after="240"/></w:pPr>
+        ${_runsWithConcordances(text.substring(pinyin.end))}
+      </w:p>''';
+    }
     return '''<w:p>
       <w:pPr><w:spacing w:after="240"/></w:pPr>
       <w:r><w:rPr><w:b/><w:sz w:val="24"/></w:rPr><w:t xml:space="preserve">$number </w:t></w:r>
@@ -918,7 +1035,7 @@ class DocxBuilder {
   <w:docDefaults>
     <w:rPrDefault>
       <w:rPr>
-        <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+        <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial" w:eastAsia="DengXian"/>
         <w:sz w:val="24"/>
         <w:szCs w:val="24"/>
       </w:rPr>
@@ -934,6 +1051,16 @@ class DocxBuilder {
     <w:qFormat/>
   </w:style>
 </w:styles>''';
+
+  static final RegExp _hanCharacters = RegExp(r'[\u3400-\u9fff\u2e80-\u2fdf]');
+  static final RegExp _pinyinPrefix = RegExp(
+    r'^Pinyin\b',
+    caseSensitive: false,
+  );
+  static final RegExp _pinyinNumber = RegExp(
+    r'^Pinyin\s*[:：]?\s*(\d{1,3})(?=\s|[:：]|$)',
+    caseSensitive: false,
+  );
 
   static final RegExp _numberedParagraphPattern = RegExp(
     r'^[^\p{L}\p{N}\r\n]{0,8}\s*(\d{1,3})[\s.)-]+(.+)$',
