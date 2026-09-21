@@ -36,11 +36,13 @@ jobs:
       - run: flutter build web --release --base-href /dec-docx/
       - run: |
           cp -R public/. build/web/
+          cp -R word_addin build/web/word-addin
           cd build/web && zip -qr ../../DEC-DOCX-Web.zip .
+          cd ../.. && zip -qr DEC-DOCX-Word-Addin.zip word_addin
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.1-preview
-          name: DEC DOCX 1.9.1 — aperçu
+          tag_name: v1.9.2-preview
+          name: DEC DOCX 1.9.2 — aperçu
           prerelease: true
           body: |
             Interface Inter, trois thèmes, chinois/pinyin et sauvegarde par dossier cloud synchronisé.
@@ -48,7 +50,9 @@ jobs:
             Android utilise une signature de test (ne remplace pas nécessairement une installation existante).
             macOS est distribué sans notarisation Apple ; Windows sans signature de confiance.
             Aucun document utilisateur n'est inclus dans ces fichiers.
-          files: DEC-DOCX-Web.zip
+          files: |
+            DEC-DOCX-Web.zip
+            DEC-DOCX-Word-Addin.zip
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -102,7 +106,7 @@ jobs:
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath DEC-DOCX-Windows-preview.zip
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.1-preview
+          tag_name: v1.9.2-preview
           prerelease: true
           files: |
             DEC-DOCX-Android-preview.apk

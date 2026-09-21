@@ -18,9 +18,10 @@ DOCX.
 
 ## Word
 
-La version actuelle peut déjà enregistrer le `.docx`, puis proposer « Ouvrir
-dans Word » sur ordinateur lorsque Word est l’application associée aux fichiers
-`.docx`.
+La version actuelle peut enregistrer et partager le `.docx`, puis proposer
+« Ouvrir dans Word » sur ordinateur lorsque Word est l’application associée aux
+fichiers `.docx`. Sur le Web, « Télécharger pour Word » conserve une copie qui
+peut être ouverte dans Word.
 
 Une extension Word complète sera un module séparé, basé sur un task pane
 [Office Add-in](https://learn.microsoft.com/en-us/office/dev/add-ins/word/).
@@ -31,6 +32,7 @@ avec le document. Cette séparation permet de conserver le moteur Flutter
 stable et de publier l’extension pour Word Web, Windows, macOS et iPad sans
 dupliquer la logique DOCX.
 
-Un premier complément sideloadable est fourni dans `word_addin/`. Son manifeste
-est `word_addin/manifest.xml` et son panneau sait lire la sélection Word,
-ouvrir l’application locale puis réinsérer le texte validé.
+Le complément sideloadable est fourni dans `word_addin/` et publié en HTTPS avec
+l’application. Son manifeste est `word_addin/manifest.xml` et son panneau sait
+lire la sélection Word, ouvrir l’application publique puis réinsérer le texte
+validé. La page `/word.html` guide son installation manuelle.

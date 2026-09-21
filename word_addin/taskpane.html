@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DEC DOCX</title>
+    <link rel="stylesheet" href="taskpane.css" />
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="brand"><span class="mark">D</span><div><strong>DEC DOCX</strong><small>Contrôle Word</small></div></header>
+      <section class="card">
+        <span class="eyebrow">SÉLECTION WORD</span>
+        <h1>Préparer ce texte</h1>
+        <p class="muted">Lis la sélection, ouvre DEC DOCX pour la génération, puis réinsère le texte validé.</p>
+        <textarea id="selection" placeholder="Sélectionne un texte dans Word puis clique sur Lire la sélection."></textarea>
+        <div class="actions">
+          <button id="read" class="primary">Lire la sélection</button>
+          <button id="open-app" class="secondary">Ouvrir DEC DOCX</button>
+        </div>
+      </section>
+      <section class="card">
+        <span class="eyebrow">RETOUR DANS WORD</span>
+        <p class="muted">Modifie ou colle ici le résultat validé avant de le replacer à l’emplacement sélectionné.</p>
+        <button id="insert" class="primary">Réinsérer dans Word</button>
+        <p id="status" class="status" role="status"></p>
+      </section>
+    </main>
+    <script src="taskpane.js"></script>
+  </body>
+</html>

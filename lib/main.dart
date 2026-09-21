@@ -114,7 +114,7 @@ class DesignPalette {
 }
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.9.1';
+const _appVersion = '1.9.2';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -205,10 +205,34 @@ class AppStrings {
     'Abrir no Word',
   );
   String get shareDocument => _text(
-    'Partager le document',
-    'Share document',
-    'Compartir documento',
-    'Compartilhar documento',
+    'Partager vers une application',
+    'Share to another app',
+    'Compartir con otra aplicación',
+    'Compartilhar com outro aplicativo',
+  );
+  String get downloadForWord => _text(
+    'Télécharger pour Word',
+    'Download for Word',
+    'Descargar para Word',
+    'Baixar para Word',
+  );
+  String get wordAddIn => _text(
+    'Complément Microsoft Word',
+    'Microsoft Word add-in',
+    'Complemento de Microsoft Word',
+    'Suplemento do Microsoft Word',
+  );
+  String get shareAndWord => _text(
+    'Partager & Microsoft Word',
+    'Share & Microsoft Word',
+    'Compartir y Microsoft Word',
+    'Compartilhar e Microsoft Word',
+  );
+  String get shareAndWordDescription => _text(
+    'Envoyez le Word vers une autre application, téléchargez-le ou installez le panneau DEC DOCX dans Word.',
+    'Send the Word file to another app, download it, or install the DEC DOCX pane in Word.',
+    'Envíe el archivo Word a otra aplicación, descárguelo o instale el panel DEC DOCX en Word.',
+    'Envie o arquivo Word para outro aplicativo, baixe-o ou instale o painel DEC DOCX no Word.',
   );
   String get openFolder =>
       _text('Ouvrir le dossier', 'Open folder', 'Abrir carpeta', 'Abrir pasta');
@@ -997,6 +1021,54 @@ class _GeneratorPageState extends State<GeneratorPage>
     );
   }
 
+  Future<void> _shareLatestDocument() async {
+    final document = _cloudDocument;
+    if (document == null) return;
+    try {
+      if (kIsWeb) {
+        await SharePlus.instance.share(
+          ShareParams(
+            title: document.name,
+            files: [
+              XFile.fromData(
+                document.bytes,
+                mimeType: _docxMimeType,
+                name: document.name,
+              ),
+            ],
+          ),
+        );
+      } else if (_libraryPath != null || _generatedPath != null) {
+        await _shareDocumentPath();
+      } else {
+        await _shareGeneratedFile(document.name, document.bytes);
+      }
+      _setStatus(_strings.shared);
+    } catch (error) {
+      _setStatus('Partage non terminé : $error');
+    }
+  }
+
+  Future<void> _downloadLatestForWord() async {
+    final document = _cloudDocument;
+    if (document == null) return;
+    if (!kIsWeb && (_generatedPath != null || _libraryPath != null)) {
+      await _openGeneratedDocument();
+      return;
+    }
+    await _exportCloudCopy(document.name, document.bytes);
+  }
+
+  Future<void> _openWordAddIn() async {
+    final opened = await launchUrl(
+      Uri.parse('https://nikaisedoua-source.github.io/dec-docx/word.html'),
+      mode: kIsWeb
+          ? LaunchMode.platformDefault
+          : LaunchMode.externalApplication,
+    );
+    if (!opened) _setStatus('Impossible d’ouvrir la page du complément Word.');
+  }
+
   Future<void> _openLibraryFolder() async {
     final path = _libraryPath;
     if (path == null || kIsWeb) return;
@@ -1586,6 +1658,10 @@ class _GeneratorPageState extends State<GeneratorPage>
                     ),
                     onOpenGenerated: _openGeneratedDocument,
                     onShareGenerated: _shareDocumentPath,
+                    documentReady: _cloudDocument != null,
+                    onShareLatest: _shareLatestDocument,
+                    onDownloadForWord: _downloadLatestForWord,
+                    onOpenWordAddIn: _openWordAddIn,
                     onOpenLibraryFolder: _openLibraryFolder,
                     onGenerate: _generate,
                     onRemoveSource: _removeSource,
@@ -2507,6 +2583,10 @@ class _SettingsPanel extends StatelessWidget {
     required this.cloudPanel,
     required this.onOpenGenerated,
     required this.onShareGenerated,
+    required this.documentReady,
+    required this.onShareLatest,
+    required this.onDownloadForWord,
+    required this.onOpenWordAddIn,
     required this.onOpenLibraryFolder,
   });
 
@@ -2529,6 +2609,10 @@ class _SettingsPanel extends StatelessWidget {
   final Widget cloudPanel;
   final VoidCallback onOpenGenerated;
   final VoidCallback onShareGenerated;
+  final bool documentReady;
+  final VoidCallback onShareLatest;
+  final VoidCallback onDownloadForWord;
+  final VoidCallback onOpenWordAddIn;
   final VoidCallback onOpenLibraryFolder;
 
   @override
@@ -2750,6 +2834,87 @@ class _SettingsPanel extends StatelessWidget {
             ),
             const SizedBox(height: 14),
           ],
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: palette.surfaceStrong,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: palette.accent.withValues(alpha: .45)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.ios_share_rounded, color: palette.accent),
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: Text(
+                        strings.shareAndWord,
+                        style: TextStyle(
+                          color: palette.text,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  strings.shareAndWordDescription,
+                  style: TextStyle(
+                    color: palette.mutedText,
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: documentReady ? onShareLatest : null,
+                      icon: const Icon(Icons.share_outlined, size: 18),
+                      label: Text(strings.shareDocument),
+                    ),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: palette.text,
+                        side: BorderSide(
+                          color: palette.accent.withValues(alpha: .65),
+                        ),
+                      ),
+                      onPressed: documentReady ? onDownloadForWord : null,
+                      icon: const Icon(Icons.file_download_outlined, size: 18),
+                      label: Text(
+                        kIsWeb ? strings.downloadForWord : strings.openInWord,
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: palette.text,
+                        side: BorderSide(
+                          color: palette.accent.withValues(alpha: .65),
+                        ),
+                      ),
+                      onPressed: onOpenWordAddIn,
+                      icon: const Icon(Icons.extension_outlined, size: 18),
+                      label: Text(strings.wordAddIn),
+                    ),
+                  ],
+                ),
+                if (!documentReady) ...[
+                  const SizedBox(height: 7),
+                  Text(
+                    'Générez un Word pour activer le partage et le téléchargement.',
+                    style: TextStyle(color: palette.mutedText, fontSize: 12),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
           cloudPanel,
           const SizedBox(height: 14),
           _AssistantPanel(
