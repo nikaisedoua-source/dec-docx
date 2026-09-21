@@ -2,7 +2,7 @@ name: Publish verified application
 on:
   push:
     branches: [main]
-    paths: ['lib/**', 'pubspec.yaml', 'web/**', 'tool/prepare_release_assets.py', '.github/workflows/publish-app.yml']
+    paths: ['lib/**', 'pubspec.yaml', 'web/**', 'test/**', 'tool/prepare_release_assets.py', '.github/workflows/publish-app.yml']
   workflow_dispatch:
 permissions:
   contents: read
