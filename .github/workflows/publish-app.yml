@@ -2,7 +2,7 @@ name: Publish verified application
 on:
   push:
     branches: [main]
-    paths: ['lib/**', 'pubspec.yaml', 'web/**', 'test/**', 'tool/prepare_release_assets.py', '.github/workflows/publish-app.yml']
+    paths: ['lib/**', 'pubspec.yaml', 'web/**', 'public/**', 'word_addin/**', 'browser_extension/**', 'test/**', 'tool/prepare_release_assets.py', '.github/workflows/publish-app.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -39,13 +39,15 @@ jobs:
           cp -R word_addin build/web/word-addin
           cd build/web && zip -qr ../../DEC-DOCX-Web.zip .
           cd ../.. && zip -qr DEC-DOCX-Word-Addin.zip word_addin
+          zip -qr DEC-DOCX-Browser-Extension.zip browser_extension
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.2-preview
-          name: DEC DOCX 1.9.2 — aperçu
+          tag_name: v1.9.3-preview
+          name: DEC DOCX 1.9.3 — aperçu
           prerelease: true
           body: |
             Interface Inter, trois thèmes, chinois/pinyin et sauvegarde par dossier cloud synchronisé.
+            Cette version corrige le manifeste Word et ajoute une extension pour Chrome, Edge et Firefox.
             Le site web est utilisable sans installation. Les archives natives sont des versions de test.
             Android utilise une signature de test (ne remplace pas nécessairement une installation existante).
             macOS est distribué sans notarisation Apple ; Windows sans signature de confiance.
@@ -53,6 +55,7 @@ jobs:
           files: |
             DEC-DOCX-Web.zip
             DEC-DOCX-Word-Addin.zip
+            DEC-DOCX-Browser-Extension.zip
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -106,7 +109,7 @@ jobs:
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath DEC-DOCX-Windows-preview.zip
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.2-preview
+          tag_name: v1.9.3-preview
           prerelease: true
           files: |
             DEC-DOCX-Android-preview.apk

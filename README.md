@@ -1,6 +1,6 @@
 # DEC DOCX
 
-Application Flutter pour Android, macOS, Web et Windows. Version actuelle : `1.9.2`.
+Application Flutter pour Android, macOS, Web et Windows. Version actuelle : `1.9.3`.
 Elle genere un fichier `.docx` a partir d'un texte colle, d'un fichier fourni,
 ou de plusieurs fichiers fournis.
 
@@ -51,6 +51,8 @@ Les liens directs sont listes dans [TELECHARGEMENTS.md](TELECHARGEMENTS.md).
   dans leur verset. Le titre chinois conserve la casse du pinyin.
 - Complément Word gratuit à charger depuis `word_addin/manifest.xml` pour lire
   une sélection, ouvrir DEC DOCX et réinsérer le texte validé.
+- Extension Chrome, Edge et Firefox dans `browser_extension/` pour copier une
+  sélection de page et ouvrir DEC DOCX sans envoyer le texte à un serveur.
 
 ## Sauvegarde cloud
 

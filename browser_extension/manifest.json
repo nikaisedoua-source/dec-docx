@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "DEC DOCX",
+  "version": "1.0.0",
+  "description": "Copier le texte sélectionné et ouvrir DEC DOCX depuis le navigateur.",
+  "permissions": ["activeTab", "scripting", "clipboardWrite"],
+  "action": {
+    "default_title": "DEC DOCX",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "assets/icon-16.png",
+      "32": "assets/icon-32.png",
+      "48": "assets/icon-48.png",
+      "128": "assets/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "assets/icon-16.png",
+    "32": "assets/icon-32.png",
+    "48": "assets/icon-48.png",
+    "128": "assets/icon-128.png"
+  }
+}

@@ -15,7 +15,7 @@ void main() {
     await tester.pumpWidget(const DocxGeneratorApp(skipStorageSetup: true));
 
     expect(find.text('DEC DOCX'), findsWidgets);
-    expect(find.text('Version 1.9.2'), findsOneWidget);
+    expect(find.text('Version 1.9.3'), findsOneWidget);
     expect(find.text('Titre du chapitre'), findsOneWidget);
     expect(
       find.byTooltip(AppStrings(AppLanguage.fr).chapterTitleLowercaseHelp),
@@ -28,6 +28,7 @@ void main() {
     expect(find.text('Corriger et générer'), findsOneWidget);
     expect(find.text('Partager & Microsoft Word'), findsOneWidget);
     expect(find.text('Complément Microsoft Word'), findsOneWidget);
+    expect(find.text('Extension pour navigateurs'), findsOneWidget);
   });
 
   testWidgets('retains optional chapter details after collapsing the section', (

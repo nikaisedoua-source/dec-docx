@@ -114,7 +114,7 @@ class DesignPalette {
 }
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.9.2';
+const _appVersion = '1.9.3';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -221,6 +221,12 @@ class AppStrings {
     'Microsoft Word add-in',
     'Complemento de Microsoft Word',
     'Suplemento do Microsoft Word',
+  );
+  String get browserExtension => _text(
+    'Extension pour navigateurs',
+    'Browser extension',
+    'Extensión para navegadores',
+    'Extensão para navegadores',
   );
   String get shareAndWord => _text(
     'Partager & Microsoft Word',
@@ -1069,6 +1075,20 @@ class _GeneratorPageState extends State<GeneratorPage>
     if (!opened) _setStatus('Impossible d’ouvrir la page du complément Word.');
   }
 
+  Future<void> _openBrowserExtension() async {
+    final opened = await launchUrl(
+      Uri.parse(
+        'https://nikaisedoua-source.github.io/dec-docx/navigateurs.html',
+      ),
+      mode: kIsWeb
+          ? LaunchMode.platformDefault
+          : LaunchMode.externalApplication,
+    );
+    if (!opened) {
+      _setStatus('Impossible d’ouvrir la page de l’extension navigateur.');
+    }
+  }
+
   Future<void> _openLibraryFolder() async {
     final path = _libraryPath;
     if (path == null || kIsWeb) return;
@@ -1662,6 +1682,7 @@ class _GeneratorPageState extends State<GeneratorPage>
                     onShareLatest: _shareLatestDocument,
                     onDownloadForWord: _downloadLatestForWord,
                     onOpenWordAddIn: _openWordAddIn,
+                    onOpenBrowserExtension: _openBrowserExtension,
                     onOpenLibraryFolder: _openLibraryFolder,
                     onGenerate: _generate,
                     onRemoveSource: _removeSource,
@@ -2587,6 +2608,7 @@ class _SettingsPanel extends StatelessWidget {
     required this.onShareLatest,
     required this.onDownloadForWord,
     required this.onOpenWordAddIn,
+    required this.onOpenBrowserExtension,
     required this.onOpenLibraryFolder,
   });
 
@@ -2613,6 +2635,7 @@ class _SettingsPanel extends StatelessWidget {
   final VoidCallback onShareLatest;
   final VoidCallback onDownloadForWord;
   final VoidCallback onOpenWordAddIn;
+  final VoidCallback onOpenBrowserExtension;
   final VoidCallback onOpenLibraryFolder;
 
   @override
@@ -2901,6 +2924,17 @@ class _SettingsPanel extends StatelessWidget {
                       onPressed: onOpenWordAddIn,
                       icon: const Icon(Icons.extension_outlined, size: 18),
                       label: Text(strings.wordAddIn),
+                    ),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: palette.text,
+                        side: BorderSide(
+                          color: palette.accent.withValues(alpha: .65),
+                        ),
+                      ),
+                      onPressed: onOpenBrowserExtension,
+                      icon: const Icon(Icons.language_rounded, size: 18),
+                      label: Text(strings.browserExtension),
                     ),
                   ],
                 ),
