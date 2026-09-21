@@ -61,4 +61,19 @@ void main() {
       expect(safeCloudSegment('中文', 'fallback'), '中文');
     },
   );
+
+  test('remembers an explicit local-only storage choice', () async {
+    final temp = await Directory.systemTemp.createTemp('dec-local-mode-');
+    addTearDown(() => temp.delete(recursive: true));
+    final config = File('${temp.path}/settings.json');
+    final storage = CloudStorage(configFile: config);
+    await storage.chooseLocal();
+    expect(storage.configured, isTrue);
+    expect(storage.mode, 'local');
+    expect(storage.connected, isFalse);
+    final restored = CloudStorage(configFile: config);
+    await restored.restore();
+    expect(restored.mode, 'local');
+    expect(restored.permission, 'granted');
+  });
 }

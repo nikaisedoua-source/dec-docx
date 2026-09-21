@@ -12,7 +12,7 @@ import 'package:dec_docx/sermon_reference.dart';
 
 void main() {
   testWidgets('shows the generator screen', (tester) async {
-    await tester.pumpWidget(const DocxGeneratorApp());
+    await tester.pumpWidget(const DocxGeneratorApp(skipStorageSetup: true));
 
     expect(find.text('DEC DOCX'), findsWidgets);
     expect(find.text('Version 1.9.0'), findsOneWidget);
@@ -31,7 +31,7 @@ void main() {
   testWidgets('retains optional chapter details after collapsing the section', (
     tester,
   ) async {
-    await tester.pumpWidget(const DocxGeneratorApp());
+    await tester.pumpWidget(const DocxGeneratorApp(skipStorageSetup: true));
     final options = find.text('Sous-titre et chapitres similaires');
     await tester.tap(options);
     await tester.pump();
@@ -58,7 +58,7 @@ void main() {
   testWidgets(
     'uses a suggested or custom document language in the output name',
     (tester) async {
-      await tester.pumpWidget(const DocxGeneratorApp());
+      await tester.pumpWidget(const DocxGeneratorApp(skipStorageSetup: true));
       await tester.enterText(
         find.widgetWithText(TextField, 'Titre du chapitre'),
         'KACOU 181 : Har Meguiddo',
@@ -98,7 +98,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pumpWidget(const DocxGeneratorApp());
+      await tester.pumpWidget(const DocxGeneratorApp(skipStorageSetup: true));
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.text('Corriger et générer').hitTestable(), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -119,7 +119,7 @@ void main() {
   }
 
   testWidgets('preserves normal capitals in the chapter title', (tester) async {
-    await tester.pumpWidget(const DocxGeneratorApp());
+    await tester.pumpWidget(const DocxGeneratorApp(skipStorageSetup: true));
 
     await tester.enterText(
       find.widgetWithText(TextField, 'Titre du chapitre'),
@@ -476,6 +476,24 @@ KACOU 169 : 中文章节
         DocxBuilder.validateChapter(chinese('Pinyin : 1 Yī\n1 中文')).errors,
         contains(contains('[ZH-PINYIN-ORPHAN]')),
       );
+    });
+
+    test('recovers a Chinese verse number replaced by a PDF bullet', () {
+      final result = DocxBuilder.validateChapter(
+        chinese(
+          '201 第一段\nPinyin 201 : Dì yī duàn\n'
+          '• 凡接受过按手的人都证实发生了变化。\n'
+          'Pinyin 202 : Fán jiēshòu guò ànshǒu de rén.\n'
+          '203 第三段\nPinyin 203 : Dì sān duàn',
+        ),
+      );
+      expect(result.errors, isEmpty);
+      expect(result.documents.single.paragraphs.map((p) => p.number), [
+        201,
+        202,
+        203,
+      ]);
+      expect(result.documents.single.paragraphs[1].text, startsWith('凡接受过'));
     });
   });
 

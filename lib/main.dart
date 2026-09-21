@@ -13,6 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'docx_builder.dart';
 import 'cloud/cloud_models.dart';
 import 'cloud/cloud_panel.dart';
+import 'cloud/storage_gate.dart';
 import 'pdf_web_stub.dart' if (dart.library.js_interop) 'pdf_web.dart';
 import 'ai_assistant.dart';
 import 'sermon_reference.dart';
@@ -113,7 +114,7 @@ class DesignPalette {
 }
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.9.0';
+const _appVersion = '1.9.1';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -634,7 +635,9 @@ class AppStrings {
 }
 
 class DocxGeneratorApp extends StatelessWidget {
-  const DocxGeneratorApp({super.key});
+  const DocxGeneratorApp({super.key, this.skipStorageSetup = false});
+
+  final bool skipStorageSetup;
 
   @override
   Widget build(BuildContext context) {
@@ -713,7 +716,9 @@ class DocxGeneratorApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const GeneratorPage(),
+      home: skipStorageSetup
+          ? const GeneratorPage()
+          : const StorageGate(child: GeneratorPage()),
     );
   }
 }

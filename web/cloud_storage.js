@@ -20,7 +20,12 @@
       });
     } finally { db.close(); }
   }
-  const state = () => connection ? {folder: connection.handle.name, provider: connection.provider} : null;
+  const state = async () => connection ? {
+    mode: 'folder',
+    folder: connection.handle.name,
+    provider: connection.provider,
+    permission: await connection.handle.queryPermission({mode:'readwrite'}),
+  } : null;
   async function library(write = false) {
     if (!connection) throw new Error('Choisissez un dossier synchronisé.');
     const opts = {mode: write ? 'readwrite' : 'read'};
@@ -40,15 +45,30 @@
     return value;
   };
   const operations = {
-    async restore() { connection = await settings('get') || null; return state(); },
+    async restore() {
+      const saved = await settings('get');
+      if (saved?.mode === 'local') { connection = null; return {mode:'local',permission:'granted'}; }
+      connection = saved || null;
+      return state();
+    },
+    async chooseLocal() {
+      await settings('put', {mode:'local'});
+      connection = null;
+      return {mode:'local',permission:'granted'};
+    },
     async choose(args) {
       try {
         const handle = await window.showDirectoryPicker({mode:'readwrite',id:'dec-docx-cloud'});
-        const next = {handle, provider: args.provider};
+        const next = {mode:'folder',handle, provider: args.provider};
         await settings('put', next);
         connection = next;
         return state();
       } catch (error) { if(error.name === 'AbortError') return state(); throw error; }
+    },
+    async authorize() {
+      if (!connection) return null;
+      await connection.handle.requestPermission({mode:'readwrite'});
+      return state();
     },
     async disconnect() { await settings('delete'); connection = null; return null; },
     async save(args, bytes) {

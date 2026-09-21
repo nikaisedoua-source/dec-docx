@@ -17,7 +17,11 @@ external bool get _supported;
 class CloudStorage {
   String? folder;
   String? provider;
+  String? mode;
+  String? permission;
   bool get supported => _supported;
+  bool get configured => mode != null;
+  bool get connected => folder != null && permission == 'granted';
   Future<dynamic> _request(
     String method, [
     Map<String, dynamic> args = const {},
@@ -32,6 +36,8 @@ class CloudStorage {
   void _state(dynamic result) {
     folder = result?['folder'] as String?;
     provider = result?['provider'] as String?;
+    mode = result?['mode'] as String?;
+    permission = result?['permission'] as String?;
   }
 
   Future<void> restore() async {
@@ -40,6 +46,14 @@ class CloudStorage {
 
   Future<void> choose(String service) async {
     _state(await _request('choose', {'provider': service}));
+  }
+
+  Future<void> chooseLocal() async {
+    _state(await _request('chooseLocal'));
+  }
+
+  Future<void> authorize() async {
+    _state(await _request('authorize'));
   }
 
   Future<List<CloudFile>> list() async => ((await _request('list')) as List)
@@ -64,5 +78,7 @@ class CloudStorage {
     await _request('disconnect');
     folder = null;
     provider = null;
+    mode = null;
+    permission = null;
   }
 }

@@ -388,7 +388,7 @@ class DocxBuilder {
     String text, [
     String language = '',
   ]) {
-    final lines = text
+    final rawLines = text
         .replaceAll('\r\n', '\n')
         .split('\n')
         .map((line) => line.trim())
@@ -398,6 +398,7 @@ class DocxBuilder {
         language.toLowerCase().contains('chinois') ||
         language.toLowerCase().contains('chinese') ||
         language.toLowerCase().contains('zh');
+    final lines = _repairChineseNumbersFromPinyin(rawLines, isChinese);
     final pairedChinese =
         isChinese && lines.any((line) => _pinyinPrefix.hasMatch(line));
     final pairingErrors = <String>[];
@@ -1061,6 +1062,47 @@ class DocxBuilder {
     r'^Pinyin\s*[:：]?\s*(\d{1,3})(?=\s|[:：]|$)',
     caseSensitive: false,
   );
+
+  static List<String> _repairChineseNumbersFromPinyin(
+    List<String> lines,
+    bool isChinese,
+  ) {
+    if (!isChinese) return lines;
+    final repaired = List<String>.of(lines);
+    int? previousVerse;
+    for (var index = 0; index < repaired.length; index++) {
+      final line = repaired[index].trim();
+      final paragraph = _parseNumberedParagraph(line);
+      if (paragraph != null) {
+        previousVerse = paragraph.number;
+        continue;
+      }
+      if (previousVerse == null ||
+          !_missingChineseNumberMarker.hasMatch(line) ||
+          !_hanCharacters.hasMatch(line)) {
+        continue;
+      }
+      int? pinyinNumber;
+      for (var next = index + 1; next < repaired.length; next++) {
+        final candidate = repaired[next].trim();
+        if (candidate.isEmpty) continue;
+        if (_parseNumberedParagraph(candidate) != null) break;
+        final pinyin = _pinyinNumber.firstMatch(candidate);
+        if (pinyin != null) {
+          pinyinNumber = int.parse(pinyin.group(1)!);
+          break;
+        }
+      }
+      if (pinyinNumber == previousVerse + 1) {
+        repaired[index] =
+            '$pinyinNumber ${line.replaceFirst(_missingChineseNumberMarker, '').trim()}';
+        previousVerse = pinyinNumber;
+      }
+    }
+    return repaired;
+  }
+
+  static final RegExp _missingChineseNumberMarker = RegExp(r'^[•●◦▪‣·]\s*');
 
   static final RegExp _numberedParagraphPattern = RegExp(
     r'^[^\p{L}\p{N}\r\n]{0,8}\s*(\d{1,3})[\s.)-]+(.+)$',

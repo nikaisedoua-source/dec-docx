@@ -58,13 +58,26 @@ test('web folder persistence, versioning, retrieval and disconnect preserve docu
   assert.equal((await call('list')).length,2);
   assert.deepEqual(await window.decCloudRead(a),bytes);
   reload();
-  assert.equal((await call('restore')).provider,'Google Drive');
+  const restored=await call('restore');
+  assert.equal(restored.provider,'Google Drive');
+  assert.equal(restored.permission,'granted');
   assert.equal((await call('list')).length,2);
   await assert.rejects(window.decCloudRead('../private.txt'),/Chemin invalide/);
   await call('disconnect');
   assert.equal(await call('restore'),null);
   await call('choose',{provider:'Google Drive'});
   assert.equal((await call('list')).length,2);
+});
+
+test('local mode is remembered without pretending a cloud folder is connected',async()=>{
+  const {call,reload}=setup();
+  assert.deepEqual(await call('chooseLocal'),{mode:'local',permission:'granted'});
+  reload();
+  assert.deepEqual(await call('restore'),{mode:'local',permission:'granted'});
+  await assert.rejects(
+    call('save',{language:'fr',person:'a',name:'doc'},new Uint8Array([1])),
+    /Choisissez un dossier synchronisé/,
+  );
 });
 
 test('refused permissions and cancelled selection never pretend a save succeeded',async()=>{

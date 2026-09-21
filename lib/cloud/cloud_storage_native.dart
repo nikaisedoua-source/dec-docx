@@ -11,7 +11,16 @@ class CloudStorage {
   final File? configFile;
   String? _root;
   String? provider;
+  String? mode;
   String? get folder => _root;
+  String? get permission =>
+      mode == 'local' || (_root != null && Directory(_root!).existsSync())
+      ? 'granted'
+      : mode == 'folder'
+      ? 'denied'
+      : null;
+  bool get configured => mode != null;
+  bool get connected => mode == 'folder' && permission == 'granted';
   bool get supported =>
       Platform.isMacOS || Platform.isWindows || Platform.isLinux;
   Future<File> _config() async =>
@@ -24,8 +33,9 @@ class CloudStorage {
     final file = await _config();
     if (!await file.exists()) return;
     final data = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-    _root = data['root'] as String;
-    provider = data['provider'] as String;
+    mode = data['mode'] as String? ?? 'folder';
+    _root = data['root'] as String?;
+    provider = data['provider'] as String?;
   }
 
   Future<void> choose(String service) async {
@@ -43,12 +53,24 @@ class CloudStorage {
     final file = await _config();
     await file.parent.create(recursive: true);
     await file.writeAsString(
-      jsonEncode({'root': path, 'provider': service}),
+      jsonEncode({'mode': 'folder', 'root': path, 'provider': service}),
       flush: true,
     );
     _root = path;
     provider = service;
+    mode = 'folder';
   }
+
+  Future<void> chooseLocal() async {
+    final file = await _config();
+    await file.parent.create(recursive: true);
+    await file.writeAsString(jsonEncode({'mode': 'local'}), flush: true);
+    _root = null;
+    provider = null;
+    mode = 'local';
+  }
+
+  Future<void> authorize() async {}
 
   Future<Directory> _library() async {
     if (_root == null || !await Directory(_root!).exists()) {
@@ -122,5 +144,6 @@ class CloudStorage {
     if (await file.exists()) await file.delete();
     _root = null;
     provider = null;
+    mode = null;
   }
 }

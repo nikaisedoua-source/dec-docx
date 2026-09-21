@@ -41,11 +41,17 @@ class _CloudPanelState extends State<CloudPanel> {
   Future<void> _restore() async {
     try {
       await _storage.restore();
+      if (_storage.connected) await _refresh();
       if (mounted) {
         setState(() {
           _provider = cloudProviders.containsKey(_storage.provider)
               ? _storage.provider!
               : 'MEGA';
+          _message = _storage.connected
+              ? 'Dossier ${_storage.provider} connecté et prêt.'
+              : _storage.mode == 'folder'
+              ? 'Le dossier est mémorisé. Autorisez de nouveau son accès pour continuer.'
+              : null;
         });
       }
     } catch (_) {
@@ -79,7 +85,19 @@ class _CloudPanelState extends State<CloudPanel> {
 
   Future<void> _choose() async {
     await _storage.choose(_provider);
-    if (_storage.folder != null) await _refresh();
+    if (_storage.connected) await _refresh();
+  }
+
+  Future<void> _authorize() async {
+    await _storage.authorize();
+    if (_storage.connected) {
+      await _refresh();
+      if (mounted) {
+        setState(
+          () => _message = 'Dossier ${_storage.provider} reconnecté et prêt.',
+        );
+      }
+    }
   }
 
   Future<void> _save() async {
@@ -119,7 +137,9 @@ class _CloudPanelState extends State<CloudPanel> {
   @override
   Widget build(BuildContext context) {
     final info = cloudProviders[_provider]!;
-    final connected = _storage.folder != null;
+    final connected = _storage.connected;
+    final needsAuthorization =
+        _storage.mode == 'folder' && _storage.folder != null && !connected;
     final visible = _files
         .where((f) => f.path.toLowerCase().contains(_search.toLowerCase()))
         .toList();
@@ -201,16 +221,28 @@ class _CloudPanelState extends State<CloudPanel> {
           ),
           if (_storage.supported) ...[
             Text(
-              'Installez et connectez l’application du cloud, puis choisissez son dossier synchronisé. DEC DOCX y crée sa bibliothèque ; aucun compte cloud n’est connecté directement ici.',
+              connected
+                  ? 'Connexion active : DEC DOCX peut lire et enregistrer dans le dossier synchronisé.'
+                  : 'Installez et connectez l’application du cloud, puis choisissez son dossier synchronisé. Une connexion au site seule ne donne pas accès au dossier.',
               style: style,
             ),
             const SizedBox(height: 8),
+            if (needsAuthorization) ...[
+              FilledButton.icon(
+                onPressed: _busy ? null : () => _run(_authorize),
+                icon: const Icon(Icons.lock_open_outlined),
+                label: Text('Réautoriser ${_storage.provider}'),
+              ),
+              const SizedBox(height: 8),
+            ],
             OutlinedButton.icon(
               onPressed: _busy ? null : () => _run(_choose),
               icon: const Icon(Icons.create_new_folder_outlined),
               label: Text(
                 connected
                     ? 'Changer de dossier'
+                    : needsAuthorization
+                    ? 'Choisir un autre dossier'
                     : 'Relier un dossier synchronisé',
               ),
             ),

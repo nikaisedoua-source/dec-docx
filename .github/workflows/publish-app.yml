@@ -39,8 +39,8 @@ jobs:
           cd build/web && zip -qr ../../DEC-DOCX-Web.zip .
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.0-preview
-          name: DEC DOCX 1.9.0 — aperçu
+          tag_name: v1.9.1-preview
+          name: DEC DOCX 1.9.1 — aperçu
           prerelease: true
           body: |
             Interface Inter, trois thèmes, chinois/pinyin et sauvegarde par dossier cloud synchronisé.
@@ -102,7 +102,7 @@ jobs:
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath DEC-DOCX-Windows-preview.zip
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.0-preview
+          tag_name: v1.9.1-preview
           prerelease: true
           files: |
             DEC-DOCX-Android-preview.apk
