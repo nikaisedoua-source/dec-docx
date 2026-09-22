@@ -15,7 +15,7 @@ void main() {
     await tester.pumpWidget(const DocxGeneratorApp(skipStorageSetup: true));
 
     expect(find.text('DEC DOCX'), findsWidgets);
-    expect(find.text('Version 1.9.3'), findsOneWidget);
+    expect(find.text('Version 1.9.4'), findsOneWidget);
     expect(find.text('Titre du chapitre'), findsOneWidget);
     expect(
       find.byTooltip(AppStrings(AppLanguage.fr).chapterTitleLowercaseHelp),
@@ -367,6 +367,43 @@ PARTIE 2 : SUITE
     expect(extracted, contains('2 Deuxieme paragraphe'));
   });
 
+  test('accepts Urdu section headings between numbered paragraphs', () {
+    final validation = DocxBuilder.validateChapter(
+      const ChapterInput(
+        title: 'KACOU 173 : معجزات اور شفا یابی کی شہادتیں',
+        subtitle: '',
+        similarChapters: '',
+        language: 'Urdu',
+        sources: [
+          DocumentSource(
+            name: 'KACOU 173 ourdou',
+            text: '''
+حصہ 1: تعارف
+1 پہلا پیراگراف
+حصہ 2: موزمبیق میں معجزات اور شفا یابیاں
+2 دوسرا پیراگراف
+قسم 3: شہادتیں
+3 تیسرا پیراگراف
+''',
+          ),
+        ],
+      ),
+    );
+
+    expect(validation.hasErrors, isFalse);
+    expect(validation.documents.single.paragraphs, hasLength(3));
+    expect(
+      validation.documents.single.blocks
+          .where((block) => block.sectionTitle != null)
+          .map((block) => block.sectionTitle),
+      containsAll(<String>[
+        'حصہ 1: تعارف',
+        'حصہ 2: موزمبیق میں معجزات اور شفا یابیاں',
+        'قسم 3: شہادتیں',
+      ]),
+    );
+  });
+
   test('renders chapter section headings in bold', () {
     final bytes = DocxBuilder.build(const [
       DocumentSource(
@@ -388,11 +425,15 @@ AVEUGLE D’UN ŒIL GUÉRIE
 
     expect(
       documentXml,
-      contains('<w:b/><w:sz w:val="24"/></w:rPr><w:t>PARTIE 1 : INTRODUCTION'),
+      contains(
+        '<w:b/><w:bCs/><w:sz w:val="24"/></w:rPr><w:t>PARTIE 1 : INTRODUCTION',
+      ),
     );
     expect(
       documentXml,
-      contains('<w:b/><w:sz w:val="24"/></w:rPr><w:t>AVEUGLE D’UN ŒIL GUÉRIE'),
+      contains(
+        '<w:b/><w:bCs/><w:sz w:val="24"/></w:rPr><w:t>AVEUGLE D’UN ŒIL GUÉRIE',
+      ),
     );
   });
 

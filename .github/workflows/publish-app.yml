@@ -42,12 +42,13 @@ jobs:
           zip -qr DEC-DOCX-Browser-Extension.zip browser_extension
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.3-preview
-          name: DEC DOCX 1.9.3 — aperçu
+          tag_name: v1.9.4-preview
+          name: DEC DOCX 1.9.4 — aperçu
           prerelease: true
           body: |
             Interface Inter, trois thèmes, chinois/pinyin et sauvegarde par dossier cloud synchronisé.
-            Cette version corrige le manifeste Word et ajoute une extension pour Chrome, Edge et Firefox.
+            Cette version traite les titres de section en ourdou, arabe et persan, avec le gras adapté aux écritures complexes.
+            Elle contient aussi le complément Word validé et l’extension pour Chrome, Edge et Firefox.
             Le site web est utilisable sans installation. Les archives natives sont des versions de test.
             Android utilise une signature de test (ne remplace pas nécessairement une installation existante).
             macOS est distribué sans notarisation Apple ; Windows sans signature de confiance.
@@ -109,7 +110,7 @@ jobs:
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath DEC-DOCX-Windows-preview.zip
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.3-preview
+          tag_name: v1.9.4-preview
           prerelease: true
           files: |
             DEC-DOCX-Android-preview.apk

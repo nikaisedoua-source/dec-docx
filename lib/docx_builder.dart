@@ -710,6 +710,12 @@ class DocxBuilder {
     ).hasMatch(trimmed)) {
       return true;
     }
+    if (RegExp(
+      r'^(?:حصہ|حصّہ|قسم|الجزء|بخش|فصل)(?:\s+|[:：])',
+      unicode: true,
+    ).hasMatch(trimmed)) {
+      return true;
+    }
     final letters = RegExp(r'[A-Za-zÀ-ÿ]').allMatches(trimmed).length;
     final uppercase = RegExp(r'[A-ZÀ-Þ]').allMatches(trimmed).length;
     return letters > 0 && uppercase / letters >= 0.7;
@@ -849,7 +855,7 @@ class DocxBuilder {
   static String _titleParagraph(String text) {
     return '''<w:p>
       <w:pPr><w:spacing w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/><w:sz w:val="24"/></w:rPr><w:t>${_escape(_hanCharacters.hasMatch(text) ? text : text.toUpperCase())}</w:t></w:r>
+      <w:r><w:rPr><w:b/><w:bCs/><w:sz w:val="24"/></w:rPr><w:t>${_escape(_hanCharacters.hasMatch(text) ? text : text.toUpperCase())}</w:t></w:r>
     </w:p>''';
   }
 
@@ -863,7 +869,7 @@ class DocxBuilder {
   static String _sectionTitleParagraph(String text) {
     return '''<w:p>
       <w:pPr><w:spacing w:before="160" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/><w:sz w:val="24"/></w:rPr><w:t>${_escape(text)}</w:t></w:r>
+      <w:r><w:rPr><w:b/><w:bCs/><w:sz w:val="24"/></w:rPr><w:t>${_escape(text)}</w:t></w:r>
     </w:p>''';
   }
 
@@ -876,7 +882,7 @@ class DocxBuilder {
         _hanCharacters.hasMatch(text.substring(0, pinyin.start))) {
       return '''<w:p>
         <w:pPr><w:keepNext/><w:spacing w:after="0"/></w:pPr>
-        <w:r><w:rPr><w:b/><w:sz w:val="24"/></w:rPr><w:t xml:space="preserve">$number </w:t></w:r>
+        <w:r><w:rPr><w:b/><w:bCs/><w:sz w:val="24"/></w:rPr><w:t xml:space="preserve">$number </w:t></w:r>
         ${_runsWithConcordances(text.substring(0, pinyin.start))}
       </w:p><w:p>
         <w:pPr><w:spacing w:after="240"/></w:pPr>
@@ -885,7 +891,7 @@ class DocxBuilder {
     }
     return '''<w:p>
       <w:pPr><w:spacing w:after="240"/></w:pPr>
-      <w:r><w:rPr><w:b/><w:sz w:val="24"/></w:rPr><w:t xml:space="preserve">$number </w:t></w:r>
+      <w:r><w:rPr><w:b/><w:bCs/><w:sz w:val="24"/></w:rPr><w:t xml:space="preserve">$number </w:t></w:r>
       ${_runsWithConcordances(text)}
     </w:p>''';
   }
