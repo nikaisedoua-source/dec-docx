@@ -41,7 +41,7 @@ class CloudStorage {
   }
 
   Future<void> restore() async {
-    if (supported) _state(await _request('restore'));
+    _state(await _request('restore'));
   }
 
   Future<void> choose(String service) async {

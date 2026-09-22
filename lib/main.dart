@@ -13,6 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'docx_builder.dart';
 import 'cloud/cloud_models.dart';
 import 'cloud/cloud_panel.dart';
+import 'cloud/cloud_storage.dart';
 import 'cloud/storage_gate.dart';
 import 'pdf_web_stub.dart' if (dart.library.js_interop) 'pdf_web.dart';
 import 'ai_assistant.dart';
@@ -114,7 +115,7 @@ class DesignPalette {
 }
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.9.4';
+const _appVersion = '1.9.5';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -991,7 +992,33 @@ class _GeneratorPageState extends State<GeneratorPage>
   }
 
   Future<String?> _saveInLibrary(String fileName, Uint8List bytes) async {
-    if (kIsWeb) return null;
+    final document = CloudDocument(
+      bytes,
+      fileName,
+      _documentLanguageController.text,
+      _personNameController.text,
+    );
+    if (kIsWeb) {
+      final storage = CloudStorage();
+      await storage.restore();
+      if (!storage.configured ||
+          (storage.mode == 'folder' && !storage.connected)) {
+        return null;
+      }
+      String path;
+      try {
+        path = await storage.save(document);
+      } catch (error) {
+        if (storage.mode == 'folder' &&
+            error.toString().contains('Version locale conservée')) {
+          return 'Bibliothèque locale · synchronisation à reprendre';
+        }
+        rethrow;
+      }
+      return storage.mode == 'local'
+          ? 'Bibliothèque locale / $path'
+          : '${storage.provider ?? 'Dossier synchronisé'} / $path';
+    }
     final root = await getApplicationDocumentsDirectory();
     final language = _safeFolderName(
       _documentLanguageController.text,
@@ -1003,8 +1030,26 @@ class _GeneratorPageState extends State<GeneratorPage>
     );
     final directory = Directory('${root.path}/DEC DOCX/$language/$person');
     await directory.create(recursive: true);
-    final file = File('${directory.path}/$fileName');
+    final timestamp = DateTime.now()
+        .toUtc()
+        .toIso8601String()
+        .replaceAll(':', '-')
+        .replaceAll('.', '-');
+    final stem = fileName.replaceFirst(
+      RegExp(r'\.docx$', caseSensitive: false),
+      '',
+    );
+    final file = File('${directory.path}/$stem-$timestamp.docx');
     await file.writeAsBytes(bytes, flush: true);
+    try {
+      final storage = CloudStorage();
+      await storage.restore();
+      if (storage.connected) {
+        await storage.save(document);
+      }
+    } catch (_) {
+      // The local version remains valid if a synchronized folder is offline.
+    }
     return file.path;
   }
 
@@ -1019,22 +1064,53 @@ class _GeneratorPageState extends State<GeneratorPage>
   Future<void> _shareDocumentPath() async {
     final path = _libraryPath ?? _generatedPath;
     if (path == null || kIsWeb) return;
-    await SharePlus.instance.share(
+    final result = await SharePlus.instance.share(
       ShareParams(
         title: _strings.appTitle,
+        sharePositionOrigin: _shareOrigin(),
         files: [XFile(path, mimeType: _docxMimeType)],
       ),
     );
+    _setShareResult(result);
+  }
+
+  void _setShareResult(ShareResult result) {
+    switch (result.status) {
+      case ShareResultStatus.success:
+        _setStatus('Partage lancé avec ${result.raw}.');
+        return;
+      case ShareResultStatus.dismissed:
+        _setStatus(
+          'Partage annulé. Le document reste dans votre bibliothèque.',
+        );
+        return;
+      case ShareResultStatus.unavailable:
+        _setStatus(
+          kIsWeb
+              ? 'Le navigateur a ouvert le partage ou téléchargé une copie selon ses capacités.'
+              : 'Le système ne confirme pas l’application destinataire. Le document reste enregistré.',
+        );
+        return;
+    }
+  }
+
+  Rect? _shareOrigin() {
+    final renderObject = context.findRenderObject();
+    if (renderObject is! RenderBox || !renderObject.hasSize) return null;
+    return renderObject.localToGlobal(Offset.zero) & renderObject.size;
   }
 
   Future<void> _shareLatestDocument() async {
     final document = _cloudDocument;
     if (document == null) return;
     try {
+      final ShareResult result;
       if (kIsWeb) {
-        await SharePlus.instance.share(
+        result = await SharePlus.instance.share(
           ShareParams(
             title: document.name,
+            downloadFallbackEnabled: false,
+            sharePositionOrigin: _shareOrigin(),
             files: [
               XFile.fromData(
                 document.bytes,
@@ -1045,11 +1121,12 @@ class _GeneratorPageState extends State<GeneratorPage>
           ),
         );
       } else if (_libraryPath != null || _generatedPath != null) {
-        await _shareDocumentPath();
+        final path = _libraryPath ?? _generatedPath!;
+        result = await _shareDocumentPathOverride(path);
       } else {
-        await _shareGeneratedFile(document.name, document.bytes);
+        result = await _shareGeneratedFile(document.name, document.bytes);
       }
-      _setStatus(_strings.shared);
+      _setShareResult(result);
     } catch (error) {
       _setStatus('Partage non terminé : $error');
     }
@@ -1306,13 +1383,8 @@ class _GeneratorPageState extends State<GeneratorPage>
       );
 
       if (path == null) {
-        if (libraryPath != null) {
-          await _shareDocumentPathOverride(libraryPath);
-        } else {
-          await _shareGeneratedFile(fileName, bytes);
-        }
         final savedMessage = libraryPath == null
-            ? _strings.shared
+            ? 'Document généré. Utilisez Télécharger ou Partager pour conserver une copie.'
             : _strings.savedInLibrary(libraryPath);
         _setStatus('$checkMessage\n$savedMessage');
       } else {
@@ -1422,22 +1494,26 @@ class _GeneratorPageState extends State<GeneratorPage>
     );
   }
 
-  Future<void> _shareGeneratedFile(String fileName, Uint8List bytes) async {
+  Future<ShareResult> _shareGeneratedFile(
+    String fileName,
+    Uint8List bytes,
+  ) async {
     if (kIsWeb) {
-      return;
+      return ShareResult.unavailable;
     }
 
     final directory = await getTemporaryDirectory();
     final file = File('${directory.path}/$fileName');
     await file.writeAsBytes(bytes, flush: true);
 
-    await _shareDocumentPathOverride(file.path);
+    return _shareDocumentPathOverride(file.path);
   }
 
-  Future<void> _shareDocumentPathOverride(String path) async {
-    await SharePlus.instance.share(
+  Future<ShareResult> _shareDocumentPathOverride(String path) async {
+    return SharePlus.instance.share(
       ShareParams(
         title: _strings.appTitle,
+        sharePositionOrigin: _shareOrigin(),
         files: [XFile(path, mimeType: _docxMimeType)],
       ),
     );
@@ -1453,6 +1529,29 @@ class _GeneratorPageState extends State<GeneratorPage>
     );
     if (!kIsWeb && path != null) {
       await File(path).writeAsBytes(bytes, flush: true);
+    }
+  }
+
+  Future<void> _shareCloudCopy(String name, Uint8List bytes) async {
+    try {
+      final ShareResult result;
+      if (kIsWeb) {
+        result = await SharePlus.instance.share(
+          ShareParams(
+            title: name,
+            downloadFallbackEnabled: false,
+            sharePositionOrigin: _shareOrigin(),
+            files: [XFile.fromData(bytes, mimeType: _docxMimeType, name: name)],
+          ),
+        );
+      } else {
+        result = await _shareGeneratedFile(name, bytes);
+      }
+      _setShareResult(result);
+    } catch (_) {
+      _setStatus(
+        'Le partage de fichiers n’est pas disponible dans ce navigateur. Utilisez « Enregistrer une copie » puis partagez le Word depuis vos fichiers.',
+      );
     }
   }
 
@@ -1671,6 +1770,7 @@ class _GeneratorPageState extends State<GeneratorPage>
                       onImport: _importCloudCopy,
                       onPickFiles: _pickFiles,
                       onExport: _exportCloudCopy,
+                      onShare: _shareCloudCopy,
                       textColor: palette.text,
                       mutedColor: palette.mutedText,
                       accent: palette.accent,

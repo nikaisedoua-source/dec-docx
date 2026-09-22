@@ -1,9 +1,17 @@
 (() => {
   let connection = null;
+  let currentMode = null;
   window.decCloudSupported = typeof window.showDirectoryPicker === 'function';
   const database = () => new Promise((resolve, reject) => {
-    const request = indexedDB.open('dec-docx-cloud', 1);
-    request.onupgradeneeded = () => request.result.createObjectStore('settings');
+    const request = indexedDB.open('dec-docx-cloud', 2);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains('settings')) {
+        request.result.createObjectStore('settings');
+      }
+      if (!request.result.objectStoreNames.contains('documents')) {
+        request.result.createObjectStore('documents', {keyPath: 'path'});
+      }
+    };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
@@ -14,6 +22,19 @@
         const tx = db.transaction('settings', operation === 'get' ? 'readonly' : 'readwrite');
         const store = tx.objectStore('settings');
         const request = operation === 'get' ? store.get('folder') : operation === 'put' ? store.put(value, 'folder') : store.delete('folder');
+        tx.oncomplete = () => resolve(request.result);
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error || new Error('Enregistrement interrompu'));
+      });
+    } finally { db.close(); }
+  }
+  async function documents(operation, value) {
+    const db = await database();
+    try {
+      return await new Promise((resolve, reject) => {
+        const tx = db.transaction('documents', operation === 'list' || operation === 'get' ? 'readonly' : 'readwrite');
+        const store = tx.objectStore('documents');
+        const request = operation === 'list' ? store.getAll() : operation === 'get' ? store.get(value) : store.put(value);
         tx.oncomplete = () => resolve(request.result);
         tx.onerror = () => reject(tx.error);
         tx.onabort = () => reject(tx.error || new Error('Enregistrement interrompu'));
@@ -44,16 +65,26 @@
     if (typeof value !== 'string' || segments(value).length !== 1) throw new Error('Nom invalide');
     return value;
   };
+  async function saveLocal(args, bytes) {
+    const name = `${safe(args.name)}-${Date.now()}-${crypto.randomUUID().slice(0,8)}.docx`;
+    const path = `${safe(args.language)}/${safe(args.person)}/${name}`;
+    const copy = new Uint8Array(bytes).slice();
+    await documents('put', {path, bytes: copy, size: copy.byteLength, modified: Date.now()});
+    return path;
+  }
   const operations = {
     async restore() {
       const saved = await settings('get');
-      if (saved?.mode === 'local') { connection = null; return {mode:'local',permission:'granted'}; }
+      if (saved?.mode === 'local') { connection = null; currentMode = 'local'; return {mode:'local',permission:'granted'}; }
       connection = saved || null;
+      currentMode = connection ? 'folder' : null;
       return state();
     },
     async chooseLocal() {
       await settings('put', {mode:'local'});
       connection = null;
+      currentMode = 'local';
+      await window.navigator?.storage?.persist?.().catch(()=>false);
       return {mode:'local',permission:'granted'};
     },
     async choose(args) {
@@ -62,6 +93,7 @@
         const next = {mode:'folder',handle, provider: args.provider};
         await settings('put', next);
         connection = next;
+        currentMode = 'folder';
         return state();
       } catch (error) { if(error.name === 'AbortError') return state(); throw error; }
     },
@@ -70,18 +102,30 @@
       await connection.handle.requestPermission({mode:'readwrite'});
       return state();
     },
-    async disconnect() { await settings('delete'); connection = null; return null; },
+    async disconnect() { await settings('delete'); connection = null; currentMode = null; return null; },
     async save(args, bytes) {
-      let dir = await library(true);
-      for (const name of [safe(args.language), safe(args.person)]) dir = await dir.getDirectoryHandle(name,{create:true});
-      const name = `${safe(args.name)}-${Date.now()}-${crypto.randomUUID().slice(0,8)}.docx`;
-      const handle = await dir.getFileHandle(name, {create:true});
-      const stream = await handle.createWritable();
-      try { await stream.write(bytes); await stream.close(); }
-      catch (error) { await stream.abort().catch(()=>{}); throw error; }
-      return `${args.language}/${args.person}/${name}`;
+      const localPath = await saveLocal(args, bytes);
+      if (currentMode === 'local') {
+        return localPath;
+      }
+      try {
+        let dir = await library(true);
+        for (const name of [safe(args.language), safe(args.person)]) dir = await dir.getDirectoryHandle(name,{create:true});
+        const name = `${safe(args.name)}-${Date.now()}-${crypto.randomUUID().slice(0,8)}.docx`;
+        const handle = await dir.getFileHandle(name, {create:true});
+        const stream = await handle.createWritable();
+        try { await stream.write(bytes); await stream.close(); }
+        catch (error) { await stream.abort().catch(()=>{}); throw error; }
+        return `${args.language}/${args.person}/${name}`;
+      } catch (error) {
+        throw new Error(`Version locale conservée (${localPath}). Synchronisation à reprendre : ${error.message || error}`);
+      }
     },
     async list() {
+      if (currentMode === 'local') {
+        const saved = await documents('list');
+        return saved.map(({path,size,modified}) => ({path,size,modified})).sort((a,b)=>b.modified-a.modified);
+      }
       let root;
       try { root = await library(); }
       catch(error) { if(error.name === 'NotFoundError') return []; throw error; }
@@ -105,6 +149,11 @@
   };
   window.decCloudRead = async path => {
     const parts = segments(path);
+    if (currentMode === 'local') {
+      const saved = await documents('get', path);
+      if (!saved) throw new DOMException('Fichier introuvable', 'NotFoundError');
+      return new Uint8Array(saved.bytes);
+    }
     let dir = await library();
     for (const part of parts.slice(0,-1)) dir = await dir.getDirectoryHandle(part);
     const file = await (await dir.getFileHandle(parts.at(-1))).getFile();

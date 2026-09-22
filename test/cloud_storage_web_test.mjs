@@ -27,19 +27,23 @@ class Directory {
 }
 function setup() {
   const values=new Map();
+  const localDocuments=new Map();
   const root=new Directory('Google Drive');
   const indexedDB={open:()=>{
     const request={};
-    request.result={close(){},transaction(){
+    request.result={
+      objectStoreNames:{contains:()=>true},createObjectStore(){},close(){},transaction(storeName){
+      const data=storeName==='documents'?localDocuments:values;
       const tx={objectStore:()=>({
-        get(key){const r={result:values.get(key)};queueMicrotask(()=>tx.oncomplete());return r;},
-        put(value,key){values.set(key,value);const r={result:key};queueMicrotask(()=>tx.oncomplete());return r;},
-        delete(key){values.delete(key);const r={};queueMicrotask(()=>tx.oncomplete());return r;},
+        get(key){const r={result:data.get(key)};queueMicrotask(()=>tx.oncomplete());return r;},
+        getAll(){const r={result:[...data.values()]};queueMicrotask(()=>tx.oncomplete());return r;},
+        put(value,key){const resolved=key??value.path;data.set(resolved,value);const r={result:resolved};queueMicrotask(()=>tx.oncomplete());return r;},
+        delete(key){data.delete(key);const r={};queueMicrotask(()=>tx.oncomplete());return r;},
       })};return tx;
     }};
     queueMicrotask(()=>request.onsuccess());return request;
   }};
-  const window={showDirectoryPicker:async()=>root};
+  const window={showDirectoryPicker:async()=>root,navigator:{storage:{persist:async()=>true}}};
   const context=vm.createContext({window,indexedDB,crypto:webcrypto,Uint8Array,DOMException,console});
   const script=fs.readFileSync(new URL('../web/cloud_storage.js',import.meta.url),'utf8');
   const reload=()=>vm.runInContext(script,context);
@@ -70,14 +74,16 @@ test('web folder persistence, versioning, retrieval and disconnect preserve docu
 });
 
 test('local mode is remembered without pretending a cloud folder is connected',async()=>{
-  const {call,reload}=setup();
+  const {call,reload,window}=setup();
   assert.deepEqual(await call('chooseLocal'),{mode:'local',permission:'granted'});
+  const bytes=new Uint8Array([80,75,3,4,99]);
+  const path=await call('save',{language:'ourdou',person:'Equipe',name:'Kacou 173'},bytes);
+  assert.equal((await call('list')).length,1);
+  assert.deepEqual(await window.decCloudRead(path),bytes);
   reload();
   assert.deepEqual(await call('restore'),{mode:'local',permission:'granted'});
-  await assert.rejects(
-    call('save',{language:'fr',person:'a',name:'doc'},new Uint8Array([1])),
-    /Choisissez un dossier synchronisé/,
-  );
+  assert.equal((await call('list')).length,1);
+  assert.deepEqual(await window.decCloudRead(path),bytes);
 });
 
 test('refused permissions and cancelled selection never pretend a save succeeded',async()=>{

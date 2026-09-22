@@ -11,6 +11,7 @@ class CloudPanel extends StatefulWidget {
     required this.onImport,
     required this.onPickFiles,
     required this.onExport,
+    required this.onShare,
     required this.textColor,
     required this.mutedColor,
     required this.accent,
@@ -20,6 +21,7 @@ class CloudPanel extends StatefulWidget {
   final void Function(String, Uint8List) onImport;
   final VoidCallback onPickFiles;
   final Future<void> Function(String, Uint8List) onExport;
+  final Future<void> Function(String, Uint8List) onShare;
   final Color textColor, mutedColor, accent, surface;
   @override
   State<CloudPanel> createState() => _CloudPanelState();
@@ -41,7 +43,7 @@ class _CloudPanelState extends State<CloudPanel> {
   Future<void> _restore() async {
     try {
       await _storage.restore();
-      if (_storage.connected) await _refresh();
+      if (_storage.connected || _storage.mode == 'local') await _refresh();
       if (mounted) {
         setState(() {
           _provider = cloudProviders.containsKey(_storage.provider)
@@ -49,6 +51,8 @@ class _CloudPanelState extends State<CloudPanel> {
               : 'MEGA';
           _message = _storage.connected
               ? 'Dossier ${_storage.provider} connecté et prêt.'
+              : _storage.mode == 'local'
+              ? 'Bibliothèque locale prête. Les documents restent disponibles après la fermeture.'
               : _storage.mode == 'folder'
               ? 'Le dossier est mémorisé. Autorisez de nouveau son accès pour continuer.'
               : null;
@@ -106,8 +110,9 @@ class _CloudPanelState extends State<CloudPanel> {
     final path = await _storage.save(doc);
     if (mounted) {
       setState(
-        () => _message =
-            'Copie enregistrée : $path. La synchronisation distante est gérée par ${_storage.provider} ; vérifiez son indicateur.',
+        () => _message = _storage.mode == 'local'
+            ? 'Version enregistrée dans la bibliothèque locale : $path.'
+            : 'Copie enregistrée : $path. La synchronisation distante est gérée par ${_storage.provider} ; vérifiez son indicateur.',
       );
     }
     // A refresh failure must not hide the successful write.
@@ -138,6 +143,7 @@ class _CloudPanelState extends State<CloudPanel> {
   Widget build(BuildContext context) {
     final info = cloudProviders[_provider]!;
     final connected = _storage.connected;
+    final localReady = _storage.mode == 'local';
     final needsAuthorization =
         _storage.mode == 'folder' && _storage.folder != null && !connected;
     final visible = _files
@@ -219,6 +225,26 @@ class _CloudPanelState extends State<CloudPanel> {
             icon: const Icon(Icons.open_in_new, size: 16),
             label: Text('Ouvrir $_provider'),
           ),
+          if (localReady) ...[
+            Text(
+              'Bibliothèque locale active. Chaque Word généré est conservé automatiquement avec une nouvelle version.',
+              style: style,
+            ),
+            const SizedBox(height: 8),
+            FilledButton.icon(
+              onPressed: _busy || widget.document == null
+                  ? null
+                  : () => _run(_save),
+              icon: const Icon(Icons.save_outlined),
+              label: const Text('Conserver une nouvelle version'),
+            ),
+            const SizedBox(height: 6),
+            TextButton.icon(
+              onPressed: _busy ? null : () => _run(_refresh),
+              icon: const Icon(Icons.sync),
+              label: const Text('Actualiser mes fichiers'),
+            ),
+          ],
           if (_storage.supported) ...[
             Text(
               connected
@@ -283,74 +309,82 @@ class _CloudPanelState extends State<CloudPanel> {
                   ),
                 ],
               ),
-              TextField(
-                decoration: const InputDecoration(
-                  labelText: 'Rechercher par langue, personne ou nom',
-                  prefixIcon: Icon(Icons.search),
-                ),
-                onChanged: (value) => setState(() => _search = value),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${visible.length} document(s) dans la bibliothèque',
-                style: style,
-              ),
-              if (visible.isNotEmpty)
-                SizedBox(
-                  height: 230,
-                  child: ListView.builder(
-                    itemCount: visible.length,
-                    itemBuilder: (context, index) {
-                      final f = visible[index];
-                      return ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          f.name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: widget.textColor,
-                            fontSize: 12,
-                          ),
-                        ),
-                        subtitle: Text(
-                          '${f.path.split('/').take(2).join(' / ')} · ${(f.size / 1024).ceil()} Ko',
-                          style: style,
-                        ),
-                        trailing: PopupMenuButton<String>(
-                          tooltip: 'Récupérer le document',
-                          enabled: !_busy,
-                          onSelected: (value) => _run(() async {
-                            if (value == 'import') {
-                              await _import(f);
-                            } else {
-                              await widget.onExport(
-                                f.name,
-                                await _storage.read(f.path),
-                              );
-                            }
-                          }),
-                          itemBuilder: (context) => const [
-                            PopupMenuItem(
-                              value: 'download',
-                              child: Text('Enregistrer une copie'),
-                            ),
-                            PopupMenuItem(
-                              value: 'import',
-                              child: Text('Réimporter dans le chapitre'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
             ],
-          ] else ...[
+          ] else if (!localReady) ...[
             Text(
               'Ce navigateur ou appareil ne donne pas accès à un dossier permanent. Utilisez Enregistrer une copie, puis le dossier cloud proposé par votre appareil, ou chargez le fichier dans le service choisi.',
               style: style,
             ),
+          ],
+          if (connected || localReady) ...[
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'Rechercher par langue, personne ou nom',
+                prefixIcon: Icon(Icons.search),
+              ),
+              onChanged: (value) => setState(() => _search = value),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${visible.length} document(s) dans la bibliothèque',
+              style: style,
+            ),
+            if (visible.isNotEmpty)
+              SizedBox(
+                height: 230,
+                child: ListView.builder(
+                  itemCount: visible.length,
+                  itemBuilder: (context, index) {
+                    final f = visible[index];
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        f.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: widget.textColor, fontSize: 12),
+                      ),
+                      subtitle: Text(
+                        '${f.path.split('/').take(2).join(' / ')} · ${(f.size / 1024).ceil()} Ko',
+                        style: style,
+                      ),
+                      trailing: PopupMenuButton<String>(
+                        tooltip: 'Récupérer le document',
+                        enabled: !_busy,
+                        onSelected: (value) => _run(() async {
+                          if (value == 'import') {
+                            await _import(f);
+                          } else if (value == 'share') {
+                            await widget.onShare(
+                              f.name,
+                              await _storage.read(f.path),
+                            );
+                          } else {
+                            await widget.onExport(
+                              f.name,
+                              await _storage.read(f.path),
+                            );
+                          }
+                        }),
+                        itemBuilder: (context) => const [
+                          PopupMenuItem(
+                            value: 'download',
+                            child: Text('Enregistrer une copie'),
+                          ),
+                          PopupMenuItem(
+                            value: 'share',
+                            child: Text('Partager vers une autre application'),
+                          ),
+                          PopupMenuItem(
+                            value: 'import',
+                            child: Text('Réimporter dans le chapitre'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
           ],
           const SizedBox(height: 8),
           Wrap(

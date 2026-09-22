@@ -66,14 +66,26 @@ void main() {
     final temp = await Directory.systemTemp.createTemp('dec-local-mode-');
     addTearDown(() => temp.delete(recursive: true));
     final config = File('${temp.path}/settings.json');
-    final storage = CloudStorage(configFile: config);
+    final storage = CloudStorage(configFile: config, localDirectory: temp);
     await storage.chooseLocal();
     expect(storage.configured, isTrue);
     expect(storage.mode, 'local');
     expect(storage.connected, isFalse);
-    final restored = CloudStorage(configFile: config);
+    final document = CloudDocument(
+      Uint8List.fromList([80, 75, 3, 4, 7]),
+      'Kacou 173.docx',
+      'ourdou',
+      'Equipe',
+    );
+    final first = await storage.save(document);
+    final second = await storage.save(document);
+    expect(first, isNot(second));
+    expect(await storage.list(), hasLength(2));
+    expect(await storage.read(first), document.bytes);
+    final restored = CloudStorage(configFile: config, localDirectory: temp);
     await restored.restore();
     expect(restored.mode, 'local');
     expect(restored.permission, 'granted');
+    expect(await restored.list(), hasLength(2));
   });
 }

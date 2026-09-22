@@ -7,8 +7,9 @@ import 'package:path_provider/path_provider.dart';
 import 'cloud_models.dart';
 
 class CloudStorage {
-  CloudStorage({this.configFile});
+  CloudStorage({this.configFile, this.localDirectory});
   final File? configFile;
+  final Directory? localDirectory;
   String? _root;
   String? provider;
   String? mode;
@@ -29,7 +30,6 @@ class CloudStorage {
         '${(await getApplicationSupportDirectory()).path}/cloud-folder.json',
       );
   Future<void> restore() async {
-    if (!supported) return;
     final file = await _config();
     if (!await file.exists()) return;
     final data = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
@@ -73,6 +73,11 @@ class CloudStorage {
   Future<void> authorize() async {}
 
   Future<Directory> _library() async {
+    if (mode == 'local') {
+      final documents =
+          localDirectory ?? await getApplicationDocumentsDirectory();
+      return Directory('${documents.path}/DEC DOCX');
+    }
     if (_root == null || !await Directory(_root!).exists()) {
       throw const FileSystemException(
         'Dossier indisponible. Reconnectez le disque ou le cloud.',

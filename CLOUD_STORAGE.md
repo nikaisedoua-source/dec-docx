@@ -18,14 +18,18 @@ synchronisé, avec le client cloud installé et connecté.
    **Enregistrer une copie** ou **Réimporter dans le chapitre**.
 
 Arborescence : `dossier choisi/DEC DOCX/langue/personne/document-version.docx`.
-Chaque sauvegarde crée un nouveau nom et conserve les anciennes versions.
+Chaque génération crée d'abord une version locale, puis une copie dans le
+dossier synchronisé lorsqu'il est relié. Chaque sauvegarde crée un nouveau nom
+et conserve les anciennes versions.
 Détacher le dossier retire uniquement le réglage local ; les documents restent.
-Les documents générés avant la fermeture ne restent pas en mémoire après
-redémarrage : il faut les sauvegarder ou les télécharger avant de fermer.
+Les documents générés restent accessibles dans la bibliothèque locale après
+redémarrage. Sur le Web, cette bibliothèque repose sur IndexedDB et demande au
+navigateur de rendre son stockage persistant lorsque cette possibilité existe.
 
 ## Disponibilité et limites
 
-- Web : accès à un dossier seulement si `showDirectoryPicker` est disponible,
+- Web : la bibliothèque locale fonctionne avec IndexedDB. L'accès à un dossier
+  synchronisé n'est proposé que si `showDirectoryPicker` est disponible,
   en contexte sécurisé (HTTPS ou localhost). L'autorisation est conservée via
   IndexedDB, mais le navigateur peut demander de l'accorder de nouveau.
 - Desktop natif : chemin du dossier enregistré dans le répertoire de support
