@@ -18,6 +18,7 @@ import 'cloud/storage_gate.dart';
 import 'pdf_web_stub.dart' if (dart.library.js_interop) 'pdf_web.dart';
 import 'ai_assistant.dart';
 import 'sermon_reference.dart';
+import 'french_consistency.dart';
 import 'verse_editor.dart';
 
 enum DesignMode {
@@ -116,7 +117,7 @@ class DesignPalette {
 }
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.9.8';
+const _appVersion = '1.9.9';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -822,6 +823,9 @@ class _GeneratorPageState extends State<GeneratorPage>
     _chapterTitleController.addListener(_syncAutomaticFileName);
     _documentLanguageController.addListener(_syncAutomaticFileName);
     _manualTextController.addListener(_invalidateEditedText);
+    _subtitleController.addListener(_invalidateEditedText);
+    _chapterTitleController.addListener(_invalidateEditedText);
+    _documentLanguageController.addListener(_invalidateEditedText);
     _checkForUpdateNotice();
   }
 
@@ -830,6 +834,9 @@ class _GeneratorPageState extends State<GeneratorPage>
     _ambientController.dispose();
     _chapterTitleController.removeListener(_syncAutomaticFileName);
     _documentLanguageController.removeListener(_syncAutomaticFileName);
+    _subtitleController.removeListener(_invalidateEditedText);
+    _chapterTitleController.removeListener(_invalidateEditedText);
+    _documentLanguageController.removeListener(_invalidateEditedText);
     _chapterTitleController.dispose();
     _subtitleController.dispose();
     _similarChaptersController.dispose();
@@ -1479,33 +1486,38 @@ class _GeneratorPageState extends State<GeneratorPage>
         chapterNumber,
       );
     } catch (error) {
-      return _ReferenceCheckResult.ok(
-        _strings.referenceFetchFailed(chapterNumber, error),
+      return _ReferenceCheckResult.error(
+        '[FR-UNAVAILABLE] La référence française de Kacou $chapterNumber est inaccessible ($error). Les dates et les références [Kc…] doivent être vérifiées : reconnecte-toi puis relance la génération.',
       );
     }
 
     final localCount = DocxBuilder.paragraphCount(document);
-
+    final errors = <String>[];
     if (document.similarChapters == null &&
         input.similarChapters.trim().isEmpty &&
         reference.similarChapters != null) {
-      return _ReferenceCheckResult.error(
+      errors.add(
         _strings.similarChaptersOnlineMissing(reference.similarChapters!),
       );
     }
-
     if (localCount != reference.paragraphCount) {
-      return _ReferenceCheckResult.errors([
+      errors.add(
         _strings.paragraphCountMismatch(
           chapter: chapterNumber,
           localCount: localCount,
           referenceCount: reference.paragraphCount,
         ),
-      ]);
+      );
+    }
+    errors.addAll(
+      compareFrenchConsistency(document, reference, language: input.language),
+    );
+    if (errors.isNotEmpty) {
+      return _ReferenceCheckResult.errors(errors);
     }
 
     return _ReferenceCheckResult.ok(
-      _strings.referenceOk(chapter: chapterNumber, paragraphCount: localCount),
+      '${_strings.referenceOk(chapter: chapterNumber, paragraphCount: localCount)}\nDates des sous-titres et références [Kc…] vérifiées avec le français.',
     );
   }
 
@@ -2547,6 +2559,16 @@ class _InputPanel extends StatelessWidget {
                     decoration: InputDecoration(
                       labelText: strings.subtitle,
                       hintText: strings.subtitleHint,
+                      errorText: verseIssues
+                          .where(
+                            (issue) =>
+                                issue.startsWith('[TITLE-IN-SUBTITLE]') ||
+                                issue.startsWith(
+                                  '[FR-DATE] Sous-titre initial',
+                                ),
+                          )
+                          .firstOrNull,
+                      errorMaxLines: 5,
                     ),
                   ),
                   const SizedBox(height: 12),

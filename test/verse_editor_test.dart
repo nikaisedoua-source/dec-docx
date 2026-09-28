@@ -7,8 +7,9 @@ import 'package:dec_docx/verse_editor.dart';
 void main() {
   Future<void> mount(
     WidgetTester tester,
-    TextEditingController controller,
-  ) async {
+    TextEditingController controller, {
+    List<String> issues = const [],
+  }) async {
     final language = TextEditingController(text: 'francais');
     addTearDown(language.dispose);
     await tester.pumpWidget(
@@ -18,6 +19,7 @@ void main() {
             child: VerseEditor(
               controller: controller,
               languageController: language,
+              issues: issues,
             ),
           ),
         ),
@@ -58,6 +60,34 @@ void main() {
       );
     },
   );
+
+  testWidgets('French concordance errors highlight only the matching verse', (
+    tester,
+  ) async {
+    final controller = TextEditingController(text: '1 Premier\n2 Deuxième\n');
+    addTearDown(controller.dispose);
+    await mount(
+      tester,
+      controller,
+      issues: [
+        '[FR-KC] verset 2 : références françaises attendues [Kc.1v2] ; trouvées aucune.',
+      ],
+    );
+    final verses = locateSourceVerses(controller.text);
+    for (final verse in verses) {
+      final card = tester.widget<Container>(
+        find.byKey(ValueKey('verse-card-${verse.start}')),
+      );
+      expect(
+        ((card.decoration! as BoxDecoration).border! as Border).top.color,
+        verse.number == 2 ? const Color(0xFFB91C1C) : const Color(0xFF8B4513),
+      );
+    }
+    expect(
+      find.textContaining('références françaises attendues'),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('a numbering gap highlights its own verse', (tester) async {
     final controller = TextEditingController(

@@ -1,6 +1,6 @@
 # DEC DOCX
 
-Application Flutter pour Android, macOS, Web et Windows. Version actuelle : `1.9.8`.
+Application Flutter pour Android, macOS, Web et Windows. Version actuelle : `1.9.9`.
 Elle genere un fichier `.docx` a partir d'un texte colle, d'un fichier fourni,
 ou de plusieurs fichiers fournis.
 
@@ -30,14 +30,20 @@ Les liens directs sont listes dans [TELECHARGEMENTS.md](TELECHARGEMENTS.md).
   espace, page A4.
 - Chapitres similaires ajoutes tels que saisis par le traducteur, sans prefixe
   francais automatique, a la fin du dernier paragraphe en bleu italique.
+- Contrôle obligatoire des dates des sous-titres (jour/mois/année et emplacement)
+  et des références `[Kc…]` par verset avec le chapitre français officiel.
+  Une référence incomplète ou inaccessible bloque la génération : aucune date
+  ni référence n'est corrigée silencieusement. Les références erronées sont en rouge.
+- Les titres recopiés dans le contenu ne deviennent pas des sous-titres ;
+  le champ sous-titre refuse un titre de prédication.
 - Validation bloquante quand un paragraphe n'a pas de numero ou quand un numero
   saute.
 - Reparation des mauvais formats courants : numeros seuls sur une ligne et
   plusieurs paragraphes numerotes colles sur une meme ligne.
 - Comparaison du nombre de paragraphes avec le chapitre francais correspondant
   sur `www.philippekacou.org`, sans limite fixe de numero de chapitre. Si la
-  connexion internet est absente, la generation reste possible avec les
-  controles locaux.
+  connexion internet est absente, le texte reste modifiable ; la generation
+  attend la comparaison obligatoire avec le français.
 - Identite visuelle DEC DOCX dans l'interface.
 - Enregistrement du `.docx` sur desktop et mobile.
 - Partage du document lorsque la plateforme ne renvoie pas de chemin de sortie.

@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:xml/xml.dart';
 
+import 'sermon_rules.dart';
+
 class DocumentSource {
   const DocumentSource({required this.name, required this.text});
 
@@ -125,6 +127,24 @@ class DocxBuilder {
       );
     }
 
+    final descriptiveTitle = title.contains(':')
+        ? title.substring(title.indexOf(':') + 1)
+        : title;
+    if (subtitle
+        .split('\n')
+        .any(
+          (line) =>
+              line.trim().isNotEmpty &&
+              (SermonRules.isSermonTitle(line) ||
+                  SermonRules.titleKey(line) == SermonRules.titleKey(title) ||
+                  SermonRules.titleKey(line) ==
+                      SermonRules.titleKey(descriptiveTitle)),
+        )) {
+      errors.add(
+        '[TITLE-IN-SUBTITLE] Sous-titre : ce texte est le titre de la prédication. Place-le uniquement dans le champ Titre du chapitre.',
+      );
+    }
+
     final blocks = <DocumentBlock>[
       if (subtitle.isNotEmpty) DocumentBlock.subtitle(subtitle),
     ];
@@ -136,7 +156,12 @@ class DocxBuilder {
       }
 
       hasAnyText = true;
-      final result = _parseContent(source.name, source.text, input.language);
+      final result = _parseContent(
+        source.name,
+        source.text,
+        input.language,
+        title,
+      );
       blocks.addAll(result.blocks);
       errors.addAll(result.errors);
       similarChapters ??= result.similarChapters;
@@ -348,6 +373,8 @@ class DocxBuilder {
     final result = _parseContent(
       fallbackTitle,
       lines.skip(contentStart).join('\n'),
+      '',
+      title,
     );
 
     return _ParseResult(
@@ -378,15 +405,17 @@ class DocxBuilder {
 
   static bool _isKacouTitle(String value) {
     return RegExp(
-      r'^KACOU(?:\s*(?:N[°O.]?\s*)?\d{1,3})?\s*:',
-      caseSensitive: false,
-    ).hasMatch(value.trim());
+          r'^KACOU(?:\s*(?:N[°O.]?\s*)?\d{1,3})?\s*:',
+          caseSensitive: false,
+        ).hasMatch(value.trim()) ||
+        SermonRules.isSermonTitle(value);
   }
 
   static _ContentParseResult _parseContent(
     String sourceName,
     String text, [
     String language = '',
+    String chapterTitle = '',
   ]) {
     final rawLines = text
         .replaceAll('\r\n', '\n')
@@ -418,6 +447,15 @@ class DocxBuilder {
     var pendingParagraph = false;
     for (var index = 0; index < lines.length; index++) {
       final line = lines[index];
+      final descriptiveTitle = chapterTitle.contains(':')
+          ? chapterTitle.substring(chapterTitle.indexOf(':') + 1)
+          : chapterTitle;
+      if (chapterTitle.isNotEmpty &&
+          (SermonRules.titleKey(line) == SermonRules.titleKey(chapterTitle) ||
+              SermonRules.titleKey(line) ==
+                  SermonRules.titleKey(descriptiveTitle))) {
+        continue;
+      }
       if (line.isEmpty) {
         continue;
       }
@@ -466,6 +504,7 @@ class DocxBuilder {
           _isConcordanceLine(line) ||
           _looksLikeSimilarChaptersLine(line) ||
           _looksLikeSectionSubtitle(line) ||
+          SermonRules.isDateHeading(line) ||
           _standaloneNumberPattern.hasMatch(line);
       if (isChinese &&
           !startsParagraph &&
@@ -524,11 +563,14 @@ class DocxBuilder {
         continue;
       }
 
-      final paragraph = _looksLikeParenthesizedDate(line)
+      final paragraph =
+          (_looksLikeParenthesizedDate(line) || SermonRules.isDateHeading(line))
           ? null
           : _parseNumberedParagraph(line);
       if (paragraph == null) {
-        if (!sawNumberedParagraph || _looksLikeSectionSubtitle(line)) {
+        if (!sawNumberedParagraph ||
+            _looksLikeSectionSubtitle(line) ||
+            SermonRules.isDateHeading(line)) {
           blocks.add(
             _looksLikeSectionSubtitle(line)
                 ? DocumentBlock.sectionTitle(line)
@@ -749,6 +791,8 @@ class DocxBuilder {
     if (value.isEmpty || _isKacouTitle(value)) {
       return true;
     }
+
+    if (SermonRules.isDateHeading(value)) return false;
 
     final noisePatterns = [
       RegExp(r'^\d{1,2}:\d{2}(\s?[AP]M)?$', caseSensitive: false),
