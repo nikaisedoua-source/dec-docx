@@ -18,6 +18,7 @@ import 'cloud/storage_gate.dart';
 import 'pdf_web_stub.dart' if (dart.library.js_interop) 'pdf_web.dart';
 import 'ai_assistant.dart';
 import 'sermon_reference.dart';
+import 'verse_editor.dart';
 
 enum DesignMode {
   aura,
@@ -115,7 +116,7 @@ class DesignPalette {
 }
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.9.5';
+const _appVersion = '1.9.6';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -820,6 +821,7 @@ class _GeneratorPageState extends State<GeneratorPage>
     )..repeat(reverse: true);
     _chapterTitleController.addListener(_syncAutomaticFileName);
     _documentLanguageController.addListener(_syncAutomaticFileName);
+    _manualTextController.addListener(_invalidateEditedText);
     _checkForUpdateNotice();
   }
 
@@ -831,12 +833,25 @@ class _GeneratorPageState extends State<GeneratorPage>
     _chapterTitleController.dispose();
     _subtitleController.dispose();
     _similarChaptersController.dispose();
+    _manualTextController.removeListener(_invalidateEditedText);
     _manualTextController.dispose();
     _downloadUrlController.dispose();
     _fileNameController.dispose();
     _documentLanguageController.dispose();
     _personNameController.dispose();
     super.dispose();
+  }
+
+  void _invalidateEditedText() {
+    if (!mounted) return;
+    setState(() {
+      _issueMessages = const [];
+      _status = null;
+      _aiReview = null;
+      _cloudDocument = null;
+      _generatedPath = null;
+      _libraryPath = null;
+    });
   }
 
   void _syncAutomaticFileName() {
@@ -1739,6 +1754,7 @@ class _GeneratorPageState extends State<GeneratorPage>
                     subtitleController: _subtitleController,
                     similarChaptersController: _similarChaptersController,
                     manualTextController: _manualTextController,
+                    editingEnabled: !_isGenerating && !_isDownloading,
                     downloadUrlController: _downloadUrlController,
                     documentLanguageController: _documentLanguageController,
                     onLanguageSelected: (language) {
@@ -2411,6 +2427,7 @@ class _InputPanel extends StatelessWidget {
     required this.subtitleController,
     required this.similarChaptersController,
     required this.manualTextController,
+    required this.editingEnabled,
     required this.downloadUrlController,
     required this.documentLanguageController,
     required this.onLanguageSelected,
@@ -2425,6 +2442,7 @@ class _InputPanel extends StatelessWidget {
   final TextEditingController subtitleController;
   final TextEditingController similarChaptersController;
   final TextEditingController manualTextController;
+  final bool editingEnabled;
   final TextEditingController downloadUrlController;
   final TextEditingController documentLanguageController;
   final ValueChanged<KacouLanguage?> onLanguageSelected;
@@ -2567,6 +2585,7 @@ class _InputPanel extends StatelessWidget {
               const SizedBox(height: 12),
               TextField(
                 controller: manualTextController,
+                enabled: editingEnabled,
                 minLines: MediaQuery.sizeOf(context).width < 600 ? 6 : 12,
                 maxLines: 24,
                 textAlignVertical: TextAlignVertical.top,
@@ -2574,6 +2593,12 @@ class _InputPanel extends StatelessWidget {
                   hintText: strings.inputHint,
                   alignLabelWithHint: true,
                 ),
+              ),
+              VerseEditor(
+                controller: manualTextController,
+                languageController: documentLanguageController,
+                locale: strings.language.name,
+                enabled: editingEnabled,
               ),
               const SizedBox(height: 8),
               ExpansionTile(

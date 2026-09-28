@@ -1,0 +1,8 @@
+{
+  "version": "1.9.6",
+  "message": "Modifiez ou supprimez un verset après collage, avec annulation et signalement des numéros répétés.",
+  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.6-preview/DEC-DOCX-Android-preview.apk",
+  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.6-preview/DEC-DOCX-macOS-preview.zip",
+  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.6-preview/DEC-DOCX-Windows-preview.zip",
+  "webUrl": "https://nikaisedoua-source.github.io/dec-docx/"
+}

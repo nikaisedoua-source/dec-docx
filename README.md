@@ -1,6 +1,6 @@
 # DEC DOCX
 
-Application Flutter pour Android, macOS, Web et Windows. Version actuelle : `1.9.5`.
+Application Flutter pour Android, macOS, Web et Windows. Version actuelle : `1.9.6`.
 Elle genere un fichier `.docx` a partir d'un texte colle, d'un fichier fourni,
 ou de plusieurs fichiers fournis.
 
@@ -13,6 +13,8 @@ Les liens directs sont listes dans [TELECHARGEMENTS.md](TELECHARGEMENTS.md).
 - Saisie separee du titre du chapitre, du sous-titre optionnel et des chapitres
   similaires optionnels.
 - Saisie directe du texte des paragraphes.
+- Vue par verset après collage, modification du numéro et du texte, suppression
+  individuelle avec annulation et signalement des numéros répétés.
 - Interface utilisateur en francais, anglais, espagnol et portugais, avec
   drapeaux dans le selecteur de langue.
 - Import de plusieurs fichiers `.txt`, `.md`, `.docx` ou `.pdf`.
