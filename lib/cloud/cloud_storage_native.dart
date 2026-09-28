@@ -70,13 +70,25 @@ class CloudStorage {
     mode = 'local';
   }
 
-  Future<void> authorize() async {}
+  Future<void> authorize() async {
+    if (mode != 'folder' || _root == null) return;
+    if (!await Directory(_root!).exists()) {
+      throw const FileSystemException(
+        'Dossier indisponible. Choisissez à nouveau le dossier synchronisé.',
+      );
+    }
+  }
+
+  Future<Directory> _localLibrary() async {
+    final documents =
+        localDirectory ??
+        (configFile?.parent ?? await getApplicationDocumentsDirectory());
+    return Directory('${documents.path}/DEC DOCX');
+  }
 
   Future<Directory> _library() async {
     if (mode == 'local') {
-      final documents =
-          localDirectory ?? await getApplicationDocumentsDirectory();
-      return Directory('${documents.path}/DEC DOCX');
+      return _localLibrary();
     }
     if (_root == null || !await Directory(_root!).exists()) {
       throw const FileSystemException(
@@ -86,8 +98,7 @@ class CloudStorage {
     return Directory('$_root/DEC DOCX');
   }
 
-  Future<String> save(CloudDocument document) async {
-    final root = await _library();
+  Future<String> _writeVersion(Directory root, CloudDocument document) async {
     final lang = safeCloudSegment(document.language, 'sans-langue');
     final person = safeCloudSegment(document.person, 'sans-personne');
     final stem = safeCloudSegment(
@@ -102,8 +113,33 @@ class CloudStorage {
     return '$lang/$person/$name';
   }
 
+  Future<String> save(CloudDocument document) async {
+    if (mode == 'local') {
+      return _writeVersion(await _localLibrary(), document);
+    }
+    // Keep a local recovery copy before touching a removable or synchronized
+    // folder. A provider can be offline even while its folder still exists.
+    final localPath = await _writeVersion(await _localLibrary(), document);
+    try {
+      return await _writeVersion(await _library(), document);
+    } catch (error) {
+      throw FileSystemException(
+        'Version locale conservée ($localPath). Synchronisation à reprendre : $error',
+      );
+    }
+  }
+
   Future<List<CloudFile>> list() async {
-    final root = await _library();
+    Directory root;
+    try {
+      root = await _library();
+    } catch (_) {
+      // Offline mode still exposes the local recovery library.
+      root = await _localLibrary();
+    }
+    if (!await root.exists() && mode == 'folder') {
+      root = await _localLibrary();
+    }
     if (!await root.exists()) return [];
     final result = <CloudFile>[];
     await for (final entry in root.list(recursive: true, followLinks: false)) {
@@ -134,14 +170,23 @@ class CloudStorage {
         path.contains(':')) {
       throw const FormatException('Chemin invalide');
     }
-    final root = await _library();
-    final file = File('${root.path}/$path');
-    final canonicalRoot = await root.resolveSymbolicLinks();
-    final canonicalFile = await file.resolveSymbolicLinks();
-    if (!canonicalFile.startsWith('$canonicalRoot${Platform.pathSeparator}')) {
-      throw const FormatException('Fichier hors bibliothèque');
+    Future<Uint8List> readFrom(Directory root) async {
+      final file = File('${root.path}/$path');
+      final canonicalRoot = await root.resolveSymbolicLinks();
+      final canonicalFile = await file.resolveSymbolicLinks();
+      if (!canonicalFile.startsWith(
+        '$canonicalRoot${Platform.pathSeparator}',
+      )) {
+        throw const FormatException('Fichier hors bibliothèque');
+      }
+      return file.readAsBytes();
     }
-    return file.readAsBytes();
+
+    try {
+      return await readFrom(await _library());
+    } catch (_) {
+      return readFrom(await _localLibrary());
+    }
   }
 
   Future<void> disconnect() async {

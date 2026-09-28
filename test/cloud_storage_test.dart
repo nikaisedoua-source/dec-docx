@@ -47,7 +47,19 @@ void main() {
       await root.delete();
       await expectLater(
         storage.save(CloudDocument(Uint8List(1), 'test.docx', 'fr', 'a')),
-        throwsA(isA<FileSystemException>()),
+        throwsA(
+          predicate<FileSystemException>(
+            (error) => error.message.contains('Version locale conservée'),
+          ),
+        ),
+      );
+      final recovery = Directory('${temp.path}/DEC DOCX');
+      expect(
+        recovery
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((file) => file.path.endsWith('.docx')),
+        isNotEmpty,
       );
     },
   );
