@@ -116,7 +116,7 @@ class DesignPalette {
 }
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.9.6';
+const _appVersion = '1.9.7';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -1755,6 +1755,7 @@ class _GeneratorPageState extends State<GeneratorPage>
                     similarChaptersController: _similarChaptersController,
                     manualTextController: _manualTextController,
                     editingEnabled: !_isGenerating && !_isDownloading,
+                    verseIssues: _issueMessages,
                     downloadUrlController: _downloadUrlController,
                     documentLanguageController: _documentLanguageController,
                     onLanguageSelected: (language) {
@@ -2428,6 +2429,7 @@ class _InputPanel extends StatelessWidget {
     required this.similarChaptersController,
     required this.manualTextController,
     required this.editingEnabled,
+    required this.verseIssues,
     required this.downloadUrlController,
     required this.documentLanguageController,
     required this.onLanguageSelected,
@@ -2443,6 +2445,7 @@ class _InputPanel extends StatelessWidget {
   final TextEditingController similarChaptersController;
   final TextEditingController manualTextController;
   final bool editingEnabled;
+  final List<String> verseIssues;
   final TextEditingController downloadUrlController;
   final TextEditingController documentLanguageController;
   final ValueChanged<KacouLanguage?> onLanguageSelected;
@@ -2599,6 +2602,7 @@ class _InputPanel extends StatelessWidget {
                 languageController: documentLanguageController,
                 locale: strings.language.name,
                 enabled: editingEnabled,
+                issues: verseIssues,
               ),
               const SizedBox(height: 8),
               ExpansionTile(

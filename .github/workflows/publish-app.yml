@@ -32,7 +32,7 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test test/widget_test.dart test/cloud_storage_test.dart test/verse_editor_test.dart
-      - run: node --test test/cloud_storage_web_test.mjs
+      - run: node --test test/cloud_storage_web_test.mjs test/app_bootstrap_test.mjs
       - run: flutter build web --release --base-href /dec-docx/
       - run: |
           cp -R public/. build/web/
@@ -42,11 +42,13 @@ jobs:
           zip -qr DEC-DOCX-Browser-Extension.zip browser_extension
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.6-preview
-          name: DEC DOCX 1.9.6 — aperçu
+          tag_name: v1.9.7-preview
+          name: DEC DOCX 1.9.7 — aperçu
           prerelease: true
           body: |
-            Édition des versets après collage : Modifier, Supprimer et annuler une suppression.
+            Cartes de versets avec texte complet et actions Modifier et Supprimer à droite.
+            Les versets concernés par une erreur sont indiqués en rouge.
+            Une seule adresse publique, avec correction du chargement des anciennes versions mises en cache.
             Les numéros répétés sont signalés et les contrôles locaux sont actualisés après correction.
             Le moteur de génération Word et de comparaison reste inchangé.
             Cette version ajoute une bibliothèque locale persistante et versionnée sur le Web et les applications natives.
@@ -113,7 +115,7 @@ jobs:
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath DEC-DOCX-Windows-preview.zip
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.6-preview
+          tag_name: v1.9.7-preview
           prerelease: true
           files: |
             DEC-DOCX-Android-preview.apk

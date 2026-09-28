@@ -91,11 +91,13 @@ class VerseEditor extends StatefulWidget {
     required this.languageController,
     this.locale = 'fr',
     this.enabled = true,
+    this.issues = const [],
   });
   final TextEditingController controller;
   final TextEditingController languageController;
   final String locale;
   final bool enabled;
+  final List<String> issues;
 
   @override
   State<VerseEditor> createState() => _VerseEditorState();
@@ -215,6 +217,129 @@ class _VerseEditorState extends State<VerseEditor> {
     );
   }
 
+  Widget _verseCard(
+    BuildContext context,
+    SourceVerse verse,
+    String source,
+    List<String> issues,
+  ) {
+    final selectable = canSelect(verse, source);
+    const normal = Color(0xFF8B4513);
+    const errorColor = Color(0xFFB91C1C);
+    final color = issues.isEmpty ? normal : errorColor;
+    final display = verse
+        .textIn(source)
+        .replaceFirst(
+          RegExp(r'^[^\p{L}\p{N}\r\n]{0,8}\s*\d{1,3}[\s.)-]*', unicode: true),
+          '${verse.number}. ',
+        );
+    return Container(
+      key: ValueKey('verse-card-${verse.start}'),
+      margin: const EdgeInsets.only(bottom: 16),
+      constraints: const BoxConstraints(minHeight: 120),
+      decoration: BoxDecoration(
+        color: issues.isEmpty ? Colors.white : const Color(0xFFFFF7F7),
+        border: Border.all(color: color, width: 1.3),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x10000000),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  display,
+                  key: ValueKey('verse-text-${verse.start}'),
+                  style: TextStyle(
+                    color: issues.isEmpty
+                        ? const Color(0xFF171717)
+                        : errorColor,
+                    fontSize: MediaQuery.sizeOf(context).width < 600 ? 15 : 17,
+                    height: 1.65,
+                  ),
+                ),
+                for (final issue in issues)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      issue,
+                      style: const TextStyle(color: errorColor, fontSize: 13),
+                    ),
+                  ),
+                if (!selectable)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      label(
+                        'Plusieurs versets sur une ligne : corrige la zone de texte ci-dessus.',
+                        'Several verses on one line: edit the text box above.',
+                        'Varios versículos en una línea: edita el texto de arriba.',
+                        'Vários versículos na mesma linha: edite o texto acima.',
+                      ),
+                      style: const TextStyle(
+                        color: Color(0xFF595959),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                tooltip: label('Supprimer', 'Delete', 'Eliminar', 'Excluir'),
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: widget.enabled && selectable ? color : Colors.grey,
+                ),
+                onPressed: !widget.enabled || !selectable
+                    ? null
+                    : () {
+                        if (widget.controller.text != source) return;
+                        _beforeDelete = source;
+                        _afterDelete = source.replaceRange(
+                          verse.start,
+                          verse.end,
+                          '',
+                        );
+                        widget.controller.value = TextEditingValue(
+                          text: _afterDelete!,
+                          selection: TextSelection.collapsed(
+                            offset: verse.start,
+                          ),
+                        );
+                      },
+              ),
+              IconButton(
+                tooltip: label('Modifier', 'Edit', 'Editar', 'Editar'),
+                icon: Icon(
+                  Icons.edit_outlined,
+                  color: widget.enabled && selectable ? color : Colors.grey,
+                ),
+                onPressed: widget.enabled && selectable
+                    ? () => edit(verse, source)
+                    : null,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: Listenable.merge([widget.controller, widget.languageController]),
@@ -226,13 +351,45 @@ class _VerseEditorState extends State<VerseEditor> {
       );
       final canUndo = _beforeDelete != null && source == _afterDelete;
       if (verses.isEmpty && !canUndo) return const SizedBox.shrink();
-      final counts = <int, int>{};
-      for (final verse in verses) {
-        counts.update(verse.number, (count) => count + 1, ifAbsent: () => 1);
-      }
       final errors = source.trim().isEmpty
           ? <String>[]
           : validate(source).errors;
+      final localIssues = {
+        ...errors,
+        ...widget.issues.where((issue) => issue.startsWith('Texte saisi,')),
+      };
+      final issuesByVerse = <int, List<String>>{};
+      final seen = <int>{};
+      for (final verse in verses) {
+        final messages = <String>[];
+        if (!seen.add(verse.number)) {
+          messages.add(
+            label(
+              'Numéro répété',
+              'Repeated number',
+              'Número repetido',
+              'Número repetido',
+            ),
+          );
+        }
+        final firstLine = source.substring(0, verse.start).split('\n').length;
+        final lastLine =
+            firstLine +
+            source
+                .substring(verse.start, verse.end)
+                .trimRight()
+                .split('\n')
+                .length -
+            1;
+        for (final issue in localIssues) {
+          final match = RegExp(r'ligne (\d+) :').firstMatch(issue);
+          final line = match == null ? null : int.tryParse(match.group(1)!);
+          if (line != null && line >= firstLine && line <= lastLine) {
+            messages.add(issue.substring(issue.indexOf(' :') + 2).trim());
+          }
+        }
+        issuesByVerse[verse.start] = messages;
+      }
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -261,128 +418,17 @@ class _VerseEditorState extends State<VerseEditor> {
                       );
                     },
             ),
-          if (verses.isNotEmpty)
-            ExpansionTile(
-              key: const PageStorageKey('verse-editor'),
-              initiallyExpanded: true,
-              tilePadding: EdgeInsets.zero,
-              title: Text(
+          if (verses.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text(
                 '${label('Versets', 'Verses', 'Versículos', 'Versículos')} (${verses.length})',
+                style: Theme.of(context).textTheme.titleMedium,
               ),
-              children: [
-                SizedBox(
-                  height: verses.length == 1 ? 230 : 420,
-                  child: ListView.builder(
-                    primary: false,
-                    itemCount: verses.length,
-                    itemBuilder: (context, index) {
-                      final verse = verses[index];
-                      final selectable = canSelect(verse, source);
-                      final repeated = counts[verse.number]! > 1;
-                      return Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${label('Verset', 'Verse', 'Versículo', 'Versículo')} ${verse.number}',
-                                style: Theme.of(context).textTheme.titleSmall,
-                              ),
-                              if (repeated)
-                                Text(
-                                  label(
-                                    'Numéro répété',
-                                    'Repeated number',
-                                    'Número repetido',
-                                    'Número repetido',
-                                  ),
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.error,
-                                  ),
-                                ),
-                              const SizedBox(height: 6),
-                              Text(
-                                verse.textIn(source),
-                                maxLines: 5,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              if (!selectable)
-                                Text(
-                                  label(
-                                    'Plusieurs versets sur une ligne : corrige la zone de texte ci-dessus.',
-                                    'Several verses on one line: edit the text box above.',
-                                    'Varios versículos en una línea: edita el texto de arriba.',
-                                    'Vários versículos na mesma linha: edite o texto acima.',
-                                  ),
-                                ),
-                              Wrap(
-                                spacing: 8,
-                                children: [
-                                  TextButton.icon(
-                                    icon: const Icon(
-                                      Icons.edit_outlined,
-                                      size: 18,
-                                    ),
-                                    label: Text(
-                                      label(
-                                        'Modifier',
-                                        'Edit',
-                                        'Editar',
-                                        'Editar',
-                                      ),
-                                    ),
-                                    onPressed: widget.enabled && selectable
-                                        ? () => edit(verse, source)
-                                        : null,
-                                  ),
-                                  TextButton.icon(
-                                    icon: const Icon(
-                                      Icons.delete_outline,
-                                      size: 18,
-                                    ),
-                                    label: Text(
-                                      label(
-                                        'Supprimer',
-                                        'Delete',
-                                        'Eliminar',
-                                        'Excluir',
-                                      ),
-                                    ),
-                                    onPressed: !widget.enabled || !selectable
-                                        ? null
-                                        : () {
-                                            if (widget.controller.text !=
-                                                source) {
-                                              return;
-                                            }
-                                            _beforeDelete = source;
-                                            _afterDelete = source.replaceRange(
-                                              verse.start,
-                                              verse.end,
-                                              '',
-                                            );
-                                            widget.controller.value =
-                                                TextEditingValue(
-                                                  text: _afterDelete!,
-                                                  selection:
-                                                      TextSelection.collapsed(
-                                                        offset: verse.start,
-                                                      ),
-                                                );
-                                          },
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
             ),
+            for (final verse in verses)
+              _verseCard(context, verse, source, issuesByVerse[verse.start]!),
+          ],
           if (errors.isNotEmpty)
             ExpansionTile(
               tilePadding: EdgeInsets.zero,

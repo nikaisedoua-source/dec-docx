@@ -26,6 +26,56 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets(
+    'only erroneous cards are red and verse text is never truncated',
+    (tester) async {
+      final controller = TextEditingController(
+        text: '1 Premier\n2 Deuxième\n2 Doublon\n3 Troisième\n',
+      );
+      addTearDown(controller.dispose);
+      await mount(tester, controller);
+      final verses = locateSourceVerses(controller.text);
+      for (var i = 0; i < verses.length; i++) {
+        final card = tester.widget<Container>(
+          find.byKey(ValueKey('verse-card-${verses[i].start}')),
+        );
+        final border = (card.decoration! as BoxDecoration).border! as Border;
+        expect(
+          border.top.color,
+          i == 2 ? const Color(0xFFB91C1C) : const Color(0xFF8B4513),
+        );
+        final text = tester.widget<Text>(
+          find.byKey(ValueKey('verse-text-${verses[i].start}')),
+        );
+        expect(text.maxLines, isNull);
+        expect(text.overflow, isNull);
+      }
+      expect(
+        tester.getTopLeft(find.byTooltip('Modifier').first).dx,
+        greaterThan(
+          tester.getTopLeft(find.byKey(const ValueKey('verse-text-0'))).dx,
+        ),
+      );
+    },
+  );
+
+  testWidgets('a numbering gap highlights its own verse', (tester) async {
+    final controller = TextEditingController(
+      text: '1 Premier\n3 Numéro incorrect\n',
+    );
+    addTearDown(controller.dispose);
+    await mount(tester, controller);
+    final verses = locateSourceVerses(controller.text);
+    final card = tester.widget<Container>(
+      find.byKey(ValueKey('verse-card-${verses.last.start}')),
+    );
+    expect(
+      ((card.decoration! as BoxDecoration).border! as Border).top.color,
+      const Color(0xFFB91C1C),
+    );
+    expect(find.textContaining('Attendu 2 mais trouve 3'), findsOneWidget);
+  });
+
   testWidgets('pasting into the app shows verse actions on a narrow screen', (
     tester,
   ) async {
@@ -44,9 +94,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     await tester.ensureVisible(find.byType(VerseEditor));
     await tester.pump();
-    expect(find.text('Numéro répété'), findsNWidgets(2));
-    expect(find.text('Modifier'), findsWidgets);
-    expect(find.text('Supprimer'), findsWidgets);
+    expect(find.text('Numéro répété'), findsOneWidget);
+    expect(find.byTooltip('Modifier'), findsWidgets);
+    expect(find.byTooltip('Supprimer'), findsWidgets);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -57,7 +107,7 @@ void main() {
     final controller = TextEditingController(text: '1 Premier\n');
     addTearDown(controller.dispose);
     await mount(tester, controller);
-    await tester.tap(find.text('Modifier'));
+    await tester.tap(find.byTooltip('Modifier'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), '');
     await tester.tap(find.text('Enregistrer'));
@@ -122,8 +172,8 @@ void main() {
       final controller = TextEditingController(text: original);
       addTearDown(controller.dispose);
       await mount(tester, controller);
-      expect(find.text('Numéro répété'), findsNWidgets(2));
-      await tester.tap(find.text('Supprimer').at(1));
+      expect(find.text('Numéro répété'), findsOneWidget);
+      await tester.tap(find.byTooltip('Supprimer').at(1));
       await tester.pumpAndSettle();
       expect(controller.text, '1 Premier\n2 Deuxième\n');
       expect(find.text('Numéro répété'), findsNothing);
@@ -142,13 +192,13 @@ void main() {
       );
       addTearDown(controller.dispose);
       await mount(tester, controller);
-      await tester.tap(find.text('Modifier').at(1));
+      await tester.tap(find.byTooltip('Modifier').at(1));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), '2 Nouveau');
       await tester.tap(find.text('Annuler'));
       await tester.pumpAndSettle();
       expect(controller.text, contains('2 Ancien'));
-      await tester.tap(find.text('Modifier').at(1));
+      await tester.tap(find.byTooltip('Modifier').at(1));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), '2 Nouveau');
       await tester.tap(find.text('Enregistrer'));
@@ -177,7 +227,7 @@ void main() {
     final controller = TextEditingController(text: '1 Premier\n2 Deuxième\n');
     addTearDown(controller.dispose);
     await mount(tester, controller);
-    await tester.tap(find.text('Supprimer').first);
+    await tester.tap(find.byTooltip('Supprimer').first);
     await tester.pumpAndSettle();
     controller.text = '1 Nouveau collage\n';
     await tester.pumpAndSettle();
@@ -189,8 +239,11 @@ void main() {
     final controller = TextEditingController(text: '1 Premier 2 Deuxième\n');
     addTearDown(controller.dispose);
     await mount(tester, controller);
-    final button = tester.widget<TextButton>(
-      find.widgetWithText(TextButton, 'Supprimer'),
+    final button = tester.widget<IconButton>(
+      find.ancestor(
+        of: find.byTooltip('Supprimer'),
+        matching: find.byType(IconButton),
+      ),
     );
     expect(button.onPressed, isNull);
   });
