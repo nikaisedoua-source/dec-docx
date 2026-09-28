@@ -1,6 +1,6 @@
 # DEC DOCX
 
-Application Flutter pour Android, macOS, Web et Windows. Version actuelle : `1.9.7`.
+Application Flutter pour Android, macOS, Web et Windows. Version actuelle : `1.9.8`.
 Elle genere un fichier `.docx` a partir d'un texte colle, d'un fichier fourni,
 ou de plusieurs fichiers fournis.
 
@@ -83,3 +83,15 @@ desktop active.
 Sur cette machine, `flutter build apk`, `flutter analyze` et `flutter test`
 fonctionnent. `flutter build macos` echoue tant que `xcodebuild` est absent, et
 `flutter build windows` est refuse par Flutter hors Windows.
+
+## Compilation Web
+
+```bash
+flutter build web --release --base-href /dec-docx/
+python3 tool/version_web_assets.py build/web
+```
+
+La seconde commande prepare les ressources de cette version pour eviter de
+reutiliser les anciennes polices et images du cache. L’adresse publique reste
+`https://nikaisedoua-source.github.io/dec-docx/`. La bibliotheque locale reste
+conservee dans IndexedDB.

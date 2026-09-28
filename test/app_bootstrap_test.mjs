@@ -11,6 +11,7 @@ test('canonical app retires only its asset cache and loads current compiled code
   const unregistered = [];
   const opened = [];
   let loads = 0;
+  let configuration;
   const appRoot = 'https://nikaisedoua-source.github.io/dec-docx/';
   const requests = [appRoot + 'main.dart.js', 'https://nikaisedoua-source.github.io/other/main.dart.js'];
   const caches = {
@@ -21,7 +22,7 @@ test('canonical app retires only its asset cache and loads current compiled code
     },
   };
   const flutter = {buildConfig: {builds: [{compileTarget: 'dart2js', mainJsPath: 'main.dart.js'}]},
-    loader: {load: async () => { loads++; }}};
+    loader: {load: async (options) => { loads++; configuration = options.config; }}};
   await vm.runInNewContext(script, {URL, console, document: {baseURI: appRoot},
     window: {caches}, caches, _flutter: flutter,
     navigator: {serviceWorker: {getRegistrations: async () => [appRoot, 'https://nikaisedoua-source.github.io/other/']
@@ -31,7 +32,8 @@ test('canonical app retires only its asset cache and loads current compiled code
   assert.deepEqual(opened, ['flutter-app-cache']);
   assert.deepEqual(deleted, [requests[0]]);
   assert.equal(loads, 1);
-  assert.equal(flutter.buildConfig.builds[0].mainJsPath, appRoot + 'main.dart.js?build=1.9.7');
+  assert.equal(configuration.assetBase, 'releases/1.9.8/');
+  assert.equal(flutter.buildConfig.builds[0].mainJsPath, appRoot + 'main.dart.js?build=1.9.8');
 });
 
 test('unavailable cache cleanup never prevents app startup', async () => {

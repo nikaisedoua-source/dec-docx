@@ -2,7 +2,7 @@ name: Publish verified application
 on:
   push:
     branches: [main]
-    paths: ['lib/**', 'pubspec.yaml', 'web/**', 'public/**', 'word_addin/**', 'browser_extension/**', 'test/**', 'tool/prepare_release_assets.py', '.github/workflows/publish-app.yml']
+    paths: ['lib/**', 'pubspec.yaml', 'web/**', 'public/**', 'word_addin/**', 'browser_extension/**', 'test/**', 'tool/prepare_release_assets.py', 'tool/version_web_assets.py', '.github/workflows/publish-app.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -34,6 +34,7 @@ jobs:
       - run: flutter test test/widget_test.dart test/cloud_storage_test.dart test/verse_editor_test.dart
       - run: node --test test/cloud_storage_web_test.mjs test/app_bootstrap_test.mjs
       - run: flutter build web --release --base-href /dec-docx/
+      - run: python3 tool/version_web_assets.py build/web
       - run: |
           cp -R public/. build/web/
           cp -R word_addin build/web/word-addin
@@ -42,8 +43,8 @@ jobs:
           zip -qr DEC-DOCX-Browser-Extension.zip browser_extension
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.7-preview
-          name: DEC DOCX 1.9.7 — aperçu
+          tag_name: v1.9.8-preview
+          name: DEC DOCX 1.9.8 — aperçu
           prerelease: true
           body: |
             Cartes de versets avec texte complet et actions Modifier et Supprimer à droite.
@@ -115,7 +116,7 @@ jobs:
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath DEC-DOCX-Windows-preview.zip
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.7-preview
+          tag_name: v1.9.8-preview
           prerelease: true
           files: |
             DEC-DOCX-Android-preview.apk
