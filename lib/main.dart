@@ -2569,6 +2569,15 @@ class _InputPanel extends StatelessWidget {
                           )
                           .firstOrNull,
                       errorMaxLines: 5,
+                      errorStyle: TextStyle(
+                        color:
+                            ThemeData.estimateBrightnessForColor(
+                                  palette.surface,
+                                ) ==
+                                Brightness.dark
+                            ? const Color(0xFFFFB4AB)
+                            : const Color(0xFFB91C1C),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),

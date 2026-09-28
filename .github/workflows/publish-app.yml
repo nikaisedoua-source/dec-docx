@@ -43,8 +43,8 @@ jobs:
           zip -qr DEC-DOCX-Browser-Extension.zip browser_extension
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.9-preview
-          name: DEC DOCX 1.9.9 — aperçu
+          tag_name: v1.9.10-preview
+          name: DEC DOCX 1.9.10 — aperçu
           prerelease: true
           body: |
             Contrôle des dates des sous-titres avec la référence française, y compris entre deux versets.
@@ -113,7 +113,7 @@ jobs:
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath DEC-DOCX-Windows-preview.zip
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.9-preview
+          tag_name: v1.9.10-preview
           prerelease: true
           files: |
             DEC-DOCX-Android-preview.apk

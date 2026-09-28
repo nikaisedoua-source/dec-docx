@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'docx_builder.dart';
+import 'sermon_rules.dart';
 
 /// An occurrence in the original text. Offsets, rather than verse numbers,
 /// distinguish repeated verses and preserve everything outside the selection.
@@ -40,10 +41,9 @@ List<SourceVerse> locateSourceVerses(String source, {String language = ''}) {
     final value = line.group(0)!.trim();
     if (value.isEmpty) continue;
     // A parenthesized date and Chinese date continuations are not verses.
-    final date = RegExp(
-      r'^\(\s*\d{1,2}\s+\p{L}',
-      unicode: true,
-    ).hasMatch(value);
+    final date =
+        SermonRules.isDateHeading(value) ||
+        RegExp(r'^\(\s*\d{1,2}\s+\p{L}', unicode: true).hasMatch(value);
     final match = date ? null : numbered.firstMatch(value);
     final isolated = date ? null : standalone.firstMatch(value);
     final dateContinuation =

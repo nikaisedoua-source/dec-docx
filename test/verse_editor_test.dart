@@ -5,6 +5,16 @@ import 'package:dec_docx/main.dart';
 import 'package:dec_docx/verse_editor.dart';
 
 void main() {
+  test('date headings stay outside editable verse ranges', () {
+    for (final date in ['24 mai 2009', '24/05/2009', '(24 mai 2009)']) {
+      final text = '1 Premier\n$date\n2 Deuxième\n';
+      final verses = locateSourceVerses(text, language: 'français');
+      expect(verses.map((verse) => verse.number), [1, 2]);
+      expect(verses.first.textIn(text), '1 Premier');
+      expect(verses.last.textIn(text), '2 Deuxième');
+    }
+  });
+
   Future<void> mount(
     WidgetTester tester,
     TextEditingController controller, {
