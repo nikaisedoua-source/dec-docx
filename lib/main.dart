@@ -864,6 +864,16 @@ class _GeneratorPageState extends State<GeneratorPage>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _ambientController.stop();
+    } else if (!_ambientController.isAnimating) {
+      _ambientController.repeat(reverse: true);
+    }
+  }
+
+  @override
   void dispose() {
     for (final field in _draftFields.values) {
       field.removeListener(_draftChanged);
@@ -996,14 +1006,48 @@ class _GeneratorPageState extends State<GeneratorPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            text,
+          Row(
             key: const ValueKey('draft-status'),
-            style: TextStyle(
-              color: session.error != null
-                  ? _palette.accentText
-                  : _palette.text,
-            ),
+            children: [
+              AnimatedSwitcher(
+                duration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : const Duration(milliseconds: 240),
+                child: Icon(
+                  session.error != null
+                      ? Icons.error_outline_rounded
+                      : session.saving || session.dirty
+                      ? Icons.sync_rounded
+                      : session.savedAt != null
+                      ? Icons.check_circle_outline_rounded
+                      : Icons.edit_note_rounded,
+                  key: ValueKey(
+                    '${session.error != null}-${session.saving || session.dirty}-${session.savedAt != null}',
+                  ),
+                  color: session.error != null
+                      ? _palette.accentText
+                      : _palette.accent,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: MediaQuery.disableAnimationsOf(context)
+                      ? Duration.zero
+                      : const Duration(milliseconds: 240),
+                  child: Text(
+                    text,
+                    key: ValueKey(text),
+                    style: TextStyle(
+                      color: session.error != null
+                          ? _palette.accentText
+                          : _palette.text,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           if (session.savedAt != null)
             Text(
@@ -2548,6 +2592,7 @@ class _PageEntrance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
     return TweenAnimationBuilder<double>(
       duration: const Duration(milliseconds: 550),
       curve: Curves.easeOutCubic,
@@ -2593,6 +2638,16 @@ class _AnimatedUpdateBannerState extends State<_AnimatedUpdateBanner>
       _controller.value = 1;
     } else {
       _controller.forward();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.stop();
+    } else if (!_controller.isAnimating) {
+      _controller.repeat(reverse: true);
     }
   }
 
@@ -2678,7 +2733,7 @@ class _BrandMark extends StatelessWidget {
   }
 }
 
-class _SectionCard extends StatelessWidget {
+class _SectionCard extends StatefulWidget {
   const _SectionCard({
     required this.step,
     required this.icon,
@@ -2696,8 +2751,46 @@ class _SectionCard extends StatelessWidget {
   final DesignPalette palette;
 
   @override
+  State<_SectionCard> createState() => _SectionCardState();
+}
+
+class _SectionCardState extends State<_SectionCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _entrance = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 460),
+  );
+  Timer? _startTimer;
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _startTimer?.cancel();
+      _entrance.value = 1;
+      _started = true;
+      return;
+    }
+    if (_started) return;
+    _started = true;
+    final stepNumber = int.tryParse(widget.step) ?? 1;
+    _startTimer = Timer(Duration(milliseconds: 90 * stepNumber), () {
+      if (mounted) _entrance.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _startTimer?.cancel();
+    _entrance.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final palette = widget.palette;
     return GlassSurface(
       tint: palette.surfaceStrong,
       child: Padding(
@@ -2708,22 +2801,34 @@ class _SectionCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [palette.accent, palette.accentSecondary],
+                AnimatedBuilder(
+                  animation: _entrance,
+                  builder: (context, child) {
+                    final progress = Curves.easeOutBack.transform(
+                      _entrance.value,
+                    );
+                    return Transform.scale(
+                      scale: 0.72 + progress * 0.28,
+                      child: child,
+                    );
+                  },
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [palette.accent, palette.accentSecondary],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Center(
-                    child: Text(
-                      step,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                    child: Center(
+                      child: Text(
+                        widget.step,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
@@ -2734,7 +2839,7 @@ class _SectionCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        title,
+                        widget.title,
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: palette.text,
                           fontWeight: FontWeight.w800,
@@ -2742,7 +2847,7 @@ class _SectionCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        description,
+                        widget.description,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: palette.mutedText,
                           fontSize: 13,
@@ -2755,7 +2860,7 @@ class _SectionCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 14),
-            child,
+            widget.child,
           ],
         ),
       ),
@@ -3468,73 +3573,102 @@ class _IssueIndex extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final entries = issues.isEmpty ? [status] : issues;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF1F0),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFE11D48).withValues(alpha: .3),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.rule_rounded,
-                color: Color(0xFF9F1239),
-                size: 19,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    color: Color(0xFF9F1239),
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              Text(
-                '${entries.length}',
-                style: const TextStyle(
-                  color: Color(0xFF9F1239),
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
+    return _FeedbackEntrance(
+      identity: status,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF1F0),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: const Color(0xFFE11D48).withValues(alpha: .3),
           ),
-          const SizedBox(height: 8),
-          ...entries.asMap().entries.map(
-            (entry) => Padding(
-              padding: const EdgeInsets.only(top: 7),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${entry.key + 1}.',
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.rule_rounded,
+                  color: Color(0xFF9F1239),
+                  size: 19,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
                     style: const TextStyle(
                       color: Color(0xFF9F1239),
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      entry.value,
+                ),
+                Text(
+                  '${entries.length}',
+                  style: const TextStyle(
+                    color: Color(0xFF9F1239),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ...entries.asMap().entries.map(
+              (entry) => Padding(
+                padding: const EdgeInsets.only(top: 7),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${entry.key + 1}.',
                       style: const TextStyle(
-                        color: Color(0xFF7F1D3C),
-                        height: 1.35,
+                        color: Color(0xFF9F1239),
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        entry.value,
+                        style: const TextStyle(
+                          color: Color(0xFF7F1D3C),
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FeedbackEntrance extends StatelessWidget {
+  const _FeedbackEntrance({required this.identity, required this.child});
+
+  final String identity;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(identity),
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+      child: child,
+      builder: (context, progress, child) => Opacity(
+        opacity: progress,
+        child: Transform.translate(
+          offset: Offset(0, 10 * (1 - progress)),
+          child: child,
+        ),
       ),
     );
   }
@@ -3666,6 +3800,16 @@ class _PulsingGenerateButtonState extends State<_PulsingGenerateButton>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _pulse.stop();
+    } else if (!_pulse.isAnimating) {
+      _pulse.repeat(reverse: true);
+    }
+  }
+
+  @override
   void dispose() {
     _pulse.dispose();
     super.dispose();
@@ -3761,42 +3905,45 @@ class _StatusMessage extends StatelessWidget {
         ? Icons.report_problem_outlined
         : Icons.check_circle_outline;
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: background,
-        border: Border(left: BorderSide(color: border, width: 5)),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: foreground, size: 22),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SelectableText(
-                  title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: foreground,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                if (body.isNotEmpty) ...[
-                  const SizedBox(height: 6),
+    return _FeedbackEntrance(
+      identity: text,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: background,
+          border: Border(left: BorderSide(color: border, width: 5)),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: foreground, size: 22),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   SelectableText(
-                    body,
-                    style: theme.textTheme.bodyMedium?.copyWith(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
                       color: foreground,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
+                  if (body.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    SelectableText(
+                      body,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: foreground,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
