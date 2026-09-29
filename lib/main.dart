@@ -117,7 +117,7 @@ class DesignPalette {
 }
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.9.10';
+const _appVersion = '1.9.11';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -1487,7 +1487,7 @@ class _GeneratorPageState extends State<GeneratorPage>
       );
     } catch (error) {
       return _ReferenceCheckResult.error(
-        '[FR-UNAVAILABLE] La référence française de Kacou $chapterNumber est inaccessible ($error). Les dates et les références [Kc…] doivent être vérifiées : reconnecte-toi puis relance la génération.',
+        '[FR-UNAVAILABLE] La référence française de Kacou $chapterNumber est inaccessible ($error). Les dates des sous-titres et la numérotation doivent être vérifiées : reconnecte-toi puis relance la génération.',
       );
     }
 
@@ -1517,7 +1517,7 @@ class _GeneratorPageState extends State<GeneratorPage>
     }
 
     return _ReferenceCheckResult.ok(
-      '${_strings.referenceOk(chapter: chapterNumber, paragraphCount: localCount)}\nDates des sous-titres et références [Kc…] vérifiées avec le français.',
+      '${_strings.referenceOk(chapter: chapterNumber, paragraphCount: localCount)}\nDates des sous-titres vérifiées avec le français. Références [Kc…] conservées telles que saisies.',
     );
   }
 

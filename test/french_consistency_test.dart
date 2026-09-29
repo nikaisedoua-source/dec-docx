@@ -76,39 +76,80 @@ void main() {
       contains('aucune date reconnue'),
     );
   });
-  test(
-    'compares all Kc references by verse including standalone lines and repetitions',
-    () {
-      final fr = reference(
-        html(
-          '1 Texte [Kc.104v28]\n[Kc.2v11][Kc.31v18]\n2 Suite.',
-          subtitle: '',
-        ),
-      );
-      expect(
-        compareFrenchConsistency(
-          document('1 Text [Kc.104v28]\n[Kc.2v11][Kc.31v18]\n2 Next.'),
-          fr,
-        ),
-        isEmpty,
-      );
-      for (final text in [
-        '1 Text [Kc.104v29]\n[Kc.2v11][Kc.31v18]\n2 Next.',
-        '1 Text.\n2 Next [Kc.104v28][Kc.2v11][Kc.31v18]',
-        '1 Text [Kc.104v28][Kc.104v28][Kc.2v11][Kc.31v18]\n2 Next.',
-      ]) {
-        expect(
-          compareFrenchConsistency(document(text), fr).join('\n'),
-          contains('[FR-KC] verset 1'),
-        );
-      }
-    },
-  );
-  test('detects references added where French contains none', () {
+  test('does not restrict Kc references, their order or verse placement', () {
+    final fr = reference(
+      html('1 Texte [Kc.104v28]\n[Kc.2v11][Kc.31v18]\n2 Suite.', subtitle: ''),
+    );
+    expect(
+      compareFrenchConsistency(
+        document('1 Text [Kc.104v28]\n[Kc.2v11][Kc.31v18]\n2 Next.'),
+        fr,
+      ),
+      isEmpty,
+    );
+    for (final text in [
+      '1 Text.\n2 Next.',
+      '[Kc.1v2]\n1 Text.\n2 Next.',
+      '1 Text [Kc.104v29]\n[Kc.2v11][Kc.31v18]\n2 Next.',
+      '1 Text.\n2 Next [Kc.104v28][Kc.2v11][Kc.31v18]',
+      '1 Text [Kc.104v28][Kc.104v28][Kc.2v11][Kc.31v18]\n2 Next.',
+    ]) {
+      expect(compareFrenchConsistency(document(text), fr), isEmpty);
+    }
+  });
+  test('accepts Kc annotations omitted by the French site', () {
     final fr = reference(html('1 Texte.\n2 Suite.', subtitle: ''));
     expect(
-      compareFrenchConsistency(document('1 Text [Kc.1v2]\n2 Next.'), fr).single,
-      contains('attendues aucune'),
+      compareFrenchConsistency(document('1 Text [Kc.1v2]\n2 Next.'), fr),
+      isEmpty,
+    );
+  });
+  test('Kacou 29 annotations do not block and survive Word export', () {
+    final french = List.generate(26, (i) => '${i + 1} Texte.').join('\n');
+    final text = List.generate(26, (i) {
+      final suffix = switch (i + 1) {
+        11 => ' [Kc.59v11]',
+        15 => ' [Kc.1v13]\n[Kc.23v5]',
+        _ => '',
+      };
+      return '${i + 1} Maandishi$suffix';
+    }).join('\n');
+    final input = ChapterInput(
+      title: 'Kacou 29 : Les voix de discorde',
+      subtitle: '19 janvier 2003',
+      similarChapters: '',
+      language: 'sw',
+      sources: [DocumentSource(name: 'Kacou 29', text: text)],
+    );
+    final parsed = DocxBuilder.validateChapter(input).documents.first;
+    final fr = SermonReferenceResult(
+      chapterNumber: 29,
+      paragraphCount: 26,
+      url: Uri.parse('https://www.philippekacou.org/fr-fr/sermons/29'),
+      similarChapters: null,
+      content: SermonReferenceService.parseReferenceContent(
+        html(french, subtitle: '19 janvier 2003'),
+      ),
+    );
+    expect(compareFrenchConsistency(parsed, fr, language: 'sw'), isEmpty);
+    final exported = DocxBuilder.extractTextFromDocx(
+      DocxBuilder.buildChapter(input),
+    );
+    for (final annotation in ['[Kc.59v11]', '[Kc.1v13]', '[Kc.23v5]']) {
+      expect(exported, contains(annotation));
+    }
+    expect(
+      exported.indexOf('[Kc.1v13]'),
+      lessThan(exported.indexOf('[Kc.23v5]')),
+    );
+  });
+  test('verse numbers absent from French still block', () {
+    final fr = reference(html('1 Texte.\n2 Suite.', subtitle: ''));
+    expect(
+      compareFrenchConsistency(document('1 Text.\n2 Next.\n3 Extra.'), fr),
+      contains(
+        '[FR-VERSE] verset 3 : ce numéro est absent de la référence française.',
+      ),
     );
   });
   test('retains inter-verse date subtitles and checks their positions', () {

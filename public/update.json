@@ -1,8 +1,8 @@
 {
-  "version": "1.9.10",
-  "message": "Modifiez ou supprimez un verset après collage, avec annulation et signalement des numéros répétés.",
-  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.10-preview/DEC-DOCX-Android-preview.apk",
-  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.10-preview/DEC-DOCX-macOS-preview.zip",
-  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.10-preview/DEC-DOCX-Windows-preview.zip",
+  "version": "1.9.11",
+  "message": "Les références [Kc…] ne bloquent plus la génération et sont conservées dans le Word. Les contrôles des dates, sous-titres et numéros de versets restent actifs.",
+  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.11-preview/DEC-DOCX-Android-preview.apk",
+  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.11-preview/DEC-DOCX-macOS-preview.zip",
+  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.11-preview/DEC-DOCX-Windows-preview.zip",
   "webUrl": "https://nikaisedoua-source.github.io/dec-docx/"
 }

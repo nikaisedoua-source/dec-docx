@@ -71,7 +71,7 @@ void main() {
     },
   );
 
-  testWidgets('French concordance errors highlight only the matching verse', (
+  testWidgets('French numbering errors highlight only the matching verse', (
     tester,
   ) async {
     final controller = TextEditingController(text: '1 Premier\n2 Deuxième\n');
@@ -80,7 +80,7 @@ void main() {
       tester,
       controller,
       issues: [
-        '[FR-KC] verset 2 : références françaises attendues [Kc.1v2] ; trouvées aucune.',
+        '[FR-VERSE] verset 2 : ce numéro est absent de la référence française.',
       ],
     );
     final verses = locateSourceVerses(controller.text);
@@ -93,10 +93,7 @@ void main() {
         verse.number == 2 ? const Color(0xFFB91C1C) : const Color(0xFF8B4513),
       );
     }
-    expect(
-      find.textContaining('références françaises attendues'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('ce numéro est absent'), findsOneWidget);
   });
 
   testWidgets('a numbering gap highlights its own verse', (tester) async {

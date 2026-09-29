@@ -43,13 +43,14 @@ jobs:
           zip -qr DEC-DOCX-Browser-Extension.zip browser_extension
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.10-preview
-          name: DEC DOCX 1.9.10 — aperçu
+          tag_name: v1.9.11-preview
+          name: DEC DOCX 1.9.11 — aperçu
           prerelease: true
           body: |
             Contrôle des dates des sous-titres avec la référence française, y compris entre deux versets.
-            Contrôle des références [Kc…] au même verset, dans le même ordre.
-            Signalement en rouge des versets concernés et des dates incorrectes.
+            Suppression du blocage des références [Kc…] absentes ou différentes sur le site français.
+            Les références saisies restent conservées dans le texte et le Word.
+            Contrôles des dates, sous-titres et numéros de versets conservés.
             Prévention des titres de prédication placés comme sous-titres.
             Une référence française inaccessible ou incomplète bloque la génération sans modifier le texte.
             Bibliothèque locale et dossiers synchronisés conservés.
@@ -113,7 +114,7 @@ jobs:
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath DEC-DOCX-Windows-preview.zip
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.10-preview
+          tag_name: v1.9.11-preview
           prerelease: true
           files: |
             DEC-DOCX-Android-preview.apk

@@ -358,7 +358,8 @@ class _VerseEditorState extends State<VerseEditor> {
         ...errors,
         ...widget.issues.where(
           (issue) =>
-              issue.startsWith('Texte saisi,') || issue.startsWith('[FR-KC]'),
+              issue.startsWith('Texte saisi,') ||
+              issue.startsWith('[FR-VERSE]'),
         ),
       };
       final issuesByVerse = <int, List<String>>{};
@@ -386,7 +387,7 @@ class _VerseEditorState extends State<VerseEditor> {
             1;
         for (final issue in localIssues) {
           final referenceVerse = RegExp(
-            r'^\[FR-KC\] verset (\d+) :',
+            r'^\[FR-VERSE\] verset (\d+) :',
           ).firstMatch(issue);
           if (referenceVerse != null &&
               int.parse(referenceVerse[1]!) == verse.number) {
