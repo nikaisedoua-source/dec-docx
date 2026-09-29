@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+
+import '../iphone_install_guide.dart';
 
 import 'cloud_models.dart';
 import 'cloud_storage.dart';
@@ -113,6 +116,17 @@ class _StorageGateState extends State<StorageGate> {
                           ),
                         ],
                         const SizedBox(height: 20),
+                        if (kIsWeb) ...[
+                          TextButton.icon(
+                            onPressed: () => showDialog<void>(
+                              context: context,
+                              builder: (_) => const IphoneInstallGuide(),
+                            ),
+                            icon: const Icon(Icons.phone_iphone),
+                            label: const Text('Installer sur iPhone — guide'),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
                         if (needsAuthorization) ...[
                           FilledButton.icon(
                             onPressed: _busy

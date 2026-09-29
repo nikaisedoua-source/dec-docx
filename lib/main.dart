@@ -20,6 +20,7 @@ import 'ai_assistant.dart';
 import 'sermon_reference.dart';
 import 'french_consistency.dart';
 import 'verse_editor.dart';
+import 'iphone_install_guide.dart';
 
 enum DesignMode {
   aura,
@@ -1847,6 +1848,20 @@ class _GeneratorPageState extends State<GeneratorPage>
                                 palette: palette,
                               ),
                               const SizedBox(height: 16),
+                              if (kIsWeb) ...[
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: OutlinedButton.icon(
+                                    icon: const Icon(Icons.phone_iphone),
+                                    label: const Text('Installer sur iPhone — guide'),
+                                    onPressed: () => showDialog<void>(
+                                      context: context,
+                                      builder: (_) => const IphoneInstallGuide(),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                              ],
                               if (_availableUpdateVersion != null) ...[
                                 _AnimatedUpdateBanner(
                                   buttonLabel:

@@ -8,9 +8,54 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:dec_docx/docx_builder.dart';
 import 'package:dec_docx/main.dart';
+import 'package:dec_docx/iphone_install_guide.dart';
 import 'package:dec_docx/sermon_reference.dart';
 
 void main() {
+  testWidgets('iPhone guide scrolls on a small screen and can be closed', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 568);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(1.3)),
+          child: child!,
+        ),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (_) => const IphoneInstallGuide(),
+              ),
+              child: const Text('Guide iPhone'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Guide iPhone'));
+    await tester.pumpAndSettle();
+    expect(find.text('Installer DEC DOCX sur iPhone'), findsOneWidget);
+    expect(find.text('1. Ouvrez le lien dans Safari'), findsOneWidget);
+    await tester.ensureVisible(find.text('4. Confirmez avec Ajouter'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('4. Confirmez avec Ajouter').hitTestable(),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Compris'));
+    await tester.pumpAndSettle();
+    expect(find.byType(IphoneInstallGuide), findsNothing);
+  });
+
   testWidgets('shows the generator screen', (tester) async {
     await tester.pumpWidget(const DocxGeneratorApp(skipStorageSetup: true));
 
