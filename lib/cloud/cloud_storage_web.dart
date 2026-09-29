@@ -11,6 +11,8 @@ external JSPromise<JSString> _call(
 );
 @JS('decCloudRead')
 external JSPromise<JSUint8Array> _read(JSString path);
+@JS('decCloudReadLocal')
+external JSPromise<JSUint8Array> _readLocal(JSString path);
 @JS('decCloudSupported')
 external bool get _supported;
 
@@ -59,6 +61,12 @@ class CloudStorage {
   Future<List<CloudFile>> list() async => ((await _request('list')) as List)
       .map((e) => CloudFile.fromJson(e as Map<String, dynamic>))
       .toList();
+  Future<List<CloudFile>> listLocal() async =>
+      ((await _request('listLocal')) as List)
+          .map((e) => CloudFile.fromJson(e as Map<String, dynamic>))
+          .toList();
+  Future<Uint8List> readLocal(String path) async =>
+      (await _readLocal(path.toJS).toDart).toDart;
   Future<String> save(CloudDocument doc) async =>
       await _request('save', {
             'language': safeCloudSegment(doc.language, 'sans-langue'),

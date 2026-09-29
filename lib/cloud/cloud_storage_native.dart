@@ -98,7 +98,11 @@ class CloudStorage {
     return Directory('$_root/DEC DOCX');
   }
 
-  Future<String> _writeVersion(Directory root, CloudDocument document) async {
+  Future<String> _writeVersion(
+    Directory root,
+    CloudDocument document, {
+    String? versionName,
+  }) async {
     final lang = safeCloudSegment(document.language, 'sans-langue');
     final person = safeCloudSegment(document.person, 'sans-personne');
     final stem = safeCloudSegment(
@@ -106,22 +110,29 @@ class CloudStorage {
       'document',
     );
     final name =
+        versionName ??
         '$stem-${DateTime.now().microsecondsSinceEpoch}-${Random.secure().nextInt(1000000)}.docx';
     final dir = Directory('${root.path}/$lang/$person');
     await dir.create(recursive: true);
-    await File('${dir.path}/$name').writeAsBytes(document.bytes, flush: true);
+    final pending = File('${dir.path}/$name.pending');
+    await pending.writeAsBytes(document.bytes, flush: true);
+    await pending.rename('${dir.path}/$name');
     return '$lang/$person/$name';
   }
 
   Future<String> save(CloudDocument document) async {
-    if (mode == 'local') {
+    if (mode != 'folder') {
       return _writeVersion(await _localLibrary(), document);
     }
     // Keep a local recovery copy before touching a removable or synchronized
     // folder. A provider can be offline even while its folder still exists.
     final localPath = await _writeVersion(await _localLibrary(), document);
     try {
-      return await _writeVersion(await _library(), document);
+      return await _writeVersion(
+        await _library(),
+        document,
+        versionName: localPath.split('/').last,
+      );
     } catch (error) {
       throw FileSystemException(
         'Version locale conservée ($localPath). Synchronisation à reprendre : $error',
@@ -129,6 +140,11 @@ class CloudStorage {
     }
   }
 
+  CloudStorage _localView() =>
+      CloudStorage(configFile: configFile, localDirectory: localDirectory)
+        ..mode = 'local';
+  Future<List<CloudFile>> listLocal() => _localView().list();
+  Future<Uint8List> readLocal(String path) => _localView().read(path);
   Future<List<CloudFile>> list() async {
     Directory root;
     try {

@@ -61,6 +61,9 @@ void main() {
             .where((file) => file.path.endsWith('.docx')),
         isNotEmpty,
       );
+      final localFiles = await storage.listLocal();
+      expect(localFiles, hasLength(1));
+      expect(await storage.readLocal(localFiles.single.path), Uint8List(1));
     },
   );
 

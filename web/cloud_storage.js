@@ -105,13 +105,13 @@
     async disconnect() { await settings('delete'); connection = null; currentMode = null; return null; },
     async save(args, bytes) {
       const localPath = await saveLocal(args, bytes);
-      if (currentMode === 'local') {
+      if (currentMode !== 'folder') {
         return localPath;
       }
       try {
         let dir = await library(true);
         for (const name of [safe(args.language), safe(args.person)]) dir = await dir.getDirectoryHandle(name,{create:true});
-        const name = `${safe(args.name)}-${Date.now()}-${crypto.randomUUID().slice(0,8)}.docx`;
+        const name = localPath.split('/').at(-1);
         const handle = await dir.getFileHandle(name, {create:true});
         const stream = await handle.createWritable();
         try { await stream.write(bytes); await stream.close(); }
@@ -120,6 +120,10 @@
       } catch (error) {
         throw new Error(`Version locale conservée (${localPath}). Synchronisation à reprendre : ${error.message || error}`);
       }
+    },
+    async listLocal() {
+      const saved = await documents('list');
+      return saved.map(({path,size,modified}) => ({path,size,modified})).sort((a,b)=>b.modified-a.modified);
     },
     async list() {
       if (currentMode === 'local') {
@@ -146,6 +150,12 @@
   window.decCloudCall = async (method, json, bytes) => {
     if (!Object.hasOwn(operations, method)) throw new Error('Action inconnue');
     return JSON.stringify(await operations[method](JSON.parse(json), bytes));
+  };
+  window.decCloudReadLocal = async path => {
+    segments(path);
+    const saved = await documents('get', path);
+    if (!saved) throw new DOMException('Fichier introuvable', 'NotFoundError');
+    return new Uint8Array(saved.bytes);
   };
   window.decCloudRead = async path => {
     const parts = segments(path);

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -24,6 +25,9 @@ import 'app_release_tools.dart';
 import 'glass_surface.dart';
 import 'release_seen_io.dart'
     if (dart.library.js_interop) 'release_seen_web.dart';
+import 'drafts/draft_session.dart';
+import 'drafts/draft_store.dart';
+import 'drafts/draft_repository.dart';
 
 enum DesignMode {
   aura,
@@ -754,7 +758,7 @@ class DocxGeneratorApp extends StatelessWidget {
         ),
       ),
       home: skipStorageSetup
-          ? const GeneratorPage()
+          ? const GeneratorPage(draftsEnabled: false)
           : const StorageGate(child: GeneratorPage()),
     );
   }
@@ -780,7 +784,13 @@ class _ReferenceCheckResult {
 }
 
 class GeneratorPage extends StatefulWidget {
-  const GeneratorPage({super.key});
+  const GeneratorPage({
+    super.key,
+    this.draftsEnabled = true,
+    this.draftRepository,
+  });
+  final bool draftsEnabled;
+  final DraftRepository? draftRepository;
 
   @override
   State<GeneratorPage> createState() => _GeneratorPageState();
@@ -788,6 +798,8 @@ class GeneratorPage extends StatefulWidget {
 
 class _GeneratorPageState extends State<GeneratorPage>
     with SingleTickerProviderStateMixin {
+  DraftSession? _drafts;
+  bool _applyingDraft = false;
   final _chapterTitleController = TextEditingController();
   final _subtitleController = TextEditingController();
   final _similarChaptersController = TextEditingController();
@@ -831,6 +843,17 @@ class _GeneratorPageState extends State<GeneratorPage>
     _subtitleController.addListener(_invalidateEditedText);
     _chapterTitleController.addListener(_invalidateEditedText);
     _documentLanguageController.addListener(_invalidateEditedText);
+    if (widget.draftsEnabled) {
+      _drafts = DraftSession(widget.draftRepository ?? DraftStore());
+      _drafts!.addListener(_draftStatusChanged);
+      for (final field in _draftFields.values) {
+        field.addListener(_draftChanged);
+      }
+      unawaited(_restoreDraft());
+    }
+    _similarChaptersController.addListener(_invalidateEditedText);
+    _personNameController.addListener(_invalidateEditedText);
+    _fileNameController.addListener(_invalidateEditedText);
     _checkForUpdateNotice();
     _showNewReleaseOnce();
   }
@@ -842,6 +865,11 @@ class _GeneratorPageState extends State<GeneratorPage>
 
   @override
   void dispose() {
+    for (final field in _draftFields.values) {
+      field.removeListener(_draftChanged);
+    }
+    _drafts?.removeListener(_draftStatusChanged);
+    _drafts?.dispose();
     _ambientController.dispose();
     _chapterTitleController.removeListener(_syncAutomaticFileName);
     _documentLanguageController.removeListener(_syncAutomaticFileName);
@@ -870,6 +898,280 @@ class _GeneratorPageState extends State<GeneratorPage>
       _generatedPath = null;
       _libraryPath = null;
     });
+  }
+
+  Map<String, TextEditingController> get _draftFields => {
+    'title': _chapterTitleController,
+    'subtitle': _subtitleController,
+    'similar': _similarChaptersController,
+    'text': _manualTextController,
+    'url': _downloadUrlController,
+    'fileName': _fileNameController,
+    'language': _documentLanguageController,
+    'person': _personNameController,
+  };
+  Map<String, dynamic> _draftSnapshot() => {
+    for (final entry in _draftFields.entries) entry.key: entry.value.text,
+    'sources': _fileSources
+        .map((s) => {'name': s.name, 'text': s.text})
+        .toList(),
+  };
+  void _draftStatusChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _draftChanged() {
+    if (!_applyingDraft) _drafts?.change(_draftSnapshot());
+  }
+
+  void _applyDraft(Map<String, dynamic> data) {
+    _applyingDraft = true;
+    try {
+      // Restore fields in order, including the saved file name after the
+      // automatic name listeners have run.
+      for (final entry in _draftFields.entries) {
+        entry.value.text = data[entry.key] as String? ?? '';
+      }
+      _fileNameController.text =
+          data['fileName'] as String? ?? 'document_genere';
+      _fileSources
+        ..clear()
+        ..addAll(
+          (data['sources'] as List? ?? []).map(
+            (s) => DocumentSource(
+              name: s['name'] as String,
+              text: s['text'] as String,
+            ),
+          ),
+        );
+      _invalidateEditedText();
+    } finally {
+      _applyingDraft = false;
+    }
+  }
+
+  Future<void> _restoreDraft() async {
+    final data = await _drafts!.load();
+    if (mounted && data != null) _applyDraft(data);
+  }
+
+  String _draftLabel(String fr, String en, String es, String pt) =>
+      _strings._text(fr, en, es, pt);
+  Widget _draftPanel() {
+    final session = _drafts!;
+    final text = session.error != null
+        ? _draftLabel(
+            'Enregistrement non confirmé. Votre texte reste à l’écran ; réessayez.',
+            'Save not confirmed. Your text is still on screen; retry.',
+            'Guardado sin confirmar. El texto sigue en pantalla; reintente.',
+            'Salvamento não confirmado. O texto permanece na tela; tente novamente.',
+          )
+        : session.saving || session.dirty
+        ? _draftLabel(
+            'Enregistrement du brouillon…',
+            'Saving draft…',
+            'Guardando borrador…',
+            'Salvando rascunho…',
+          )
+        : session.savedAt != null
+        ? _draftLabel(
+            'Brouillon enregistré sur cet appareil',
+            'Draft saved on this device',
+            'Borrador guardado en este dispositivo',
+            'Rascunho salvo neste dispositivo',
+          )
+        : _draftLabel(
+            'Sauvegarde automatique du brouillon prête',
+            'Draft autosave ready',
+            'Guardado automático listo',
+            'Salvamento automático pronto',
+          );
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _palette.surfaceStrong,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            text,
+            key: const ValueKey('draft-status'),
+            style: TextStyle(
+              color: session.error != null
+                  ? _palette.accentText
+                  : _palette.text,
+            ),
+          ),
+          if (session.savedAt != null)
+            Text(
+              session.savedAt!.toLocal().toString().split('.').first,
+              style: TextStyle(color: _palette.mutedText, fontSize: 12),
+            ),
+          Wrap(
+            spacing: 8,
+            children: [
+              TextButton.icon(
+                onPressed: session.saving
+                    ? null
+                    : () async {
+                        try {
+                          await session.flush();
+                        } catch (_) {}
+                      },
+                icon: const Icon(Icons.save_outlined),
+                label: Text(
+                  _draftLabel('Enregistrer', 'Save', 'Guardar', 'Salvar'),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: session.saving ? null : _showDraftHistory,
+                icon: const Icon(Icons.history),
+                label: Text(
+                  _draftLabel(
+                    'Historique local',
+                    'Local history',
+                    'Historial local',
+                    'Histórico local',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showDraftHistory() async {
+    final session = _drafts!;
+    try {
+      final versions = await session.repository.history();
+      if (!mounted) return;
+      final id = await showDialog<String>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(
+            _draftLabel(
+              'Historique local · 50 dernières versions',
+              'Local history · latest 50 versions',
+              'Historial local · últimas 50 versiones',
+              'Histórico local · últimas 50 versões',
+            ),
+          ),
+          content: SizedBox(
+            width: 560,
+            height: 360,
+            child: versions.isEmpty
+                ? Text(
+                    _draftLabel(
+                      'Aucune version enregistrée.',
+                      'No saved versions.',
+                      'No hay versiones guardadas.',
+                      'Nenhuma versão salva.',
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: versions.length,
+                    itemBuilder: (context, i) {
+                      final v = versions[i];
+                      return ListTile(
+                        title: Text(
+                          (v['title'] as String).isEmpty
+                              ? _draftLabel(
+                                  'Sans titre',
+                                  'Untitled',
+                                  'Sin título',
+                                  'Sem título',
+                                )
+                              : v['title'] as String,
+                        ),
+                        subtitle: Text(
+                          DateTime.parse(
+                            v['savedAt'] as String,
+                          ).toLocal().toString().split('.').first,
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => Navigator.pop(context, v['id'] as String),
+                      );
+                    },
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(_draftLabel('Fermer', 'Close', 'Cerrar', 'Fechar')),
+            ),
+          ],
+        ),
+      );
+      if (id == null || !mounted) return;
+      final revision = await session.repository.read(id);
+      final data = Map<String, dynamic>.from(revision['data'] as Map);
+      if (!mounted) return;
+      final restore = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(
+            _draftLabel(
+              'Restaurer cette version ?',
+              'Restore this version?',
+              '¿Restaurar esta versión?',
+              'Restaurar esta versão?',
+            ),
+          ),
+          content: SizedBox(
+            width: 560,
+            height: 300,
+            child: SingleChildScrollView(
+              child: SelectableText(
+                '${data['title']}\n${data['subtitle']}\n\n${data['text']}\n\n${(data['sources'] as List? ?? []).map((s) => '${s['name']}\n${s['text']}').join('\n\n')}',
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(
+                _draftLabel('Annuler', 'Cancel', 'Cancelar', 'Cancelar'),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(
+                _draftLabel('Restaurer', 'Restore', 'Restaurar', 'Restaurar'),
+              ),
+            ),
+          ],
+        ),
+      );
+      if (restore != true || !mounted) return;
+      // Preserve the current draft before replacing it. Restoration itself is
+      // a new revision, so both versions remain recoverable.
+      await session.flush();
+      if (!mounted) return;
+      _applyDraft(data);
+      _draftChanged();
+      await session.flush();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _draftLabel(
+                    'Historique indisponible : ',
+                    'History unavailable: ',
+                    'Historial no disponible: ',
+                    'Histórico indisponível: ',
+                  ) +
+                  e.toString(),
+            ),
+          ),
+        );
+      }
+    }
   }
 
   void _syncAutomaticFileName() {
@@ -1031,67 +1333,19 @@ class _GeneratorPageState extends State<GeneratorPage>
       _documentLanguageController.text,
       _personNameController.text,
     );
-    if (kIsWeb) {
-      final storage = CloudStorage();
-      await storage.restore();
-      if (!storage.configured ||
-          (storage.mode == 'folder' && !storage.connected)) {
-        return null;
-      }
-      String path;
-      try {
-        path = await storage.save(document);
-      } catch (error) {
-        if (storage.mode == 'folder' &&
-            error.toString().contains('Version locale conservée')) {
-          return 'Bibliothèque locale · synchronisation à reprendre';
-        }
-        rethrow;
-      }
-      return storage.mode == 'local'
-          ? 'Bibliothèque locale / $path'
-          : '${storage.provider ?? 'Dossier synchronisé'} / $path';
-    }
-    final root = await getApplicationDocumentsDirectory();
-    final language = _safeFolderName(
-      _documentLanguageController.text,
-      fallback: 'sans-langue',
-    );
-    final person = _safeFolderName(
-      _personNameController.text,
-      fallback: 'sans-personne',
-    );
-    final directory = Directory('${root.path}/DEC DOCX/$language/$person');
-    await directory.create(recursive: true);
-    final timestamp = DateTime.now()
-        .toUtc()
-        .toIso8601String()
-        .replaceAll(':', '-')
-        .replaceAll('.', '-');
-    final stem = fileName.replaceFirst(
-      RegExp(r'\.docx$', caseSensitive: false),
-      '',
-    );
-    final file = File('${directory.path}/$stem-$timestamp.docx');
-    await file.writeAsBytes(bytes, flush: true);
+    final storage = CloudStorage();
+    await storage.restore();
     try {
-      final storage = CloudStorage();
-      await storage.restore();
-      if (storage.connected) {
-        await storage.save(document);
+      final path = await storage.save(document);
+      return storage.mode == 'folder'
+          ? 'Copie locale enregistrée · copie écrite dans le dossier ${storage.provider} / $path'
+          : 'Bibliothèque locale / $path';
+    } catch (error) {
+      if (error.toString().contains('Version locale conservée')) {
+        return 'Bibliothèque locale · copie dans le dossier non confirmée';
       }
-    } catch (_) {
-      // The local version remains valid if a synchronized folder is offline.
+      rethrow;
     }
-    return file.path;
-  }
-
-  String _safeFolderName(String value, {required String fallback}) {
-    final cleaned = value
-        .trim()
-        .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
-        .replaceAll(RegExp(r'\s+'), ' ');
-    return cleaned.isEmpty ? fallback : cleaned;
   }
 
   Future<void> _shareDocumentPath() async {
@@ -1256,6 +1510,7 @@ class _GeneratorPageState extends State<GeneratorPage>
       imported.add(DocumentSource(name: _fileTitle(file.name), text: text));
     }
 
+    _invalidateEditedText();
     setState(() {
       _fileSources.addAll(imported);
       _status = imported.isEmpty
@@ -1263,6 +1518,7 @@ class _GeneratorPageState extends State<GeneratorPage>
           : _strings.filesAdded(imported.length);
       _issueMessages = const [];
     });
+    _draftChanged();
   }
 
   Future<String> _extractPdfText(Uint8List bytes) async {
@@ -1613,14 +1869,38 @@ class _GeneratorPageState extends State<GeneratorPage>
         'Ce fichier Word ne contient pas de texte exploitable.',
       );
     }
+    _invalidateEditedText();
     setState(() => _fileSources.add(DocumentSource(name: name, text: text)));
+    _draftChanged();
   }
 
   void _removeSource(DocumentSource source) {
+    _invalidateEditedText();
     setState(() => _fileSources.remove(source));
+    _draftChanged();
   }
 
-  void _clearAll() {
+  Future<void> _clearAll() async {
+    try {
+      await _drafts?.flush();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _draftLabel(
+                'Le brouillon actuel n’a pas été enregistré. Réessayez avant de l’effacer.',
+                'The current draft was not saved. Retry before clearing it.',
+                'El borrador actual no se guardó. Reintente antes de borrarlo.',
+                'O rascunho atual não foi salvo. Tente novamente antes de apagá-lo.',
+              ),
+            ),
+          ),
+        );
+      }
+      return;
+    }
+    _applyingDraft = true;
     setState(() {
       _chapterTitleController.clear();
       _subtitleController.clear();
@@ -1638,10 +1918,19 @@ class _GeneratorPageState extends State<GeneratorPage>
       _generatedPath = null;
       _libraryPath = null;
     });
+    _applyingDraft = false;
+    _draftChanged();
+    try {
+      await _drafts?.flush();
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_drafts?.loading == true) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     final strings = _strings;
     final theme = Theme.of(context);
     final palette = _palette;
@@ -1784,7 +2073,7 @@ class _GeneratorPageState extends State<GeneratorPage>
               LayoutBuilder(
                 builder: (context, constraints) {
                   final wide = constraints.maxWidth >= 920;
-                  final editor = _InputPanel(
+                  final inputPanel = _InputPanel(
                     strings: strings,
                     chapterTitleController: _chapterTitleController,
                     subtitleController: _subtitleController,
@@ -1803,6 +2092,10 @@ class _GeneratorPageState extends State<GeneratorPage>
                     onPickFiles: _pickFiles,
                     onDownloadText: _downloadTextFromUrl,
                     palette: palette,
+                  );
+                  final editor = Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [if (_drafts != null) _draftPanel(), inputPanel],
                   );
                   final settings = _SettingsPanel(
                     strings: strings,

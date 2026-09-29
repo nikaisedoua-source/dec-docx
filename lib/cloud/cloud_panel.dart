@@ -31,6 +31,7 @@ class _CloudPanelState extends State<CloudPanel> {
   final _storage = CloudStorage();
   String _provider = 'MEGA';
   String _search = '';
+  bool _localView = true;
   String? _message;
   bool _busy = false;
   List<CloudFile> _files = [];
@@ -43,7 +44,7 @@ class _CloudPanelState extends State<CloudPanel> {
   Future<void> _restore() async {
     try {
       await _storage.restore();
-      if (_storage.connected || _storage.mode == 'local') await _refresh();
+      await _refresh();
       if (mounted) {
         setState(() {
           _provider = cloudProviders.containsKey(_storage.provider)
@@ -88,7 +89,9 @@ class _CloudPanelState extends State<CloudPanel> {
   }
 
   Future<void> _refresh() async {
-    final files = await _storage.list();
+    final files = _localView
+        ? await _storage.listLocal()
+        : await _storage.list();
     if (mounted) setState(() => _files = files);
   }
 
@@ -139,8 +142,10 @@ class _CloudPanelState extends State<CloudPanel> {
     return '${two(local.day)}/${two(local.month)}/${local.year} · ${two(local.hour)}:${two(local.minute)}';
   }
 
+  Future<Uint8List> _readFile(String path) =>
+      _localView ? _storage.readLocal(path) : _storage.read(path);
   Future<void> _import(CloudFile file) async {
-    final bytes = await _storage.read(file.path);
+    final bytes = await _readFile(file.path);
     widget.onImport(file.name, bytes);
     if (mounted) {
       setState(
@@ -364,7 +369,8 @@ class _CloudPanelState extends State<CloudPanel> {
                         ? null
                         : () => _run(() async {
                             await _storage.disconnect();
-                            if (mounted) setState(() => _files = []);
+                            _localView = true;
+                            await _refresh();
                           }),
                     child: const Text('Détacher le dossier'),
                   ),
@@ -377,7 +383,33 @@ class _CloudPanelState extends State<CloudPanel> {
               style: style,
             ),
           ],
-          if (connected || localReady) ...[
+          Wrap(
+            spacing: 8,
+            children: [
+              ChoiceChip(
+                label: const Text('Cet appareil'),
+                selected: _localView,
+                onSelected: _busy
+                    ? null
+                    : (_) => _run(() async {
+                        _localView = true;
+                        await _refresh();
+                      }),
+              ),
+              if (connected)
+                ChoiceChip(
+                  label: const Text('Dossier connecté'),
+                  selected: !_localView,
+                  onSelected: _busy
+                      ? null
+                      : (_) => _run(() async {
+                          _localView = false;
+                          await _refresh();
+                        }),
+                ),
+            ],
+          ),
+          if (_localView || connected || localReady) ...[
             TextField(
               decoration: const InputDecoration(
                 labelText: 'Rechercher par langue, personne ou nom',
@@ -434,12 +466,12 @@ class _CloudPanelState extends State<CloudPanel> {
                           } else if (value == 'share') {
                             await widget.onShare(
                               f.name,
-                              await _storage.read(f.path),
+                              await _readFile(f.path),
                             );
                           } else {
                             await widget.onExport(
                               f.name,
-                              await _storage.read(f.path),
+                              await _readFile(f.path),
                             );
                           }
                         }),
