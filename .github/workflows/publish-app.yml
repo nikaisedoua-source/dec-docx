@@ -74,6 +74,7 @@ jobs:
     needs: web
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         include:
           - os: ubuntu-latest
