@@ -60,7 +60,7 @@ void main() {
     await tester.pumpWidget(const DocxGeneratorApp(skipStorageSetup: true));
 
     expect(find.text('DEC DOCX'), findsWidgets);
-    expect(find.text('Version 1.9.11'), findsOneWidget);
+    expect(find.text('Version 1.9.12'), findsOneWidget);
     expect(find.text('Titre du chapitre'), findsOneWidget);
     expect(
       find.byTooltip(AppStrings(AppLanguage.fr).chapterTitleLowercaseHelp),
