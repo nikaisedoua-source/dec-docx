@@ -32,8 +32,8 @@ test('canonical app retires only its asset cache and loads current compiled code
   assert.deepEqual(opened, ['flutter-app-cache']);
   assert.deepEqual(deleted, [requests[0]]);
   assert.equal(loads, 1);
-  assert.equal(configuration.assetBase, 'releases/1.9.11/');
-  assert.equal(flutter.buildConfig.builds[0].mainJsPath, appRoot + 'main.dart.js?build=1.9.11');
+  assert.equal(configuration.assetBase, 'releases/1.9.12/');
+  assert.equal(flutter.buildConfig.builds[0].mainJsPath, appRoot + 'main.dart.js?build=1.9.12');
 });
 
 test('unavailable cache cleanup never prevents app startup', async () => {

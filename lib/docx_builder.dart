@@ -701,8 +701,17 @@ class DocxBuilder {
           unicode: true,
         ).allMatches(line.text).where((match) {
           final candidate = line.text.substring(match.start);
-          return !RegExp(
-            r'^\s*[^\p{L}\p{N}\r\n]{0,8}\s*\d{1,2}\s+\p{L}+\s+\d{4}\b',
+          final before = line.text.substring(0, match.start);
+          final followsBibleColon = RegExp(
+            r'^\s*[:：]\s*\d{1,3}\b',
+          ).hasMatch(line.text.substring(match.end));
+          final biblicalRange = RegExp(
+            r'\d{1,3}\s*:\s*\d{1,3}\s*(?:[-–—]|\p{L}{1,12}(?:\s+\p{L}{1,8})?)\s*$',
+            caseSensitive: false,
+            unicode: true,
+          ).hasMatch(before);
+          return !followsBibleColon && !biblicalRange && !RegExp(
+            r'^\s*[^\p{L}\p{N}\r\n]{0,8}\s*\d{1,2}\.?\s+\p{L}+\s+\d{4}\b',
             unicode: true,
           ).hasMatch(candidate);
         }).toList();

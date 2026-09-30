@@ -1,8 +1,8 @@
 {
-  "version": "1.9.11",
-  "message": "Les références [Kc…] ne bloquent plus la génération et sont conservées dans le Word. Les contrôles des dates, sous-titres et numéros de versets restent actifs.",
-  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.11-preview/DEC-DOCX-Android-preview.apk",
-  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.11-preview/DEC-DOCX-macOS-preview.zip",
-  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.11-preview/DEC-DOCX-Windows-preview.zip",
+  "version": "1.9.12",
+  "message": "Les dates tchèques et les jours suivis d’un point sont reconnus. Les nombres des références bibliques restent dans leur verset. Un mois inconnu dans une autre langue déclenche un avis de vérification si le jour et l’année concordent.",
+  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.12-preview/DEC-DOCX-Android-preview.apk",
+  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.12-preview/DEC-DOCX-macOS-preview.zip",
+  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.12-preview/DEC-DOCX-Windows-preview.zip",
   "webUrl": "https://nikaisedoua-source.github.io/dec-docx/"
 }

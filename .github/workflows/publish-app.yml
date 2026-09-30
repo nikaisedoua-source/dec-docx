@@ -43,10 +43,13 @@ jobs:
           zip -qr DEC-DOCX-Browser-Extension.zip browser_extension
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.11-preview
-          name: DEC DOCX 1.9.11 — aperçu
+          tag_name: v1.9.12-preview
+          name: DEC DOCX 1.9.12 — aperçu
           prerelease: true
           body: |
+            Reconnaissance des dates tchèques et des jours suivis d’un point dans les sous-titres.
+            Les mois encore inconnus dans une langue n’empêchent plus la génération si le jour et l’année concordent ; un avis demande de vérifier le mois.
+            Les nombres des références bibliques restent dans leur verset, y compris avec des espaces autour des deux-points et des intervalles.
             Contrôle des dates des sous-titres avec la référence française, y compris entre deux versets.
             Suppression du blocage des références [Kc…] absentes ou différentes sur le site français.
             Les références saisies restent conservées dans le texte et le Word.
@@ -114,7 +117,7 @@ jobs:
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath DEC-DOCX-Windows-preview.zip
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.11-preview
+          tag_name: v1.9.12-preview
           prerelease: true
           files: |
             DEC-DOCX-Android-preview.apk

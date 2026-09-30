@@ -118,7 +118,7 @@ class DesignPalette {
 }
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.9.11';
+const _appVersion = '1.9.12';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -1510,15 +1510,28 @@ class _GeneratorPageState extends State<GeneratorPage>
         ),
       );
     }
+    final dateNotices = <String>[];
     errors.addAll(
-      compareFrenchConsistency(document, reference, language: input.language),
+      compareFrenchConsistency(
+        document,
+        reference,
+        language: input.language,
+        notices: dateNotices,
+      ),
     );
     if (errors.isNotEmpty) {
       return _ReferenceCheckResult.errors(errors);
     }
 
+    final referenceMessage = _strings.referenceOk(
+      chapter: chapterNumber,
+      paragraphCount: localCount,
+    );
+    final dateMessage = dateNotices.isEmpty
+        ? 'Dates des sous-titres vérifiées avec le français.'
+        : dateNotices.join('\n');
     return _ReferenceCheckResult.ok(
-      '${_strings.referenceOk(chapter: chapterNumber, paragraphCount: localCount)}\nDates des sous-titres vérifiées avec le français. Références [Kc…] conservées telles que saisies.',
+      '$referenceMessage\n$dateMessage\nRéférences [Kc…] conservées telles que saisies.',
     );
   }
 

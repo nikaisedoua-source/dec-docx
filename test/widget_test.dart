@@ -753,6 +753,123 @@ KACOU 169 : 中文章节
     );
   });
 
+  test('keeps Czech biblical range numbers inside their verse', () {
+    final validation = DocxBuilder.validateChapter(
+      const ChapterInput(
+        title: 'Kacou 99: Lodě z Tarsisu',
+        subtitle: '',
+        similarChapters: '',
+        language: 'Tchèque',
+        sources: [
+          DocumentSource(
+            name: 'Texte saisi',
+            text: '''
+9 Předně Matouš 25:6 je služba jednoho muže a tato služba se řadí za Zjevení 10:7. Zjevení 10:8 je Daniel 12:8 až 10. Vidíte? Otevřená svitková knížka z Daniela 12:4 je ta ze Zjevení 10:1 až 2.
+10 Další skutečný verš.
+''',
+          ),
+        ],
+      ),
+    );
+    expect(validation.errors, isEmpty);
+    expect(
+      validation.documents.single.paragraphs.map((paragraph) => paragraph.number),
+      [9, 10],
+    );
+    expect(
+      validation.documents.single.paragraphs.first.text,
+      contains('Daniel 12:8 až 10. Vidíte?'),
+    );
+  });
+
+  test('keeps source-style spaces around Bible colons inside a verse', () {
+    final validation = DocxBuilder.validateChapter(
+      const ChapterInput(
+        title: 'Kacou 66 : Odmítání pokroku',
+        subtitle: '',
+        similarChapters: '',
+        language: 'Tchèque',
+        sources: [
+          DocumentSource(
+            name: 'Texte saisi',
+            text: '9 Zjevení 10\u00a0:8 je Daniel 12\u00a0:8 až 10. Vidíte?\n'
+                '10 Nyní si přečtěme další verš.',
+          ),
+        ],
+      ),
+    );
+    expect(validation.errors, isEmpty);
+    expect(
+      validation.documents.single.paragraphs.map((paragraph) => paragraph.number),
+      [9, 10],
+    );
+    expect(
+      validation.documents.single.paragraphs.first.text,
+      contains('Daniel 12\u00a0:8 až 10. Vidíte?'),
+    );
+  });
+
+  test('does not read a spaced Bible chapter or dotted date as a new verse', () {
+    for (final (first, second, content) in [
+      (9, 10, 'Zjevení 10\u00a0:8 je zmíněno.'),
+      (21, 22, 'Tato událost byla 22. Listopadu 2007.'),
+    ]) {
+      final validation = DocxBuilder.validateChapter(
+        ChapterInput(
+          title: 'Kacou 66 : Odmítání pokroku',
+          subtitle: '',
+          similarChapters: '',
+          language: 'Tchèque',
+          sources: [
+            DocumentSource(
+              name: 'Texte saisi',
+              text: '$first $content\n$second Skutečný další verš.',
+            ),
+          ],
+        ),
+      );
+      expect(validation.errors, isEmpty, reason: content);
+      expect(
+        validation.documents.single.paragraphs
+            .map((paragraph) => paragraph.number),
+        [first, second],
+        reason: content,
+      );
+    }
+  });
+
+  test('keeps biblical range numbers inside verses in other languages', () {
+    for (final (language, range) in [
+      ('français', 'Jean 12:8 à 10. Regardez?'),
+      ('anglais', 'John 12:8 to 10. See?'),
+      ('espagnol', 'Juan 12:8 hasta el 10. Miren?'),
+      ('portugais', 'João 12:8 até o 10. Vejam?'),
+      ('allemand', 'Johannes 12:8 bis 10. Seht?'),
+    ]) {
+      final validation = DocxBuilder.validateChapter(
+        ChapterInput(
+          title: 'Kacou 99 : Exemple',
+          subtitle: '',
+          similarChapters: '',
+          language: language,
+          sources: [
+            DocumentSource(
+              name: 'Texte saisi',
+              text: '9 Texte. $range\n10 Verset suivant.',
+            ),
+          ],
+        ),
+      );
+      expect(validation.errors, isEmpty, reason: language);
+      expect(
+        validation.documents.single.paragraphs.map((paragraph) => paragraph.number),
+        [9, 10],
+        reason: language,
+      );
+      expect(validation.documents.single.paragraphs.first.text, contains(range));
+    }
+  });
+
   test('accepts a Turkish parenthesized date and similar chapter label', () {
     final validation = DocxBuilder.validateChapter(
       const ChapterInput(

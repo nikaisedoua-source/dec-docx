@@ -53,6 +53,105 @@ void main() {
     expect(SermonRules.concordances('[Kc.] [Kc ]'), hasLength(2));
     expect(SermonRules.dates('03/04/2022', language: 'en-US'), ['2022-03-04']);
   });
+  test('recognizes Czech ordinal dates in the full subtitle', () {
+    const subtitle =
+        'Kázáno v neděli ráno 12. září 2010 v Anyamě poblíž Abidjanu – Pobřeží slonoviny';
+    expect(SermonRules.dates(subtitle, language: 'Tchèque'), ['2010-09-12']);
+    expect(SermonRules.dates('12. října 2010', language: 'Tchèque'), [
+      '2010-10-12',
+    ]);
+    final fr = reference(html('1 Texte.\n2 Suite.', subtitle: '12 septembre 2010'));
+    expect(
+      compareFrenchConsistency(
+        document('1 Text.\n2 Next.', subtitle: subtitle, language: 'Tchèque'),
+        fr,
+        language: 'Tchèque',
+      ),
+      isEmpty,
+    );
+    final notices = <String>[];
+    expect(
+      compareFrenchConsistency(
+        document(
+          '1 Text.\n2 Next.',
+          subtitle: 'Kázáno 12. neznámý 2010',
+          language: 'Tchèque',
+        ),
+        fr,
+        language: 'Tchèque',
+        notices: notices,
+      ),
+      isEmpty,
+    );
+    expect(notices.single, contains('[FR-MONTH-UNVERIFIED]'));
+    final monthFirstNotices = <String>[];
+    expect(
+      compareFrenchConsistency(
+        document(
+          '1 Text.\n2 Next.',
+          subtitle: 'Sermon given on Unknownmonth 12, 2010',
+          language: 'unlisted language',
+        ),
+        fr,
+        language: 'unlisted language',
+        notices: monthFirstNotices,
+      ),
+      isEmpty,
+    );
+    expect(monthFirstNotices.single, contains('[FR-MONTH-UNVERIFIED]'));
+    final knownWrongMonthNotices = <String>[];
+    expect(
+      compareFrenchConsistency(
+        document(
+          '1 Text.\n2 Next.',
+          subtitle: 'Kázáno 12. října 2010',
+          language: 'Tchèque',
+        ),
+        fr,
+        language: 'Tchèque',
+        notices: knownWrongMonthNotices,
+      ).single,
+      contains('[FR-DATE]'),
+    );
+    expect(knownWrongMonthNotices, isEmpty);
+    expect(
+      compareFrenchConsistency(
+        document(
+          '1 Text.\n2 Next.',
+          subtitle: 'Kázáno 13. neznámý 2010',
+          language: 'Tchèque',
+        ),
+        fr,
+        language: 'Tchèque',
+      ).single,
+      contains('[FR-DATE]'),
+    );
+  });
+  test('recognizes a dotted day with known month names across languages', () {
+    for (final subtitle in [
+      '12. septembre 2010',
+      '12. September 2010',
+      '12. septiembre 2010',
+      '12. settembre 2010',
+      '12. setembro 2010',
+      '12. září 2010',
+      '22. Listopadu 2007',
+      '12. Eylül 2010',
+    ]) {
+      final expected = subtitle.contains('Listopadu')
+          ? ['2007-11-22']
+          : ['2010-09-12'];
+      expect(SermonRules.dates(subtitle), expected, reason: subtitle);
+      expect(SermonRules.isDateHeading(subtitle), isTrue, reason: subtitle);
+    }
+    expect(
+      SermonRules.dates(
+        '(Kázáno ve čtvrtek večer 22. Listopadu 2007 v Adjamé, Abidjanu – Pobřeží slonoviny)',
+      ),
+      ['2007-11-22'],
+    );
+    expect(SermonRules.dates('12. moisInconnu 2010'), isEmpty);
+  });
   test('compares subtitles without using dates mentioned in verse prose', () {
     final fr = reference(html('1 Texte du 20 janvier 2020.\n2 Suite.'));
     expect(
