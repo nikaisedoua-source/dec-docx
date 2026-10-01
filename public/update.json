@@ -1,8 +1,8 @@
 {
-  "version": "1.9.12",
-  "message": "Les dates tchèques et les jours suivis d’un point sont reconnus. Les nombres des références bibliques restent dans leur verset. Un mois inconnu dans une autre langue déclenche un avis de vérification si le jour et l’année concordent.",
-  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.12-preview/DEC-DOCX-Android-preview.apk",
-  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.12-preview/DEC-DOCX-macOS-preview.zip",
-  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.12-preview/DEC-DOCX-Windows-preview.zip",
+  "version": "1.9.13",
+  "message": "Chapitres similaires reconnus en fin de texte, y compris en tchèque. Nouvelle interface en verre translucide, avis discret de nouvelle version et bouton d’installation adapté à votre appareil.",
+  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.13-preview/DEC-DOCX-Android-preview.apk",
+  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.13-preview/DEC-DOCX-macOS-preview.zip",
+  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.13-preview/DEC-DOCX-Windows-preview.zip",
   "webUrl": "https://nikaisedoua-source.github.io/dec-docx/"
 }

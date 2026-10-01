@@ -20,7 +20,10 @@ import 'ai_assistant.dart';
 import 'sermon_reference.dart';
 import 'french_consistency.dart';
 import 'verse_editor.dart';
-import 'iphone_install_guide.dart';
+import 'app_release_tools.dart';
+import 'glass_surface.dart';
+import 'release_seen_io.dart'
+    if (dart.library.js_interop) 'release_seen_web.dart';
 
 enum DesignMode {
   aura,
@@ -118,7 +121,7 @@ class DesignPalette {
 }
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.9.12';
+const _appVersion = '1.9.13';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -809,6 +812,7 @@ class _GeneratorPageState extends State<GeneratorPage>
   List<String> _issueMessages = const [];
   String? _availableUpdateVersion;
   String? _updateDownloadUrl;
+  bool _showReleaseNotice = false;
   late final AnimationController _ambientController;
 
   AppStrings get _strings => AppStrings(_language);
@@ -828,6 +832,12 @@ class _GeneratorPageState extends State<GeneratorPage>
     _chapterTitleController.addListener(_invalidateEditedText);
     _documentLanguageController.addListener(_invalidateEditedText);
     _checkForUpdateNotice();
+    _showNewReleaseOnce();
+  }
+
+  Future<void> _showNewReleaseOnce() async {
+    final isNew = await markReleaseSeen(_appVersion);
+    if (mounted && isNew) setState(() => _showReleaseNotice = true);
   }
 
   @override
@@ -1849,7 +1859,11 @@ class _GeneratorPageState extends State<GeneratorPage>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              _CompactTopBar(
+                              GlassSurface(
+                                tint: palette.surfaceStrong,
+                                radius: 22,
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                child: _CompactTopBar(
                                 strings: strings,
                                 language: _language,
                                 onLanguageChanged: (language) =>
@@ -1859,19 +1873,13 @@ class _GeneratorPageState extends State<GeneratorPage>
                                 onDesignModeChanged: (mode) =>
                                     setState(() => _designMode = mode),
                                 palette: palette,
+                                ),
                               ),
                               const SizedBox(height: 16),
-                              if (kIsWeb) ...[
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: OutlinedButton.icon(
-                                    icon: const Icon(Icons.phone_iphone),
-                                    label: const Text('Installer sur iPhone — guide'),
-                                    onPressed: () => showDialog<void>(
-                                      context: context,
-                                      builder: (_) => const IphoneInstallGuide(),
-                                    ),
-                                  ),
+                              if (_showReleaseNotice) ...[
+                                ReleaseNotice(
+                                  version: _appVersion,
+                                  onDismiss: () => setState(() => _showReleaseNotice = false),
                                 ),
                                 const SizedBox(height: 12),
                               ],
@@ -2032,7 +2040,7 @@ class _CompactTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.sizeOf(context).width < 420) {
+    if (MediaQuery.sizeOf(context).width < 620) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2055,6 +2063,7 @@ class _CompactTopBar extends StatelessWidget {
                 onPressed: onClear,
                 icon: Icon(Icons.restart_alt_rounded, color: palette.text),
               ),
+              if (kIsWeb) InstallAppButton(version: _appVersion, color: palette.text),
             ],
           ),
           const SizedBox(height: 8),
@@ -2105,6 +2114,7 @@ class _CompactTopBar extends StatelessWidget {
           palette: palette,
         ),
         const SizedBox(width: 4),
+        if (kIsWeb) InstallAppButton(version: _appVersion, color: palette.text),
         IconButton(
           tooltip: strings.clear,
           onPressed: onClear,
@@ -2281,7 +2291,17 @@ class _AnimatedUpdateBannerState extends State<_AnimatedUpdateBanner>
     duration: const Duration(milliseconds: 900),
     lowerBound: 0.97,
     upperBound: 1,
-  )..repeat(reverse: true);
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.value = 1;
+    } else {
+      _controller.forward();
+    }
+  }
 
   @override
   void dispose() {
@@ -2385,19 +2405,8 @@ class _SectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: palette.surface,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: palette.border),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x330E001E),
-            blurRadius: 30,
-            offset: Offset(0, 16),
-          ),
-        ],
-      ),
+    return GlassSurface(
+      tint: palette.surfaceStrong,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

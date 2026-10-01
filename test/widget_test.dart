@@ -4,14 +4,55 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:dec_docx/docx_builder.dart';
 import 'package:dec_docx/main.dart';
 import 'package:dec_docx/iphone_install_guide.dart';
 import 'package:dec_docx/sermon_reference.dart';
+import 'package:dec_docx/app_release_tools.dart';
 
 void main() {
+  testWidgets('compact install button opens the matching platform download', (tester) async {
+    for (final (platform, label, asset) in [
+      (TargetPlatform.android, 'Android', 'DEC-DOCX-Android-preview.apk'),
+      (TargetPlatform.macOS, 'Mac', 'DEC-DOCX-macOS-preview.zip'),
+      (TargetPlatform.windows, 'Windows', 'DEC-DOCX-Windows-preview.zip'),
+    ]) {
+      Uri? opened;
+      await tester.pumpWidget(MaterialApp(home: Scaffold(body: InstallAppButton(
+        version: '1.9.13', platform: platform,
+        openUrl: (uri) async { opened = uri; return true; },
+      ))));
+      await tester.tap(find.byTooltip('Installer sur $label'));
+      await tester.pump();
+      expect(opened?.path, '/nikaisedoua-source/dec-docx/releases/download/v1.9.13-preview/$asset');
+    }
+  });
+
+  testWidgets('iPhone install button opens the installation guide', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: InstallAppButton(
+      version: '1.9.13', platform: TargetPlatform.iOS,
+    ))));
+    await tester.tap(find.byTooltip('Installer sur iPhone'));
+    await tester.pumpAndSettle();
+    expect(find.text('Installer DEC DOCX sur iPhone'), findsOneWidget);
+  });
+
+  testWidgets('release notice respects reduced motion and disappears after eight seconds', (tester) async {
+    var dismissed = false;
+    await tester.pumpWidget(MaterialApp(home: MediaQuery(
+      data: const MediaQueryData(disableAnimations: true),
+      child: Scaffold(body: ReleaseNotice(version: '1.9.13', onDismiss: () => dismissed = true)),
+    )));
+    await tester.pump();
+    expect(find.text('Nouveautés disponibles · v1.9.13'), findsOneWidget);
+    expect(tester.widget<Opacity>(find.byType(Opacity).last).opacity, 1);
+    await tester.pump(const Duration(seconds: 8));
+    expect(dismissed, isTrue);
+  });
+
   testWidgets('iPhone guide scrolls on a small screen and can be closed', (
     tester,
   ) async {
@@ -60,7 +101,7 @@ void main() {
     await tester.pumpWidget(const DocxGeneratorApp(skipStorageSetup: true));
 
     expect(find.text('DEC DOCX'), findsWidgets);
-    expect(find.text('Version 1.9.12'), findsOneWidget);
+    expect(find.text('Version 1.9.13'), findsOneWidget);
     expect(find.text('Titre du chapitre'), findsOneWidget);
     expect(
       find.byTooltip(AppStrings(AppLanguage.fr).chapterTitleLowercaseHelp),
@@ -922,6 +963,52 @@ Benzer bölüm: Kc. 118
     expect(validation.hasErrors, isFalse);
     expect(validation.documents.first.paragraphs, hasLength(2));
     expect(validation.documents.first.similarChapters, contains('Kc.140'));
+  });
+
+  test('extracts translated trailing chapter labels without creating verse 71', () {
+    for (final label in [
+      'Podobná kapitola : Kc. 109',
+      'Podobné kapitoly\u00a0: Kc. 109, Kc. 101',
+      'Chapitres similaires : Kc. 109',
+      'Similar chapters: Kc. 109',
+      'Ähnliche Kapitel: Kc. 109',
+      'Benzer bölümler: Kc. 109',
+      'Похожие главы: Kc. 109',
+      '相似章节：Kc. 109',
+    ]) {
+      final validation = DocxBuilder.validateChapter(
+        ChapterInput(
+          title: 'Kacou 66 : Exemple',
+          subtitle: '',
+          similarChapters: '',
+          language: 'Tchèque',
+          sources: [
+            DocumentSource(
+              name: 'Kacou 66',
+              text: '${List.generate(70, (i) => '${i + 1} Texte.').join('\n')}\n$label',
+            ),
+          ],
+        ),
+      );
+      expect(validation.errors, isEmpty, reason: label);
+      expect(validation.documents.single.paragraphs, hasLength(70));
+      expect(validation.documents.single.similarChapters, label);
+    }
+  });
+
+  test('does not hide trailing unnumbered prose containing a Kc reference', () {
+    final validation = DocxBuilder.validateChapter(
+      const ChapterInput(
+        title: 'Kacou 66 : Exemple',
+        subtitle: '',
+        similarChapters: '',
+        sources: [DocumentSource(
+          name: 'Texte',
+          text: '1 Texte.\nNote : Kc. 109 explique ce passage.',
+        )],
+      ),
+    );
+    expect(validation.errors, isNotEmpty);
   });
 
   test('accepts Vietnamese similar chapters after numbered paragraphs', () {

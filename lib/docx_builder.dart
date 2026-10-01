@@ -781,6 +781,15 @@ class DocxBuilder {
   }
 
   static bool _looksLikeSimilarChaptersLine(String value) {
+    // A translated label followed only by chapter references is metadata.
+    // This helper is used only when extracting the trailing chapter lines.
+    if (RegExp(
+      r'^\p{L}[\p{L}\p{M}\s’\x27()\-]{0,100}[:：]\s*Kc\.?\s*\d{1,3}(?:\s*[,;،、]\s*(?:Kc\.?\s*)?\d{1,3})*\s*\.?$',
+      caseSensitive: false,
+      unicode: true,
+    ).hasMatch(value.trim())) {
+      return true;
+    }
     return RegExp(
       r'^(?:chapitres?(?:\s+similaires)?|cap[ií]tulos?(?:\s+similares)?|similar\s+chapters|similar\s+chapter|ähnliche\s+kapitel|capitoli\s+simili|cap[ií]tulos?\s+semelhantes|ikapitulu\s+solikanana|chương\s+tương\s+tự|benzer\s+bölüm(?:ler)?)[\s\u00a0]*:',
       caseSensitive: false,
