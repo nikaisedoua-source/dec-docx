@@ -31,7 +31,7 @@ jobs:
       - run: python3 tool/prepare_release_assets.py
       - run: flutter pub get
       - run: flutter analyze
-      - run: flutter test test/widget_test.dart test/cloud_storage_test.dart test/verse_editor_test.dart test/french_consistency_test.dart
+      - run: flutter test test/widget_test.dart test/cloud_storage_test.dart test/verse_editor_test.dart test/french_consistency_test.dart test/draft_session_test.dart
       - run: node --test test/cloud_storage_web_test.mjs test/app_bootstrap_test.mjs
       - run: flutter build web --release --base-href /dec-docx/
       - run: python3 tool/version_web_assets.py build/web
@@ -58,7 +58,8 @@ jobs:
             Contrôles des dates, sous-titres et numéros de versets conservés.
             Prévention des titres de prédication placés comme sous-titres.
             Une référence française inaccessible ou incomplète bloque la génération sans modifier le texte.
-            Bibliothèque locale et dossiers synchronisés conservés.
+            Brouillons automatiques récupérables et historique des versions locales.
+            Bibliothèque hors ligne, copie de récupération en cas d’échec de synchronisation et animations accessibles.
             Le site web est utilisable sans installation. Les archives natives sont des versions de test.
             Android utilise une signature de test ; macOS et Windows ne sont pas signés pour distribution de confiance.
             Aucun document utilisateur n'est inclus dans ces fichiers.

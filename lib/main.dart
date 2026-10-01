@@ -2199,24 +2199,29 @@ class _GeneratorPageState extends State<GeneratorPage>
                               GlassSurface(
                                 tint: palette.surfaceStrong,
                                 radius: 22,
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
                                 child: _CompactTopBar(
-                                strings: strings,
-                                language: _language,
-                                onLanguageChanged: (language) =>
-                                    setState(() => _language = language),
-                                onClear: _clearAll,
-                                designMode: _designMode,
-                                onDesignModeChanged: (mode) =>
-                                    setState(() => _designMode = mode),
-                                palette: palette,
+                                  strings: strings,
+                                  language: _language,
+                                  onLanguageChanged: (language) =>
+                                      setState(() => _language = language),
+                                  onClear: _clearAll,
+                                  designMode: _designMode,
+                                  onDesignModeChanged: (mode) =>
+                                      setState(() => _designMode = mode),
+                                  palette: palette,
                                 ),
                               ),
                               const SizedBox(height: 16),
                               if (_showReleaseNotice) ...[
                                 ReleaseNotice(
                                   version: _appVersion,
-                                  onDismiss: () => setState(() => _showReleaseNotice = false),
+                                  onDismiss: () => setState(
+                                    () => _showReleaseNotice = false,
+                                  ),
                                 ),
                                 const SizedBox(height: 12),
                               ],
@@ -2400,7 +2405,8 @@ class _CompactTopBar extends StatelessWidget {
                 onPressed: onClear,
                 icon: Icon(Icons.restart_alt_rounded, color: palette.text),
               ),
-              if (kIsWeb) InstallAppButton(version: _appVersion, color: palette.text),
+              if (kIsWeb)
+                InstallAppButton(version: _appVersion, color: palette.text),
             ],
           ),
           const SizedBox(height: 8),
@@ -2638,16 +2644,6 @@ class _AnimatedUpdateBannerState extends State<_AnimatedUpdateBanner>
       _controller.value = 1;
     } else {
       _controller.forward();
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _controller.stop();
-    } else if (!_controller.isAnimating) {
-      _controller.repeat(reverse: true);
     }
   }
 

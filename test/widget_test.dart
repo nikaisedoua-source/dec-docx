@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:flutter/material.dart';
@@ -122,6 +121,8 @@ void main() {
   ) async {
     await tester.pumpWidget(const DocxGeneratorApp(skipStorageSetup: true));
     final options = find.text('Sous-titre et chapitres similaires');
+    await tester.ensureVisible(options);
+    await tester.pump();
     await tester.tap(options);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
@@ -133,10 +134,14 @@ void main() {
       find.widgetWithText(TextField, 'Chapitres similaires finaux'),
       'Kacou 2, 3',
     );
+    await tester.ensureVisible(options);
+    await tester.pump();
     await tester.tap(options);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Sous-titre optionnel'), findsNothing);
+    await tester.ensureVisible(options);
+    await tester.pump();
     await tester.tap(options);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
