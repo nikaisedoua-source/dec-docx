@@ -11,11 +11,53 @@ import 'package:dec_docx/main.dart';
 import 'package:dec_docx/iphone_install_guide.dart';
 import 'package:dec_docx/sermon_reference.dart';
 import 'package:dec_docx/app_release_tools.dart';
+import 'package:dec_docx/cloud/cloud_panel.dart';
+import 'package:dec_docx/cloud/cloud_storage.dart';
+
+class _UnavailableCloudStorage extends CloudStorage {
+  @override
+  Future<void> restore() async => throw const FormatException('test');
+}
 
 void main() {
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => binding.platformDispatcher.localeTestValue = const Locale('fr'));
   tearDown(binding.platformDispatcher.clearLocaleTestValue);
+
+  testWidgets('an existing cloud status changes language with the interface', (
+    tester,
+  ) async {
+    Widget app(String locale) => MaterialApp(
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: CloudPanel(
+            storage: _UnavailableCloudStorage(),
+            document: null,
+            locale: locale,
+            onImport: (name, bytes) {},
+            onPickFiles: () {},
+            onExport: (name, bytes) async {},
+            onShare: (name, bytes) async {},
+            textColor: Colors.black,
+            mutedColor: Colors.grey,
+            accent: Colors.purple,
+            surface: Colors.white,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpWidget(app('fr'));
+    await tester.pumpAndSettle();
+    Finder message(String text) => find.byWidgetPredicate(
+      (widget) =>
+          widget is SelectableText && (widget.data ?? '').contains(text),
+    );
+    expect(message('La connexion au dossier'), findsOneWidget);
+    await tester.pumpWidget(app('es'));
+    await tester.pumpAndSettle();
+    expect(message('La connexion au dossier'), findsNothing);
+    expect(message('No se pudo restaurar la conexión'), findsOneWidget);
+  });
 
   for (final language in AppLanguage.values) {
     testWidgets('interface and built-in controls use ${language.name}', (
@@ -65,7 +107,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: InstallAppButton(
-              version: '1.9.16',
+              version: '1.9.17',
               platform: platform,
               openUrl: (uri) async {
                 opened = uri;
@@ -79,7 +121,7 @@ void main() {
       await tester.pump();
       expect(
         opened?.path,
-        '/nikaisedoua-source/dec-docx/releases/download/v1.9.16-preview/$asset',
+        '/nikaisedoua-source/dec-docx/releases/download/v1.9.17-preview/$asset',
       );
     }
   });
@@ -91,7 +133,7 @@ void main() {
       const MaterialApp(
         home: Scaffold(
           body: InstallAppButton(
-            version: '1.9.16',
+            version: '1.9.17',
             platform: TargetPlatform.iOS,
           ),
         ),
@@ -112,7 +154,7 @@ void main() {
             data: const MediaQueryData(disableAnimations: true),
             child: Scaffold(
               body: ReleaseNotice(
-                version: '1.9.16',
+                version: '1.9.17',
                 onDismiss: () => dismissed = true,
               ),
             ),
@@ -120,7 +162,7 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.text('Nouveautés disponibles · v1.9.16'), findsOneWidget);
+      expect(find.text('Nouveautés disponibles · v1.9.17'), findsOneWidget);
       expect(tester.widget<Opacity>(find.byType(Opacity).last).opacity, 1);
       await tester.pump(const Duration(seconds: 8));
       expect(dismissed, isTrue);
@@ -175,7 +217,7 @@ void main() {
     await tester.pumpWidget(const DocxGeneratorApp(skipStorageSetup: true));
 
     expect(find.text('DEC DOCX'), findsWidgets);
-    expect(find.text('Version 1.9.16'), findsOneWidget);
+    expect(find.text('Version 1.9.17'), findsOneWidget);
     expect(find.text('Titre du chapitre'), findsOneWidget);
     expect(
       find.byTooltip(AppStrings(AppLanguage.fr).chapterTitleLowercaseHelp),

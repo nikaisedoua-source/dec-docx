@@ -1,8 +1,8 @@
 {
-  "version": "1.9.16",
+  "version": "1.9.17",
   "message": "Édition des versets directement dans chaque fichier importé, interface complète en français, anglais, espagnol et portugais, et diagnostics de validation localisés.",
-  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.16-preview/DEC-DOCX-Android-preview.apk",
-  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.16-preview/DEC-DOCX-macOS-preview.zip",
-  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.16-preview/DEC-DOCX-Windows-preview.zip",
+  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.17-preview/DEC-DOCX-Android-preview.apk",
+  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.17-preview/DEC-DOCX-macOS-preview.zip",
+  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.17-preview/DEC-DOCX-Windows-preview.zip",
   "webUrl": "https://nikaisedoua-source.github.io/dec-docx/"
 }

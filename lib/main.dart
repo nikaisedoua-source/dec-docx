@@ -127,7 +127,7 @@ class DesignPalette {
 }
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.9.16';
+const _appVersion = '1.9.17';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -729,10 +729,10 @@ class AppStrings {
     'Título do capítulo: falta o número Kacou. Use um título como “KACOU 1: ...” para permitir a comparação com o site.',
   );
   String referenceFetchFailed(int chapter, Object error) => _text(
-    'Mode hors connexion : la comparaison en ligne de Kacou $chapter a ete ignoree (${technicalError(error)}). Le document a ete genere avec les controles locaux.',
+    'Mode hors connexion : la comparaison en ligne de Kacou $chapter a été ignorée (${technicalError(error)}). Le document a été généré avec les contrôles locaux.',
     'Offline mode: online comparison for Kacou $chapter was skipped (${technicalError(error)}). The document was generated with local checks.',
-    'Modo sin conexion: se omitio la comparacion en linea de Kacou $chapter (${technicalError(error)}). El documento se genero con controles locales.',
-    'Modo offline: a comparacao online de Kacou $chapter foi ignorada (${technicalError(error)}). O documento foi gerado com verificacoes locais.',
+    'Modo sin conexión: se omitió la comparación en línea de Kacou $chapter (${technicalError(error)}). El documento se generó con las comprobaciones locales.',
+    'Modo offline: a comparação online de Kacou $chapter foi ignorada (${technicalError(error)}). O documento foi gerado com as verificações locais.',
   );
   String paragraphCountMismatch({
     required int chapter,
@@ -774,10 +774,10 @@ class AppStrings {
     required int chapter,
     required int paragraphCount,
   }) => _text(
-    'Controle local OK : Kacou $chapter contient $paragraphCount paragraphe(s). La comparaison en ligne est disponible sans limite quand internet fonctionne.',
+    'Contrôle local réussi : Kacou $chapter contient $paragraphCount paragraphe(s). La comparaison en ligne est disponible lorsque la connexion Internet fonctionne.',
     'Local check OK: Kacou $chapter has $paragraphCount paragraph(s). Online comparison is available without a fixed limit when internet works.',
-    'Control local OK: Kacou $chapter tiene $paragraphCount parrafo(s). La comparacion en linea esta disponible sin limite fijo cuando hay internet.',
-    'Verificacao local OK: Kacou $chapter tem $paragraphCount paragrafo(s). A comparacao online fica disponivel sem limite fixo quando ha internet.',
+    'Comprobación local correcta: Kacou $chapter contiene $paragraphCount párrafo(s). La comparación en línea está disponible cuando hay conexión a Internet.',
+    'Verificação local concluída: Kacou $chapter contém $paragraphCount parágrafo(s). A comparação online está disponível quando há conexão com a Internet.',
   );
   String created(String path) => _text(
     'Document créé : $path',

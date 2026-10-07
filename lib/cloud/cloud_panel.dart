@@ -18,6 +18,7 @@ class CloudPanel extends StatefulWidget {
     required this.accent,
     required this.surface,
     this.locale = 'fr',
+    this.storage,
   });
   final CloudDocument? document;
   final void Function(String, Uint8List) onImport;
@@ -26,16 +27,17 @@ class CloudPanel extends StatefulWidget {
   final Future<void> Function(String, Uint8List) onShare;
   final Color textColor, mutedColor, accent, surface;
   final String locale;
+  final CloudStorage? storage;
   @override
   State<CloudPanel> createState() => _CloudPanelState();
 }
 
 class _CloudPanelState extends State<CloudPanel> {
-  final _storage = CloudStorage();
+  late final _storage = widget.storage ?? CloudStorage();
   String _provider = 'MEGA';
   String _search = '';
   bool _localView = true;
-  String? _message;
+  String? Function()? _message;
   bool _busy = false;
   List<CloudFile> _files = [];
 
@@ -111,7 +113,7 @@ class _CloudPanelState extends State<CloudPanel> {
           _provider = cloudProviders.containsKey(_storage.provider)
               ? _storage.provider!
               : 'MEGA';
-          _message = _storage.connected
+          _message = () => _storage.connected
               ? _t(
                   'Dossier ${_storage.provider} connecté et prêt.',
                   '${_storage.provider} folder connected and ready.',
@@ -138,7 +140,7 @@ class _CloudPanelState extends State<CloudPanel> {
     } catch (_) {
       if (mounted) {
         setState(
-          () => _message = _t(
+          () => _message = () => _t(
             'La connexion au dossier n’a pas pu être restaurée. Choisissez-le à nouveau.',
             'The folder connection could not be restored. Choose it again.',
             'No se pudo restaurar la conexión con la carpeta. Elígela de nuevo.',
@@ -164,7 +166,7 @@ class _CloudPanelState extends State<CloudPanel> {
       } catch (_) {}
       if (mounted) {
         setState(
-          () => _message = _t(
+          () => _message = () => _t(
             'Action non terminée : ${localizeTechnicalError(error, widget.locale)}',
             'Action not completed: ${localizeTechnicalError(error, widget.locale)}',
             'Acción no completada: ${localizeTechnicalError(error, widget.locale)}',
@@ -195,7 +197,7 @@ class _CloudPanelState extends State<CloudPanel> {
       await _refresh();
       if (mounted) {
         setState(
-          () => _message = _t(
+          () => _message = () => _t(
             'Dossier ${_storage.provider} reconnecté et prêt.',
             '${_storage.provider} folder reconnected and ready.',
             'Carpeta de ${_storage.provider} reconectada y lista.',
@@ -212,7 +214,7 @@ class _CloudPanelState extends State<CloudPanel> {
     final path = await _storage.save(doc);
     if (mounted) {
       setState(
-        () => _message = _storage.mode == 'local'
+        () => _message = () => _storage.mode == 'local'
             ? _t(
                 'Version enregistrée dans la bibliothèque locale : $path.',
                 'Version saved in the local library: $path.',
@@ -233,7 +235,7 @@ class _CloudPanelState extends State<CloudPanel> {
     } catch (_) {
       if (mounted) {
         setState(
-          () => _message = _t(
+          () => _message = () => _t(
             'Copie enregistrée : $path. Actualisez la liste pour la retrouver.',
             'Copy saved: $path. Refresh the list to find it.',
             'Copia guardada: $path. Actualiza la lista para encontrarla.',
@@ -257,7 +259,7 @@ class _CloudPanelState extends State<CloudPanel> {
     widget.onImport(file.name, bytes);
     if (mounted) {
       setState(
-        () => _message = _t(
+        () => _message = () => _t(
           'Document ajouté aux fichiers du chapitre : ${file.name}',
           'Document added to the chapter files: ${file.name}',
           'Documento añadido a los archivos del capítulo: ${file.name}',
@@ -269,6 +271,7 @@ class _CloudPanelState extends State<CloudPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final message = _message?.call();
     final info = cloudProviders[_provider]!;
     final connected = _storage.connected;
     final localReady = _storage.mode == 'local';
@@ -839,11 +842,11 @@ class _CloudPanelState extends State<CloudPanel> {
               padding: EdgeInsets.only(top: 8),
               child: LinearProgressIndicator(),
             ),
-          if (_message != null)
+          if (message != null)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: SelectableText(
-                _message!,
+                message,
                 style: TextStyle(color: widget.textColor, fontSize: 12),
               ),
             ),

@@ -43,8 +43,8 @@ jobs:
           zip -qr DEC-DOCX-Browser-Extension.zip browser_extension
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.16-preview
-          name: DEC DOCX 1.9.16 — aperçu
+          tag_name: v1.9.17-preview
+          name: DEC DOCX 1.9.17 — aperçu
           prerelease: true
           body: |
             Les dates anglaises écrites jour-mois avec une virgule avant l’année, comme 15 December, 2002, sont reconnues sans faux blocage [FR-DATE].
@@ -61,6 +61,7 @@ jobs:
             Édition directe des versets dans chaque fichier importé, avec conservation du fichier source séparé.
             Interface et messages cloud, installation et partage disponibles en français, anglais, espagnol et portugais.
             Diagnostics de validation également traduits dans ces quatre langues, tout en conservant les noms des fichiers, numéros de ligne et codes techniques.
+            Les messages déjà affichés dans la bibliothèque changent aussi de langue avec l’interface.
             Prévention des titres de prédication placés comme sous-titres.
             Une référence française inaccessible ou incomplète bloque la génération sans modifier le texte.
             Brouillons automatiques récupérables et historique des versions locales.
@@ -126,7 +127,7 @@ jobs:
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath DEC-DOCX-Windows-preview.zip
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.16-preview
+          tag_name: v1.9.17-preview
           prerelease: true
           files: |
             DEC-DOCX-Android-preview.apk
