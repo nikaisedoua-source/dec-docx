@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'cloud_models.dart';
 import 'cloud_storage.dart';
+import '../localized_issues.dart';
 
 class CloudPanel extends StatefulWidget {
   const CloudPanel({
@@ -164,10 +165,10 @@ class _CloudPanelState extends State<CloudPanel> {
       if (mounted) {
         setState(
           () => _message = _t(
-            'Action non terminée : $error',
-            'Action not completed: $error',
-            'Acción no completada: $error',
-            'Ação não concluída: $error',
+            'Action non terminée : ${localizeTechnicalError(error, widget.locale)}',
+            'Action not completed: ${localizeTechnicalError(error, widget.locale)}',
+            'Acción no completada: ${localizeTechnicalError(error, widget.locale)}',
+            'Ação não concluída: ${localizeTechnicalError(error, widget.locale)}',
           ),
         );
       }
@@ -184,7 +185,7 @@ class _CloudPanelState extends State<CloudPanel> {
   }
 
   Future<void> _choose() async {
-    await _storage.choose(_provider);
+    await _storage.choose(_provider, locale: widget.locale);
     if (_storage.connected) await _refresh();
   }
 

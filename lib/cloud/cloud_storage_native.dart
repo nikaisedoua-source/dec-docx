@@ -38,9 +38,14 @@ class CloudStorage {
     provider = data['provider'] as String?;
   }
 
-  Future<void> choose(String service) async {
+  Future<void> choose(String service, {String locale = 'fr'}) async {
     final path = await FilePicker.getDirectoryPath(
-      dialogTitle: 'Choisir votre dossier $service synchronisé',
+      dialogTitle: switch (locale) {
+        'en' => 'Choose your synchronized $service folder',
+        'es' => 'Selecciona tu carpeta sincronizada de $service',
+        'pt' => 'Escolha sua pasta sincronizada do $service',
+        _ => 'Choisir votre dossier $service synchronisé',
+      },
     );
     if (path == null) return;
     await connectDirectory(path, service);

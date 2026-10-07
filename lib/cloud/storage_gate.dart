@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
 import '../iphone_install_guide.dart';
+import '../localized_issues.dart';
 
 import 'cloud_models.dart';
 import 'cloud_storage.dart';
 
 class StorageGate extends StatefulWidget {
-  const StorageGate({super.key, required this.child});
+  const StorageGate({super.key, required this.child, this.locale});
 
   final Widget child;
+  final String? locale;
 
   @override
   State<StorageGate> createState() => _StorageGateState();
@@ -23,6 +25,7 @@ class _StorageGateState extends State<StorageGate> {
   bool _busy = false;
 
   String get _locale =>
+      widget.locale ??
       WidgetsBinding.instance.platformDispatcher.locale.languageCode;
 
   String _t(String fr, String en, String es, String pt) => switch (_locale) {
@@ -66,10 +69,10 @@ class _StorageGateState extends State<StorageGate> {
       }
     } catch (error) {
       _error = _t(
-        'Le stockage précédent est indisponible : $error',
-        'The previous storage location is unavailable: $error',
-        'El almacenamiento anterior no está disponible: $error',
-        'O armazenamento anterior não está disponível: $error',
+        'Le stockage précédent est indisponible : ${localizeTechnicalError(error, _locale)}',
+        'The previous storage location is unavailable: ${localizeTechnicalError(error, _locale)}',
+        'El almacenamiento anterior no está disponible: ${localizeTechnicalError(error, _locale)}',
+        'O armazenamento anterior não está disponível: ${localizeTechnicalError(error, _locale)}',
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -87,10 +90,10 @@ class _StorageGateState extends State<StorageGate> {
       if (mounted) {
         setState(
           () => _error = _t(
-            'Connexion non terminée : $error',
-            'Connection did not finish: $error',
-            'La conexión no terminó: $error',
-            'A conexão não terminou: $error',
+            'Connexion non terminée : ${localizeTechnicalError(error, _locale)}',
+            'Connection did not finish: ${localizeTechnicalError(error, _locale)}',
+            'La conexión no terminó: ${localizeTechnicalError(error, _locale)}',
+            'A conexão não terminou: ${localizeTechnicalError(error, _locale)}',
           ),
         );
       }
@@ -284,7 +287,12 @@ class _StorageGateState extends State<StorageGate> {
                           FilledButton.icon(
                             onPressed: _busy
                                 ? null
-                                : () => _run(() => _storage.choose(_provider)),
+                                : () => _run(
+                                    () => _storage.choose(
+                                      _provider,
+                                      locale: _locale,
+                                    ),
+                                  ),
                             icon: const Icon(Icons.cloud_done_outlined),
                             label: Text(
                               _t(

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -20,6 +21,7 @@ import 'pdf_web_stub.dart' if (dart.library.js_interop) 'pdf_web.dart';
 import 'ai_assistant.dart';
 import 'sermon_reference.dart';
 import 'french_consistency.dart';
+import 'localized_issues.dart';
 import 'verse_editor.dart';
 import 'app_release_tools.dart';
 import 'glass_surface.dart';
@@ -125,7 +127,7 @@ class DesignPalette {
 }
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.9.15';
+const _appVersion = '1.9.16';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -319,6 +321,92 @@ class AppStrings {
     'Elegir un idioma',
     'Escolher um idioma',
   );
+  String documentLanguageLabel(KacouLanguage language) {
+    const french = <String, String>{
+      'francais': 'français',
+      'anglais': 'anglais',
+      'espagnol': 'espagnol',
+      'portugais': 'portugais',
+      'allemand': 'allemand',
+      'russe': 'russe',
+      'italien': 'italien',
+      'attie': 'attié',
+      'agni': 'agni',
+      'wan': 'wan',
+      'yemba': 'yemba',
+      'fon': 'fon',
+      'kikongo': 'kikongo',
+      'gouin': 'gouin',
+      'moore': 'mooré',
+      'bambara': 'bambara',
+      'chinois': 'chinois',
+    };
+    const english = <String, String>{
+      'francais': 'French',
+      'anglais': 'English',
+      'espagnol': 'Spanish',
+      'portugais': 'Portuguese',
+      'allemand': 'German',
+      'russe': 'Russian',
+      'italien': 'Italian',
+      'attie': 'Attié',
+      'agni': 'Agni',
+      'wan': 'Wan',
+      'yemba': 'Yemba',
+      'fon': 'Fon',
+      'kikongo': 'Kikongo',
+      'gouin': 'Gouin',
+      'moore': 'Mooré',
+      'bambara': 'Bambara',
+      'chinois': 'Chinese',
+    };
+    const spanish = <String, String>{
+      'francais': 'francés',
+      'anglais': 'inglés',
+      'espagnol': 'español',
+      'portugais': 'portugués',
+      'allemand': 'alemán',
+      'russe': 'ruso',
+      'italien': 'italiano',
+      'attie': 'attié',
+      'agni': 'agni',
+      'wan': 'wan',
+      'yemba': 'yemba',
+      'fon': 'fon',
+      'kikongo': 'kikongo',
+      'gouin': 'gouin',
+      'moore': 'moore',
+      'bambara': 'bambara',
+      'chinois': 'chino',
+    };
+    const portuguese = <String, String>{
+      'francais': 'francês',
+      'anglais': 'inglês',
+      'espagnol': 'espanhol',
+      'portugais': 'português',
+      'allemand': 'alemão',
+      'russe': 'russo',
+      'italien': 'italiano',
+      'attie': 'attié',
+      'agni': 'agni',
+      'wan': 'wan',
+      'yemba': 'yemba',
+      'fon': 'fon',
+      'kikongo': 'kikongo',
+      'gouin': 'gouin',
+      'moore': 'more',
+      'bambara': 'bambara',
+      'chinois': 'chinês',
+    };
+    final labels = switch (this.language) {
+      AppLanguage.fr => french,
+      AppLanguage.en => english,
+      AppLanguage.es => spanish,
+      AppLanguage.pt => portuguese,
+    };
+    return labels[language.name] ?? language.name;
+  }
+
   String get tagline => _text(
     'Corrige les DOCX mal formés sans inventer de versets',
     'Repairs malformed DOCX without inventing verses',
@@ -328,7 +416,7 @@ class AppStrings {
   String get versionLabel => _text(
     'Version $_appVersion',
     'Version $_appVersion',
-    'Version $_appVersion',
+    'Versión $_appVersion',
     'Versão $_appVersion',
   );
   String get clear => _text('Vider', 'Clear', 'Limpiar', 'Limpar');
@@ -347,8 +435,8 @@ class AppStrings {
   String get inputTitle => _text(
     'Contenu du chapitre',
     'Chapter content',
-    'Contenido del capitulo',
-    'Conteudo do capitulo',
+    'Contenido del capítulo',
+    'Conteúdo do capítulo',
   );
   String get chapterDetails => _text(
     'Informations du chapitre',
@@ -449,8 +537,8 @@ class AppStrings {
   String get addFiles => _text(
     'Importer un fichier',
     'Import a file',
-    'Importar y reparar TXT, MD, DOCX o PDF',
-    'Importar e reparar TXT, MD, DOCX ou PDF',
+    'Importar un archivo',
+    'Importar um arquivo',
   );
   String get pdfReadFailed => _text(
     'PDF illisible : utilise un PDF contenant du texte sélectionnable ou convertis le fichier en TXT.',
@@ -492,7 +580,7 @@ class AppStrings {
   String get noSources => _text(
     'Aucun fichier ajouté.',
     'No file added.',
-    'Ningun archivo agregado.',
+    'No se ha añadido ningún archivo.',
     'Nenhum arquivo adicionado.',
   );
   String get remove => _text('Retirer', 'Remove', 'Quitar', 'Remover');
@@ -551,16 +639,55 @@ class AppStrings {
     'Texto baixado de $uri.',
   );
   String downloadFailed(Object error) => _text(
-    'Téléchargement impossible : $error',
-    'Download failed: $error',
-    'Descarga imposible: $error',
-    'Download impossível: $error',
+    'Téléchargement impossible : ${technicalError(error)}',
+    'Download failed: ${technicalError(error)}',
+    'No se pudo descargar: ${technicalError(error)}',
+    'Não foi possível baixar: ${technicalError(error)}',
   );
   String validationErrors(List<String> errors) => _text(
-    'Correction nécessaire avant génération :\n${errors.join('\n')}',
-    'Correction required before generation:\n${errors.join('\n')}',
-    'Corrección necesaria antes de generar:\n${errors.join('\n')}',
-    'Correção necessária antes de gerar:\n${errors.join('\n')}',
+    'Correction nécessaire avant génération :\n${errors.map((error) => localizeIssue(error, 'fr')).join('\n')}',
+    'Correction required before generation:\n${errors.map((error) => localizeIssue(error, 'en')).join('\n')}',
+    'Corrección necesaria antes de generar:\n${errors.map((error) => localizeIssue(error, 'es')).join('\n')}',
+    'Correção necessária antes de gerar:\n${errors.map((error) => localizeIssue(error, 'pt')).join('\n')}',
+  );
+  String issue(String value) => localizeIssue(value, language.name);
+  String technicalError(Object value) =>
+      localizeTechnicalError(value, language.name);
+  String referenceUnavailable(int chapter, Object error) => _text(
+    '[FR-UNAVAILABLE] La référence française de Kacou $chapter est inaccessible (${technicalError(error)}). Vérifie ta connexion puis relance la génération pour contrôler les dates des sous-titres et la numérotation.',
+    '[FR-UNAVAILABLE] The French reference for Kacou $chapter is unavailable (${technicalError(error)}). Check your connection and run generation again to verify subtitle dates and numbering.',
+    '[FR-UNAVAILABLE] La referencia francesa de Kacou $chapter no está disponible (${technicalError(error)}). Comprueba la conexión y vuelve a generar el documento para verificar las fechas de los subtítulos y la numeración.',
+    '[FR-UNAVAILABLE] A referência francesa de Kacou $chapter está indisponível (${technicalError(error)}). Verifique a conexão e gere novamente o documento para conferir as datas dos subtítulos e a numeração.',
+  );
+  String get subtitleDatesVerified => _text(
+    'Dates des sous-titres vérifiées avec le français.',
+    'Subtitle dates checked against the French reference.',
+    'Fechas de los subtítulos comprobadas con la referencia francesa.',
+    'Datas dos subtítulos verificadas com a referência francesa.',
+  );
+  String get referencesPreserved => _text(
+    'Références [Kc…] conservées telles que saisies.',
+    'References [Kc…] preserved as entered.',
+    'Referencias [Kc…] conservadas tal como se introdujeron.',
+    'Referências [Kc…] preservadas como foram inseridas.',
+  );
+  String libraryLocation(String path) => _text(
+    'Bibliothèque locale / $path',
+    'Local library / $path',
+    'Biblioteca local / $path',
+    'Biblioteca local / $path',
+  );
+  String synchronizedCopy(String provider, String path) => _text(
+    'Copie locale enregistrée · copie écrite dans le dossier $provider / $path',
+    'Local copy saved · copy written to the $provider folder / $path',
+    'Copia local guardada · copia escrita en la carpeta $provider / $path',
+    'Cópia local salva · cópia gravada na pasta $provider / $path',
+  );
+  String get folderCopyUnconfirmed => _text(
+    'Bibliothèque locale · copie dans le dossier non confirmée',
+    'Local library · folder copy not confirmed',
+    'Biblioteca local · copia en la carpeta sin confirmar',
+    'Biblioteca local · cópia na pasta não confirmada',
   );
   String get languageRequired => _text(
     'Langue obligatoire : choisis une langue du site ou écris-la manuellement pour nommer correctement le fichier.',
@@ -584,28 +711,28 @@ class AppStrings {
     'Não foi possível abrir o download da atualização.',
   );
   String similarChaptersOnlineMissing(String similarChapters) => _text(
-    'Chapitres similaires detectes en ligne : $similarChapters\nAjoute ce bloc dans "Chapitres similaires finaux" avant de generer.',
+    'Chapitres similaires détectés en ligne : $similarChapters\nAjoute ce bloc dans « Chapitres similaires finaux » avant de générer.',
     'Similar chapters found online: $similarChapters\nAdd this block in "Final similar chapters" before generating.',
-    'Capitulos similares detectados en linea: $similarChapters\nAgrega este bloque en "Capitulos similares finales" antes de generar.',
-    'Capitulos similares encontrados online: $similarChapters\nAdicione este bloco em "Capitulos similares finais" antes de gerar.',
+    'Capítulos similares detectados en línea: $similarChapters\nAñade este bloque en «Capítulos similares finales» antes de generar.',
+    'Capítulos semelhantes encontrados online: $similarChapters\nAdicione este bloco em “Capítulos semelhantes finais” antes de gerar.',
   );
   String get comparingReference => _text(
     'Comparaison avec la version française du site www.philippekacou.org...',
     'Comparing with the French version on www.philippekacou.org...',
-    'Comparando con la version francesa en www.philippekacou.org...',
-    'Comparando com a versao francesa em www.philippekacou.org...',
+    'Comparando con la versión francesa de www.philippekacou.org...',
+    'Comparando com a versão francesa de www.philippekacou.org...',
   );
   String referenceTitleNumberMissing() => _text(
-    'Titre du chapitre : le numero Kacou est introuvable. Mets un titre comme "KACOU 1 : ...", sinon la comparaison avec le site est impossible.',
+    'Titre du chapitre : le numéro Kacou est introuvable. Mets un titre comme « KACOU 1 : ... » pour permettre la comparaison avec le site.',
     'Chapter title: the Kacou number is missing. Use a title like "KACOU 1: ...", otherwise site comparison is impossible.',
-    'Titulo del capitulo: falta el numero Kacou. Usa un titulo como "KACOU 1: ..."; si no, la comparacion con el sitio es imposible.',
-    'Titulo do capitulo: falta o numero Kacou. Use um titulo como "KACOU 1: ..."; senao a comparacao com o site e impossivel.',
+    'Título del capítulo: falta el número Kacou. Usa un título como «KACOU 1: ...» para poder compararlo con el sitio.',
+    'Título do capítulo: falta o número Kacou. Use um título como “KACOU 1: ...” para permitir a comparação com o site.',
   );
   String referenceFetchFailed(int chapter, Object error) => _text(
-    'Mode hors connexion : la comparaison en ligne de Kacou $chapter a ete ignoree ($error). Le document a ete genere avec les controles locaux.',
-    'Offline mode: online comparison for Kacou $chapter was skipped ($error). The document was generated with local checks.',
-    'Modo sin conexion: se omitio la comparacion en linea de Kacou $chapter ($error). El documento se genero con controles locales.',
-    'Modo offline: a comparacao online de Kacou $chapter foi ignorada ($error). O documento foi gerado com verificacoes locais.',
+    'Mode hors connexion : la comparaison en ligne de Kacou $chapter a ete ignoree (${technicalError(error)}). Le document a ete genere avec les controles locaux.',
+    'Offline mode: online comparison for Kacou $chapter was skipped (${technicalError(error)}). The document was generated with local checks.',
+    'Modo sin conexion: se omitio la comparacion en linea de Kacou $chapter (${technicalError(error)}). El documento se genero con controles locales.',
+    'Modo offline: a comparacao online de Kacou $chapter foi ignorada (${technicalError(error)}). O documento foi gerado com verificacoes locais.',
   );
   String paragraphCountMismatch({
     required int chapter,
@@ -614,23 +741,23 @@ class AppStrings {
   }) {
     final gap = (referenceCount - localCount).abs();
     final frAction = localCount < referenceCount
-        ? 'Il manque $gap paragraphe(s). Ajoute les paragraphes manquants dans le texte colle.'
-        : 'Il y a $gap paragraphe(s) en trop. Retire les paragraphes en trop ou verifie les numeros.';
+        ? 'Il manque $gap paragraphe(s). Ajoute les paragraphes manquants dans le texte ou les fichiers importés.'
+        : 'Il y a $gap paragraphe(s) en trop. Retire les paragraphes en trop ou vérifie les numéros.';
     final enAction = localCount < referenceCount
-        ? '$gap paragraph(s) are missing. Add the missing paragraphs to the pasted text.'
+        ? '$gap paragraph(s) are missing. Add them to the text or imported files.'
         : '$gap extra paragraph(s) were found. Remove the extra paragraphs or check the numbers.';
     final esAction = localCount < referenceCount
-        ? 'Faltan $gap parrafo(s). Agrega los parrafos faltantes al texto pegado.'
-        : 'Hay $gap parrafo(s) de mas. Quita los parrafos sobrantes o revisa los numeros.';
+        ? 'Faltan $gap párrafo(s). Añádelos al texto o a los archivos importados.'
+        : 'Hay $gap párrafo(s) de más. Elimina los párrafos sobrantes o revisa los números.';
     final ptAction = localCount < referenceCount
-        ? 'Faltam $gap paragrafo(s). Adicione os paragrafos faltantes ao texto colado.'
-        : 'Ha $gap paragrafo(s) extra. Remova os paragrafos extras ou confira os numeros.';
+        ? 'Faltam $gap parágrafo(s). Adicione-os ao texto ou aos arquivos importados.'
+        : 'Há $gap parágrafo(s) a mais. Remova os parágrafos excedentes ou confira os números.';
 
     return _text(
-      'Comparaison site : ton texte Kacou $chapter contient $localCount paragraphe(s), mais le chapitre francais du site en contient $referenceCount. $frAction Verifie aussi que le titre indique le bon numero Kacou.',
+      'Comparaison avec le site : ton texte Kacou $chapter contient $localCount paragraphe(s), mais le chapitre français du site en contient $referenceCount. $frAction Vérifie aussi que le titre indique le bon numéro Kacou.',
       'Site comparison: your Kacou $chapter text has $localCount paragraph(s), but the French chapter on the site has $referenceCount. $enAction Also check that the title has the right Kacou number.',
-      'Comparacion del sitio: tu texto Kacou $chapter tiene $localCount parrafo(s), pero el capitulo frances del sitio tiene $referenceCount. $esAction Verifica tambien que el titulo tenga el numero Kacou correcto.',
-      'Comparacao do site: seu texto Kacou $chapter tem $localCount paragrafo(s), mas o capitulo frances do site tem $referenceCount. $ptAction Confira tambem se o titulo tem o numero Kacou correto.',
+      'Comparación con el sitio: tu texto Kacou $chapter contiene $localCount párrafo(s), pero el capítulo francés del sitio contiene $referenceCount. $esAction Comprueba también que el título indique el número Kacou correcto.',
+      'Comparação com o site: seu texto Kacou $chapter contém $localCount parágrafo(s), mas o capítulo francês do site contém $referenceCount. $ptAction Confira também se o título indica o número Kacou correto.',
     );
   }
 
@@ -638,10 +765,10 @@ class AppStrings {
     required int chapter,
     required int paragraphCount,
   }) => _text(
-    'Comparaison OK : Kacou $chapter contient $paragraphCount paragraphe(s), comme la version francaise du site.',
+    'Comparaison réussie : Kacou $chapter contient $paragraphCount paragraphe(s), comme la version française du site.',
     'Comparison OK: Kacou $chapter has $paragraphCount paragraph(s), like the French version on the site.',
-    'Comparacion OK: Kacou $chapter tiene $paragraphCount parrafo(s), como la version francesa del sitio.',
-    'Comparacao OK: Kacou $chapter tem $paragraphCount paragrafo(s), como a versao francesa do site.',
+    'Comparación correcta: Kacou $chapter contiene $paragraphCount párrafo(s), como la versión francesa del sitio.',
+    'Comparação concluída: Kacou $chapter contém $paragraphCount parágrafo(s), como a versão francesa do site.',
   );
   String localChecksOk({
     required int chapter,
@@ -653,13 +780,13 @@ class AppStrings {
     'Verificacao local OK: Kacou $chapter tem $paragraphCount paragrafo(s). A comparacao online fica disponivel sem limite fixo quando ha internet.',
   );
   String created(String path) => _text(
-    'Document cree : $path',
+    'Document créé : $path',
     'Document created: $path',
     'Documento creado: $path',
     'Documento criado: $path',
   );
   String get shared => _text(
-    'Document prepare pour le partage.',
+    'Document prêt pour le partage.',
     'Document ready to share.',
     'Documento listo para compartir.',
     'Documento pronto para compartilhar.',
@@ -671,10 +798,10 @@ class AppStrings {
     'Compartilhamento iniciado com $value.',
   );
   String shareNotFinished(Object error) => _text(
-    'Partage non terminé : $error',
-    'Sharing did not finish: $error',
-    'La compartición no terminó: $error',
-    'O compartilhamento não terminou: $error',
+    'Partage non terminé : ${technicalError(error)}',
+    'Sharing did not finish: ${technicalError(error)}',
+    'La compartición no terminó: ${technicalError(error)}',
+    'O compartilhamento não terminou: ${technicalError(error)}',
   );
   String get wordPageOpenFailed => _text(
     'Impossible d’ouvrir la page du complément Word.',
@@ -742,11 +869,41 @@ class AppStrings {
     'Cambiar estilo',
     'Alterar estilo',
   );
+  String designLabel(DesignMode mode) => switch (mode) {
+    DesignMode.aura => 'Aura',
+    DesignMode.edition => _text(
+      'Édition',
+      'Editorial',
+      'Editorial',
+      'Editorial',
+    ),
+    DesignMode.nocturne => _text('Nocturne', 'Night', 'Nocturno', 'Noturno'),
+  };
+  String designDescription(DesignMode mode) => switch (mode) {
+    DesignMode.aura => _text(
+      'Violet lumineux',
+      'Luminous violet',
+      'Violeta luminoso',
+      'Violeta luminoso',
+    ),
+    DesignMode.edition => _text(
+      'Papier éditorial',
+      'Editorial paper',
+      'Papel editorial',
+      'Papel editorial',
+    ),
+    DesignMode.nocturne => _text(
+      'Studio sombre',
+      'Dark studio',
+      'Estudio oscuro',
+      'Estúdio escuro',
+    ),
+  };
   String error(Object error) => _text(
-    'Erreur : $error',
-    'Error: $error',
-    'Error: $error',
-    'Erro: $error',
+    'Erreur : ${technicalError(error)}',
+    'Error: ${technicalError(error)}',
+    'Error: ${technicalError(error)}',
+    'Erro: ${technicalError(error)}',
   );
   String words(int count) => _text(
     '$count mots',
@@ -765,15 +922,41 @@ class AppStrings {
   }
 }
 
-class DocxGeneratorApp extends StatelessWidget {
+class DocxGeneratorApp extends StatefulWidget {
   const DocxGeneratorApp({super.key, this.skipStorageSetup = false});
 
   final bool skipStorageSetup;
 
   @override
+  State<DocxGeneratorApp> createState() => _DocxGeneratorAppState();
+}
+
+class _DocxGeneratorAppState extends State<DocxGeneratorApp> {
+  late AppLanguage _language;
+
+  @override
+  void initState() {
+    super.initState();
+    final systemLanguage =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    _language = AppLanguage.values.firstWhere(
+      (language) => language.name == systemLanguage,
+      orElse: () => AppLanguage.en,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: _appName,
+      locale: Locale(_language.name),
+      supportedLocales: const [
+        Locale('fr'),
+        Locale('en'),
+        Locale('es'),
+        Locale('pt'),
+      ],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -847,9 +1030,21 @@ class DocxGeneratorApp extends StatelessWidget {
           ),
         ),
       ),
-      home: skipStorageSetup
-          ? const GeneratorPage(draftsEnabled: false)
-          : const StorageGate(child: GeneratorPage()),
+      home: widget.skipStorageSetup
+          ? GeneratorPage(
+              draftsEnabled: false,
+              initialLanguage: _language,
+              onLanguageChanged: (language) =>
+                  setState(() => _language = language),
+            )
+          : StorageGate(
+              locale: _language.name,
+              child: GeneratorPage(
+                initialLanguage: _language,
+                onLanguageChanged: (language) =>
+                    setState(() => _language = language),
+              ),
+            ),
     );
   }
 }
@@ -878,9 +1073,13 @@ class GeneratorPage extends StatefulWidget {
     super.key,
     this.draftsEnabled = true,
     this.draftRepository,
+    this.initialLanguage,
+    this.onLanguageChanged,
   });
   final bool draftsEnabled;
   final DraftRepository? draftRepository;
+  final AppLanguage? initialLanguage;
+  final ValueChanged<AppLanguage>? onLanguageChanged;
 
   @override
   State<GeneratorPage> createState() => _GeneratorPageState();
@@ -924,6 +1123,7 @@ class _GeneratorPageState extends State<GeneratorPage>
   @override
   void initState() {
     super.initState();
+    _language = widget.initialLanguage ?? AppLanguage.fr;
     _ambientController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 12),
@@ -1016,6 +1216,7 @@ class _GeneratorPageState extends State<GeneratorPage>
   };
   Map<String, dynamic> _draftSnapshot() => {
     for (final entry in _draftFields.entries) entry.key: entry.value.text,
+    'uiLanguage': _language.name,
     'sources': _fileSources
         .map((s) => {'name': s.name, 'text': s.text})
         .toList(),
@@ -1066,6 +1267,14 @@ class _GeneratorPageState extends State<GeneratorPage>
   void _applyDraft(Map<String, dynamic> data) {
     _applyingDraft = true;
     try {
+      final savedLanguage = data['uiLanguage'] as String?;
+      if (savedLanguage != null) {
+        _language = AppLanguage.values.firstWhere(
+          (language) => language.name == savedLanguage,
+          orElse: () => _language,
+        );
+        widget.onLanguageChanged?.call(_language);
+      }
       // Restore fields in order, including the saved file name after the
       // automatic name listeners have run.
       for (final entry in _draftFields.entries) {
@@ -1409,10 +1618,13 @@ class _GeneratorPageState extends State<GeneratorPage>
         title: _chapterTitleController.text,
         language: _documentLanguageController.text,
         text: text,
+        uiLocale: _language.name,
       );
       if (mounted) setState(() => _aiReview = review);
     } catch (error) {
-      _setStatus('${_strings.assistantSetup}\n$error');
+      _setStatus(
+        '${_strings.assistantSetup}\n${_strings.technicalError(error)}',
+      );
     } finally {
       if (mounted) setState(() => _isAiReviewing = false);
     }
@@ -1509,11 +1721,11 @@ class _GeneratorPageState extends State<GeneratorPage>
     try {
       final path = await storage.save(document);
       return storage.mode == 'folder'
-          ? 'Copie locale enregistrée · copie écrite dans le dossier ${storage.provider} / $path'
-          : 'Bibliothèque locale / $path';
+          ? _strings.synchronizedCopy(storage.provider ?? '', path)
+          : _strings.libraryLocation(path);
     } catch (error) {
       if (error.toString().contains('Version locale conservée')) {
-        return 'Bibliothèque locale · copie dans le dossier non confirmée';
+        return _strings.folderCopyUnconfirmed;
       }
       rethrow;
     }
@@ -1923,7 +2135,7 @@ class _GeneratorPageState extends State<GeneratorPage>
       );
     } catch (error) {
       return _ReferenceCheckResult.error(
-        '[FR-UNAVAILABLE] La référence française de Kacou $chapterNumber est inaccessible ($error). Les dates des sous-titres et la numérotation doivent être vérifiées : reconnecte-toi puis relance la génération.',
+        _strings.referenceUnavailable(chapterNumber, error),
       );
     }
 
@@ -1963,10 +2175,10 @@ class _GeneratorPageState extends State<GeneratorPage>
       paragraphCount: localCount,
     );
     final dateMessage = dateNotices.isEmpty
-        ? 'Dates des sous-titres vérifiées avec le français.'
-        : dateNotices.join('\n');
+        ? _strings.subtitleDatesVerified
+        : dateNotices.map(_strings.issue).join('\n');
     return _ReferenceCheckResult.ok(
-      '$referenceMessage\n$dateMessage\nRéférences [Kc…] conservées telles que saisies.',
+      '$referenceMessage\n$dateMessage\n${_strings.referencesPreserved}',
     );
   }
 
@@ -2219,7 +2431,9 @@ class _GeneratorPageState extends State<GeneratorPage>
                           child: SingleChildScrollView(
                             child: _issueMessages.isNotEmpty
                                 ? _IssueIndex(
-                                    issues: _issueMessages,
+                                    issues: _issueMessages
+                                        .map(strings.issue)
+                                        .toList(),
                                     title: strings.issues,
                                     status: _status!,
                                   )
@@ -2284,7 +2498,7 @@ class _GeneratorPageState extends State<GeneratorPage>
                     aiReview: _aiReview,
                     isAiReviewing: _isAiReviewing,
                     onReviewWithAi: _reviewWithAi,
-                    issues: _issueMessages,
+                    issues: _issueMessages.map(strings.issue).toList(),
                     generatedPath: _generatedPath,
                     libraryPath: _libraryPath,
                     cloudPanel: CloudPanel(
@@ -2339,8 +2553,19 @@ class _GeneratorPageState extends State<GeneratorPage>
                                 child: _CompactTopBar(
                                   strings: strings,
                                   language: _language,
-                                  onLanguageChanged: (language) =>
-                                      setState(() => _language = language),
+                                  onLanguageChanged: (language) {
+                                    setState(() {
+                                      _language = language;
+                                      _status = _issueMessages.isEmpty
+                                          ? null
+                                          : _strings.validationErrors(
+                                              _issueMessages,
+                                            );
+                                      _aiReview = null;
+                                    });
+                                    widget.onLanguageChanged?.call(language);
+                                    _draftChanged();
+                                  },
                                   onClear: _clearAll,
                                   designMode: _designMode,
                                   onDesignModeChanged: (mode) =>
@@ -2554,7 +2779,7 @@ class _CompactTopBar extends StatelessWidget {
             children: [
               _DesignModeControl(
                 mode: designMode,
-                label: strings.changeStyle,
+                strings: strings,
                 palette: palette,
                 onChanged: onDesignModeChanged,
               ),
@@ -2586,7 +2811,7 @@ class _CompactTopBar extends StatelessWidget {
         ),
         _DesignModeControl(
           mode: designMode,
-          label: strings.changeStyle,
+          strings: strings,
           palette: palette,
           onChanged: onDesignModeChanged,
         ),
@@ -2665,20 +2890,20 @@ class _LanguageControl extends StatelessWidget {
 class _DesignModeControl extends StatelessWidget {
   const _DesignModeControl({
     required this.mode,
-    required this.label,
+    required this.strings,
     required this.palette,
     required this.onChanged,
   });
 
   final DesignMode mode;
-  final String label;
+  final AppStrings strings;
   final DesignPalette palette;
   final ValueChanged<DesignMode> onChanged;
 
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<DesignMode>(
-      tooltip: label,
+      tooltip: strings.changeStyle,
       color: palette.surfaceStrong,
       onSelected: onChanged,
       itemBuilder: (context) => DesignMode.values
@@ -2698,7 +2923,7 @@ class _DesignModeControl extends StatelessWidget {
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
-                      '${item.label} · ${item.description}',
+                      '${strings.designLabel(item)} · ${strings.designDescription(item)}',
                       style: TextStyle(
                         color: palette.text,
                         fontSize: 13,
@@ -2724,7 +2949,7 @@ class _DesignModeControl extends StatelessWidget {
             Icon(Icons.palette_outlined, color: palette.accent, size: 17),
             const SizedBox(width: 6),
             Text(
-              mode.label,
+              strings.designLabel(mode),
               style: TextStyle(
                 color: palette.text,
                 fontSize: 12,
@@ -3091,7 +3316,9 @@ class _InputPanel extends StatelessWidget {
                         .map(
                           (language) => PopupMenuItem(
                             value: language,
-                            child: Text(language.name),
+                            child: Text(
+                              strings.documentLanguageLabel(language),
+                            ),
                           ),
                         )
                         .toList(),
@@ -3214,6 +3441,7 @@ class _InputPanel extends StatelessWidget {
               ),
               VerseEditor(
                 controller: manualTextController,
+                foregroundColor: palette.text,
                 languageController: documentLanguageController,
                 locale: strings.language.name,
                 enabled: editingEnabled,
@@ -3371,6 +3599,7 @@ class _ImportedSourceEditor extends StatelessWidget {
           ),
           VerseEditor(
             controller: controller,
+            foregroundColor: palette.text,
             languageController: languageController,
             locale: locale,
             enabled: enabled,

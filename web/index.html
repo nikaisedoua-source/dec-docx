@@ -24,10 +24,10 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="DEC DOCX">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?build=1.9.15">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?build=1.9.16">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png?build=1.9.15"/>
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png?build=1.9.16"/>
 
   <title>DEC DOCX</title>
   <link rel="canonical" href="https://nikaisedoua-source.github.io/dec-docx/">
@@ -42,14 +42,14 @@
       history.replaceState(null, '', appUrl.pathname + appUrl.search + appUrl.hash);
     }
   </script>
-  <script src="draft_storage.js?build=1.9.15"></script>
-  <script src="cloud_storage.js?build=1.9.15"></script>
+  <script src="draft_storage.js?build=1.9.16"></script>
+  <script src="cloud_storage.js?build=1.9.16"></script>
   <script>
     window.decExtractPdfText = async (bytes) => {
-      const reader = await import(new URL('pdf_extract.mjs?build=1.9.15', document.baseURI).href);
+      const reader = await import(new URL('pdf_extract.mjs?build=1.9.16', document.baseURI).href);
       return reader.extractPdfText(bytes);
     };
   </script>
-  <script src="flutter_bootstrap.js?build=1.9.15" async></script>
+  <script src="flutter_bootstrap.js?build=1.9.16" async></script>
 </body>
 </html>

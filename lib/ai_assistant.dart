@@ -17,21 +17,37 @@ class LocalAiAssistant {
     required String title,
     required String language,
     required String text,
+    String uiLocale = 'fr',
   }) async {
     if (text.trim().isEmpty) {
-      throw const FormatException('Ajoute un texte avant de demander une analyse IA.');
+      throw const FormatException(
+        'Ajoute un texte avant de demander une analyse IA.',
+      );
     }
 
-    final prompt = '''
+    final responseLanguage = switch (uiLocale) {
+      'en' => 'anglais',
+      'es' => 'espagnol',
+      'pt' => 'portugais',
+      _ => 'français',
+    };
+    final remarkLabel = switch (uiLocale) {
+      'en' => 'To check',
+      'es' => 'Por comprobar',
+      'pt' => 'A verificar',
+      _ => 'À vérifier',
+    };
+    final prompt =
+        '''
 Tu es l'assistant de contrôle de DEC DOCX. Analyse le chapitre ci-dessous sans le réécrire,
 sans inventer de verset et sans corriger silencieusement le contenu.
-Réponds en français avec au maximum 5 points courts :
+Réponds uniquement en $responseLanguage, dans un registre professionnel et naturel, avec au maximum 5 points courts :
 - numérotation manquante ou sautée ;
 - paragraphes vides ou texte probablement collé ;
 - concordances ou chapitres similaires mal placés ;
 - incohérences évidentes entre le titre, la langue et le contenu ;
 - si tout semble correct, dis-le clairement.
-Présente chaque remarque comme « À vérifier : ... ».
+Présente chaque remarque comme « $remarkLabel : ... ».
 
 Titre : $title
 Langue : $language
@@ -49,7 +65,8 @@ $text
             'messages': [
               {
                 'role': 'system',
-                'content': 'Tu es prudent, factuel et tu ne modifies jamais le texte source.',
+                'content':
+                    'Tu es prudent, factuel et tu ne modifies jamais le texte source.',
               },
               {'role': 'user', 'content': prompt},
             ],
@@ -66,9 +83,7 @@ $text
     }
 
     final payload = jsonDecode(response.body);
-    final message = payload is Map<String, dynamic>
-        ? payload['message']
-        : null;
+    final message = payload is Map<String, dynamic> ? payload['message'] : null;
     final content = message is Map<String, dynamic>
         ? message['content']?.toString().trim()
         : null;

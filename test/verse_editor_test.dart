@@ -3,8 +3,108 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dec_docx/docx_builder.dart';
 import 'package:dec_docx/main.dart';
 import 'package:dec_docx/verse_editor.dart';
+import 'package:dec_docx/drafts/draft_repository.dart';
+
+class _MemoryDraftRepository implements DraftRepository {
+  _MemoryDraftRepository(Map<String, dynamic> data)
+    : revisions = [
+        {'id': 'initial', 'savedAt': '2026-10-07T00:00:00Z', 'data': data},
+      ];
+  final List<Map<String, dynamic>> revisions;
+  @override
+  Future<List<Map<String, dynamic>>> history() async =>
+      revisions.reversed.toList();
+  @override
+  Future<Map<String, dynamic>> read(String id) async =>
+      revisions.firstWhere((revision) => revision['id'] == id);
+  @override
+  Future<void> save(Map<String, dynamic> revision) async =>
+      revisions.add(revision);
+}
 
 void main() {
+  final binding = TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() => binding.platformDispatcher.localeTestValue = const Locale('fr'));
+  tearDown(binding.platformDispatcher.clearLocaleTestValue);
+
+  testWidgets(
+    'editing an imported verse reaches the saved draft and generation source',
+    (tester) async {
+      final repository = _MemoryDraftRepository({
+        'title': 'Kacou 1 : Exemple',
+        'language': 'francais',
+        'text': '1 Texte collé',
+        'sources': [
+          {'name': 'premier.docx', 'text': '2 Premier fichier\n3 À modifier'},
+          {'name': 'second.txt', 'text': '4 Second fichier'},
+        ],
+      });
+      await tester.pumpWidget(
+        MaterialApp(home: GeneratorPage(draftRepository: repository)),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      final importedEditor = find.byWidgetPredicate(
+        (widget) =>
+            widget is VerseEditor && widget.sourceName == 'premier.docx',
+      );
+      expect(importedEditor, findsOneWidget);
+      final edit = find
+          .descendant(of: importedEditor, matching: find.byTooltip('Modifier'))
+          .last;
+      await tester.ensureVisible(edit);
+      await tester.tap(edit);
+      await tester.pump(const Duration(milliseconds: 400));
+      final dialog = find.byType(AlertDialog);
+      await tester.enterText(
+        find.descendant(of: dialog, matching: find.byType(TextField)),
+        '3 Verset corrigé',
+      );
+      await tester.tap(
+        find.descendant(of: dialog, matching: find.text('Enregistrer')),
+      );
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump();
+      final saved = repository.revisions.last['data'] as Map<String, dynamic>;
+      expect(saved['text'], '1 Texte collé');
+      expect((saved['sources'] as List).last['text'], '4 Second fichier');
+      expect(
+        (saved['sources'] as List).first['text'],
+        '2 Premier fichier\n3 Verset corrigé',
+      );
+      final source = DocumentSource(
+        name: (saved['sources'] as List).first['name'] as String,
+        text: (saved['sources'] as List).first['text'] as String,
+      );
+      final validation = DocxBuilder.validateChapter(
+        ChapterInput(
+          title: saved['title'] as String,
+          subtitle: '',
+          similarChapters: '',
+          sources: [
+            DocumentSource(name: 'Texte saisi', text: saved['text'] as String),
+            source,
+            DocumentSource(
+              name: 'second.txt',
+              text: (saved['sources'] as List).last['text'] as String,
+            ),
+          ],
+        ),
+      );
+      expect(validation.errors, isEmpty);
+      expect(
+        validation.documents.single.blocks
+            .where((block) => block.paragraph != null)
+            .map((block) => block.paragraph!.text),
+        contains('Verset corrigé'),
+      );
+      expect(
+        repository.revisions.first['data']['sources'].first['text'],
+        '2 Premier fichier\n3 À modifier',
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
   test('date headings stay outside editable verse ranges', () {
     for (final date in ['24 mai 2009', '24/05/2009', '(24 mai 2009)']) {
       final text = '1 Premier\n$date\n2 Deuxième\n';
@@ -20,6 +120,7 @@ void main() {
     TextEditingController controller, {
     List<String> issues = const [],
     String? sourceName,
+    String locale = 'fr',
   }) async {
     final language = TextEditingController(text: 'francais');
     addTearDown(language.dispose);
@@ -32,6 +133,7 @@ void main() {
               languageController: language,
               issues: issues,
               sourceName: sourceName,
+              locale: locale,
             ),
           ),
         ),
@@ -138,6 +240,50 @@ void main() {
     );
     expect(find.textContaining('Attendu 2 mais trouve 3'), findsOneWidget);
   });
+
+  for (final locale in ['en', 'es', 'pt']) {
+    testWidgets('translated issues retain their verse association in $locale', (
+      tester,
+    ) async {
+      final controller = TextEditingController(
+        text: '1 Premier\n3 Numéro incorrect\n',
+      );
+      addTearDown(controller.dispose);
+      await mount(
+        tester,
+        controller,
+        locale: locale,
+        sourceName: 'verset trouvé.docx',
+      );
+      final verses = locateSourceVerses(controller.text);
+      final card = tester.widget<Container>(
+        find.byKey(ValueKey('verse-card-${verses.last.start}')),
+      );
+      expect(
+        ((card.decoration! as BoxDecoration).border! as Border).top.color,
+        const Color(0xFFB91C1C),
+      );
+      expect(find.textContaining('numero manquant'), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await mount(
+        tester,
+        controller,
+        locale: locale,
+        sourceName: 'verset trouvé.docx',
+        issues: [
+          '[FR-VERSE] verset 3 : ce numéro est absent de la référence française.',
+          'Other.docx, ligne 1 : ce paragraphe n’a pas de numero -> "Texte". Ajoute "1 " au debut de la ligne, ou transforme cette ligne en sous-titre clair comme "PARTIE ...".',
+        ],
+      );
+      final firstCard = tester.widget<Container>(
+        find.byKey(ValueKey('verse-card-${verses.first.start}')),
+      );
+      expect(
+        ((firstCard.decoration! as BoxDecoration).border! as Border).top.color,
+        const Color(0xFF8B4513),
+      );
+    });
+  }
 
   testWidgets('pasting into the app shows verse actions on a narrow screen', (
     tester,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'docx_builder.dart';
+import 'localized_issues.dart';
 import 'sermon_rules.dart';
 
 /// An occurrence in the original text. Offsets, rather than verse numbers,
@@ -93,6 +94,7 @@ class VerseEditor extends StatefulWidget {
     this.enabled = true,
     this.issues = const [],
     this.sourceName,
+    this.foregroundColor,
   });
   final TextEditingController controller;
   final TextEditingController languageController;
@@ -100,6 +102,7 @@ class VerseEditor extends StatefulWidget {
   final bool enabled;
   final List<String> issues;
   final String? sourceName;
+  final Color? foregroundColor;
 
   @override
   State<VerseEditor> createState() => _VerseEditorState();
@@ -167,6 +170,9 @@ class _VerseEditorState extends State<VerseEditor> {
           ),
           actions: [
             TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.primary,
+              ),
               onPressed: () => Navigator.pop(context),
               child: Text(label('Annuler', 'Cancel', 'Cancelar', 'Cancelar')),
             ),
@@ -362,9 +368,7 @@ class _VerseEditorState extends State<VerseEditor> {
         ...errors,
         ...widget.issues.where(
           (issue) =>
-              issue.startsWith('Texte saisi,') ||
-              (widget.sourceName != null &&
-                  issue.startsWith('${widget.sourceName},')) ||
+              issue.startsWith('${widget.sourceName ?? 'Texte saisi'},') ||
               issue.startsWith('[FR-VERSE]'),
         ),
       };
@@ -440,15 +444,28 @@ class _VerseEditorState extends State<VerseEditor> {
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Text(
                 '${label('Versets', 'Verses', 'Versículos', 'Versículos')} (${verses.length})',
-                style: Theme.of(context).textTheme.titleMedium,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: widget.foregroundColor,
+                ),
               ),
             ),
             for (final verse in verses)
-              _verseCard(context, verse, source, issuesByVerse[verse.start]!),
+              _verseCard(
+                context,
+                verse,
+                source,
+                issuesByVerse[verse.start]!
+                    .map((issue) => localizeIssue(issue, widget.locale))
+                    .toList(),
+              ),
           ],
           if (errors.isNotEmpty)
             ExpansionTile(
               tilePadding: EdgeInsets.zero,
+              textColor: widget.foregroundColor,
+              collapsedTextColor: widget.foregroundColor,
+              iconColor: widget.foregroundColor,
+              collapsedIconColor: widget.foregroundColor,
               title: Text(
                 '${label('Contrôles du texte', 'Text checks', 'Controles del texto', 'Verificações do texto')} (${errors.length})',
               ),
@@ -456,7 +473,10 @@ class _VerseEditorState extends State<VerseEditor> {
                   .map(
                     (error) => Padding(
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(error),
+                      child: Text(
+                        localizeIssue(error, widget.locale),
+                        style: TextStyle(color: widget.foregroundColor),
+                      ),
                     ),
                   )
                   .toList(),

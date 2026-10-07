@@ -13,6 +13,45 @@ import 'package:dec_docx/sermon_reference.dart';
 import 'package:dec_docx/app_release_tools.dart';
 
 void main() {
+  final binding = TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() => binding.platformDispatcher.localeTestValue = const Locale('fr'));
+  tearDown(binding.platformDispatcher.clearLocaleTestValue);
+
+  for (final language in AppLanguage.values) {
+    testWidgets('interface and built-in controls use ${language.name}', (
+      tester,
+    ) async {
+      binding.platformDispatcher.localeTestValue = Locale(language.name);
+      await tester.pumpWidget(const DocxGeneratorApp(skipStorageSetup: true));
+      await tester.pump(const Duration(milliseconds: 400));
+      final strings = AppStrings(language);
+      expect(
+        find.widgetWithText(TextField, strings.chapterTitle),
+        findsOneWidget,
+      );
+      final context = tester.element(find.byType(Scaffold).first);
+      expect(Localizations.localeOf(context).languageCode, language.name);
+      expect(
+        MaterialLocalizations.of(context).selectAllButtonLabel,
+        switch (language) {
+          AppLanguage.fr => 'Tout sélectionner',
+          AppLanguage.en => 'Select all',
+          AppLanguage.es => 'Seleccionar todo',
+          AppLanguage.pt => 'Selecionar tudo',
+        },
+      );
+      await tester.tap(find.byTooltip(strings.changeStyle));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(
+        find.text(
+          '${strings.designLabel(DesignMode.nocturne)} · ${strings.designDescription(DesignMode.nocturne)}',
+        ),
+        findsOneWidget,
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
   testWidgets('compact install button opens the matching platform download', (
     tester,
   ) async {
@@ -26,7 +65,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: InstallAppButton(
-              version: '1.9.15',
+              version: '1.9.16',
               platform: platform,
               openUrl: (uri) async {
                 opened = uri;
@@ -40,7 +79,7 @@ void main() {
       await tester.pump();
       expect(
         opened?.path,
-        '/nikaisedoua-source/dec-docx/releases/download/v1.9.15-preview/$asset',
+        '/nikaisedoua-source/dec-docx/releases/download/v1.9.16-preview/$asset',
       );
     }
   });
@@ -52,7 +91,7 @@ void main() {
       const MaterialApp(
         home: Scaffold(
           body: InstallAppButton(
-            version: '1.9.15',
+            version: '1.9.16',
             platform: TargetPlatform.iOS,
           ),
         ),
@@ -73,7 +112,7 @@ void main() {
             data: const MediaQueryData(disableAnimations: true),
             child: Scaffold(
               body: ReleaseNotice(
-                version: '1.9.15',
+                version: '1.9.16',
                 onDismiss: () => dismissed = true,
               ),
             ),
@@ -81,7 +120,7 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.text('Nouveautés disponibles · v1.9.15'), findsOneWidget);
+      expect(find.text('Nouveautés disponibles · v1.9.16'), findsOneWidget);
       expect(tester.widget<Opacity>(find.byType(Opacity).last).opacity, 1);
       await tester.pump(const Duration(seconds: 8));
       expect(dismissed, isTrue);
@@ -136,7 +175,7 @@ void main() {
     await tester.pumpWidget(const DocxGeneratorApp(skipStorageSetup: true));
 
     expect(find.text('DEC DOCX'), findsWidgets);
-    expect(find.text('Version 1.9.15'), findsOneWidget);
+    expect(find.text('Version 1.9.16'), findsOneWidget);
     expect(find.text('Titre du chapitre'), findsOneWidget);
     expect(
       find.byTooltip(AppStrings(AppLanguage.fr).chapterTitleLowercaseHelp),
@@ -196,7 +235,7 @@ void main() {
       await tester.tap(find.byTooltip('Choisir une langue'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
-      await tester.tap(find.text('francais'));
+      await tester.tap(find.text('français'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       final nameField = tester.widget<TextField>(

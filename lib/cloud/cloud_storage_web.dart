@@ -46,7 +46,7 @@ class CloudStorage {
     _state(await _request('restore'));
   }
 
-  Future<void> choose(String service) async {
+  Future<void> choose(String service, {String locale = 'fr'}) async {
     _state(await _request('choose', {'provider': service}));
   }
 
