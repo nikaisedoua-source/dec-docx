@@ -1,8 +1,8 @@
 {
-  "version": "1.8.5",
-  "message": "Mise a jour plus rapide et plus discrete.",
-  "downloadUrl": "https://nikaisedoua-source.github.io/dec-docx/DEC_DOCX-1.8.5.apk",
-  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.8.2/DEC_DOCX-mac.zip",
-  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.7.4/DEC_DOCX-windows.zip",
+  "version": "1.9.14",
+  "message": "Les dates anglaises jour-mois avec virgule et les concordances Kc avec plage de versets sont reconnues sans faux blocage.",
+  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.14-preview/DEC-DOCX-Android-preview.apk",
+  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.14-preview/DEC-DOCX-macOS-preview.zip",
+  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.14-preview/DEC-DOCX-Windows-preview.zip",
   "webUrl": "https://nikaisedoua-source.github.io/dec-docx/"
 }

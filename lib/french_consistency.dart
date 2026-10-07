@@ -82,7 +82,7 @@ List<(int, int)> _dateLikeDayYears(String heading) {
   final value = SermonRules.normalize(heading);
   final matches = <(int, int, int)>[];
   for (final match in RegExp(
-    r'(?<!\d)(\d{1,2})(?:er|st|nd|rd|th)?\.?\s+(?:de\s+)?\p{L}+\s+(?:de\s+)?(\d{4})(?!\d)',
+    r'(?<!\d)(\d{1,2})(?:er|st|nd|rd|th)?\.?\s+(?:de\s+)?\p{L}+[,]?\s+(?:de\s+)?(\d{4})(?!\d)',
     unicode: true,
   ).allMatches(value)) {
     matches.add((match.start, int.parse(match[1]!), int.parse(match[2]!)));

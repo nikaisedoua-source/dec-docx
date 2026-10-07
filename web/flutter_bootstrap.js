@@ -31,9 +31,9 @@
   for (const build of _flutter.buildConfig.builds) {
     if (build.compileTarget === 'dart2js') {
       const entrypoint = new URL(build.mainJsPath || 'main.dart.js', appRoot);
-      entrypoint.searchParams.set('build', '1.9.13');
+      entrypoint.searchParams.set('build', '1.9.14');
       build.mainJsPath = entrypoint.href;
     }
   }
-  await _flutter.loader.load({config: {assetBase: 'releases/1.9.13/'}});
+  await _flutter.loader.load({config: {assetBase: 'releases/1.9.14/'}});
 })();

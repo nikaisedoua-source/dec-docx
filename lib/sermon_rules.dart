@@ -64,7 +64,7 @@ class SermonRules {
 
     final months = _months.keys.join('|');
     for (final m in RegExp(
-      '(?<![0-9])([0-9]{1,2})(?:er|st|nd|rd|th)?\\.?\\s+(?:de\\s+)?($months)\\s+(?:de\\s+)?([0-9]{4})(?![0-9])',
+      '(?<![0-9])([0-9]{1,2})(?:er|st|nd|rd|th)?\\.?\\s+(?:de\\s+)?($months)[,]?\\s+(?:de\\s+)?([0-9]{4})(?![0-9])',
     ).allMatches(value)) {
       add(m.start, int.parse(m[3]!), _months[m[2]]!, int.parse(m[1]!));
     }

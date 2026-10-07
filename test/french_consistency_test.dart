@@ -53,6 +53,23 @@ void main() {
     expect(SermonRules.concordances('[Kc.] [Kc ]'), hasLength(2));
     expect(SermonRules.dates('03/04/2022', language: 'en-US'), ['2022-03-04']);
   });
+  test('accepts a comma after a day-first English month in a subtitle', () {
+    const subtitle =
+        '(Ɔkaa asɛm no Kwasiada anɔpa, 15 December, 2002 wɔ Locodjro, Abidjan-Ivory Coast)';
+    expect(SermonRules.dates(subtitle, language: 'Twi'), ['2002-12-15']);
+
+    final fr = reference(
+      html('1 Texte.\n2 Suite.', subtitle: '15 décembre 2002'),
+    );
+    expect(
+      compareFrenchConsistency(
+        document('1 Text.\n2 Next.', subtitle: subtitle, language: 'Twi'),
+        fr,
+        language: 'Twi',
+      ),
+      isEmpty,
+    );
+  });
   test('recognizes Czech ordinal dates in the full subtitle', () {
     const subtitle =
         'Kázáno v neděli ráno 12. září 2010 v Anyamě poblíž Abidjanu – Pobřeží slonoviny';

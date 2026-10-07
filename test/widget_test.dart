@@ -21,18 +21,18 @@ void main() {
     ]) {
       Uri? opened;
       await tester.pumpWidget(MaterialApp(home: Scaffold(body: InstallAppButton(
-        version: '1.9.13', platform: platform,
+        version: '1.9.14', platform: platform,
         openUrl: (uri) async { opened = uri; return true; },
       ))));
       await tester.tap(find.byTooltip('Installer sur $label'));
       await tester.pump();
-      expect(opened?.path, '/nikaisedoua-source/dec-docx/releases/download/v1.9.13-preview/$asset');
+      expect(opened?.path, '/nikaisedoua-source/dec-docx/releases/download/v1.9.14-preview/$asset');
     }
   });
 
   testWidgets('iPhone install button opens the installation guide', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: Scaffold(body: InstallAppButton(
-      version: '1.9.13', platform: TargetPlatform.iOS,
+      version: '1.9.14', platform: TargetPlatform.iOS,
     ))));
     await tester.tap(find.byTooltip('Installer sur iPhone'));
     await tester.pumpAndSettle();
@@ -43,10 +43,10 @@ void main() {
     var dismissed = false;
     await tester.pumpWidget(MaterialApp(home: MediaQuery(
       data: const MediaQueryData(disableAnimations: true),
-      child: Scaffold(body: ReleaseNotice(version: '1.9.13', onDismiss: () => dismissed = true)),
+      child: Scaffold(body: ReleaseNotice(version: '1.9.14', onDismiss: () => dismissed = true)),
     )));
     await tester.pump();
-    expect(find.text('Nouveautés disponibles · v1.9.13'), findsOneWidget);
+    expect(find.text('Nouveautés disponibles · v1.9.14'), findsOneWidget);
     expect(tester.widget<Opacity>(find.byType(Opacity).last).opacity, 1);
     await tester.pump(const Duration(seconds: 8));
     expect(dismissed, isTrue);
@@ -100,7 +100,7 @@ void main() {
     await tester.pumpWidget(const DocxGeneratorApp(skipStorageSetup: true));
 
     expect(find.text('DEC DOCX'), findsWidgets);
-    expect(find.text('Version 1.9.13'), findsOneWidget);
+    expect(find.text('Version 1.9.14'), findsOneWidget);
     expect(find.text('Titre du chapitre'), findsOneWidget);
     expect(
       find.byTooltip(AppStrings(AppLanguage.fr).chapterTitleLowercaseHelp),
@@ -1047,7 +1047,7 @@ Benzer bölüm: Kc. 118
           DocumentSource(
             name: 'Concordances',
             text:
-                '1 Premier paragraphe [Kc.104v28]\n[Kc.2v11][Kc.31v18]\n2 Deuxieme paragraphe',
+                '1 Premier paragraphe [Kc.104v28]\n[Kc.2v11][Kc.31v18]\n2 Deuxieme paragraphe\n[Kc.6v17][Kc.15v14-16]\n3 Troisieme paragraphe',
           ),
         ],
       ),
@@ -1063,12 +1063,14 @@ Benzer bölüm: Kc. 118
       extracted.indexOf('[Kc.2v11][Kc.31v18]'),
       lessThan(extracted.indexOf('2 Deuxieme paragraphe')),
     );
+    expect(extracted, contains('[Kc.6v17][Kc.15v14-16]'));
 
     final archive = ZipDecoder().decodeBytes(bytes);
     final documentXml = utf8.decode(
       archive.findFile('word/document.xml')!.content as List<int>,
     );
     expect(documentXml, contains('<w:color w:val="008000"/>'));
+    expect(documentXml, contains('[Kc.15v14-16]'));
   });
 
   test('adds explicit spacing after each numbered paragraph', () {

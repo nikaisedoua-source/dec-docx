@@ -799,7 +799,7 @@ class DocxBuilder {
 
   static bool _isConcordanceLine(String value) {
     return RegExp(
-      r'^(?:\[\s*Kc\.\s*\d{1,3}\s*v\s*\d{1,3}\s*\])+$',
+      r'^(?:\[\s*Kc\.\s*\d{1,3}\s*v\s*\d{1,3}(?:\s*[-–—]\s*\d{1,3})?\s*\])+$',
       caseSensitive: false,
     ).hasMatch(value.trim().replaceAll(RegExp(r'\s+'), ''));
   }
@@ -975,7 +975,7 @@ class DocxBuilder {
   static String _runsWithConcordances(String text) {
     final buffer = StringBuffer();
     final matches = RegExp(
-      r'\[\s*Kc\.\s*\d{1,3}\s*v\s*\d{1,3}\s*\]',
+      r'\[\s*Kc\.\s*\d{1,3}\s*v\s*\d{1,3}(?:\s*[-–—]\s*\d{1,3})?\s*\]',
       caseSensitive: false,
     ).allMatches(text).toList();
 
