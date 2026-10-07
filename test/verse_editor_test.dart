@@ -19,6 +19,7 @@ void main() {
     WidgetTester tester,
     TextEditingController controller, {
     List<String> issues = const [],
+    String? sourceName,
   }) async {
     final language = TextEditingController(text: 'francais');
     addTearDown(language.dispose);
@@ -30,6 +31,7 @@ void main() {
               controller: controller,
               languageController: language,
               issues: issues,
+              sourceName: sourceName,
             ),
           ),
         ),
@@ -95,6 +97,30 @@ void main() {
     }
     expect(find.textContaining('ce numéro est absent'), findsOneWidget);
   });
+
+  testWidgets(
+    'imported source issues are attached to the imported file editor',
+    (tester) async {
+      final controller = TextEditingController(text: '1 Premier\n2 Deuxième\n');
+      addTearDown(controller.dispose);
+      await mount(
+        tester,
+        controller,
+        sourceName: 'chapitre.docx',
+        issues: ['chapitre.docx, ligne 2 : texte différent de la référence.'],
+      );
+      final cards = find.byType(Container).evaluate().where((element) {
+        final widget = element.widget;
+        if (widget is! Container || widget.decoration is! BoxDecoration) {
+          return false;
+        }
+        final border = (widget.decoration! as BoxDecoration).border;
+        return border is Border && border.top.color == const Color(0xFFB91C1C);
+      });
+      expect(cards, isNotEmpty);
+      expect(find.textContaining('texte différent'), findsOneWidget);
+    },
+  );
 
   testWidgets('a numbering gap highlights its own verse', (tester) async {
     final controller = TextEditingController(

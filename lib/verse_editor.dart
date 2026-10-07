@@ -92,12 +92,14 @@ class VerseEditor extends StatefulWidget {
     this.locale = 'fr',
     this.enabled = true,
     this.issues = const [],
+    this.sourceName,
   });
   final TextEditingController controller;
   final TextEditingController languageController;
   final String locale;
   final bool enabled;
   final List<String> issues;
+  final String? sourceName;
 
   @override
   State<VerseEditor> createState() => _VerseEditorState();
@@ -121,7 +123,9 @@ class _VerseEditorState extends State<VerseEditor> {
       subtitle: '',
       similarChapters: '',
       language: widget.languageController.text,
-      sources: [DocumentSource(name: 'Texte saisi', text: text)],
+      sources: [
+        DocumentSource(name: widget.sourceName ?? 'Texte saisi', text: text),
+      ],
     ),
   );
 
@@ -359,6 +363,8 @@ class _VerseEditorState extends State<VerseEditor> {
         ...widget.issues.where(
           (issue) =>
               issue.startsWith('Texte saisi,') ||
+              (widget.sourceName != null &&
+                  issue.startsWith('${widget.sourceName},')) ||
               issue.startsWith('[FR-VERSE]'),
         ),
       };

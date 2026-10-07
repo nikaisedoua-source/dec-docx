@@ -125,7 +125,7 @@ class DesignPalette {
 }
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.9.14';
+const _appVersion = '1.9.15';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -320,29 +320,29 @@ class AppStrings {
     'Escolher um idioma',
   );
   String get tagline => _text(
-    'Corrige les DOCX mal formes sans inventer de versets',
+    'Corrige les DOCX mal formés sans inventer de versets',
     'Repairs malformed DOCX without inventing verses',
-    'Corrige DOCX mal formados sin inventar versiculos',
-    'Corrige DOCX mal formatados sem inventar versiculos',
+    'Corrige DOCX mal formados sin inventar versículos',
+    'Corrige DOCX mal formatados sem inventar versículos',
   );
   String get versionLabel => _text(
     'Version $_appVersion',
     'Version $_appVersion',
     'Version $_appVersion',
-    'Versao $_appVersion',
+    'Versão $_appVersion',
   );
   String get clear => _text('Vider', 'Clear', 'Limpiar', 'Limpar');
   String get freshBadge => _text(
     'NOUVELLE APP - installation propre',
     'NEW APP - clean install',
-    'NUEVA APP - instalacion limpia',
-    'NOVO APP - instalacao limpa',
+    'NUEVA APP - instalación limpia',
+    'NOVO APP - instalação limpa',
   );
   String get workflowTips => _text(
-    '1. Entre le titre du chapitre.\n2. Choisis ou ecris la langue du document.\n3. Les concordances restent en place et seront en vert; les chapitres similaires finaux seront en bleu.',
+    '1. Entre le titre du chapitre.\n2. Choisis ou écris la langue du document.\n3. Les concordances restent en place et seront en vert ; les chapitres similaires finaux seront en bleu.',
     '1. Enter the chapter title.\n2. Choose or type the document language.\n3. Concordances stay in place and will be green; final similar chapters will be blue.',
-    '1. Ingresa el titulo del capitulo.\n2. Elige o escribe el idioma del documento.\n3. Las concordancias quedan en su lugar y seran verdes; los capitulos similares finales seran azules.',
-    '1. Informe o titulo do capitulo.\n2. Escolha ou escreva o idioma do documento.\n3. As concordancias ficam no lugar e serao verdes; os capitulos similares finais serao azuis.',
+    '1. Introduce el título del capítulo.\n2. Elige o escribe el idioma del documento.\n3. Las concordancias permanecen en su lugar y aparecerán en verde; los capítulos similares finales aparecerán en azul.',
+    '1. Informe o título do capítulo.\n2. Escolha ou escreva o idioma do documento.\n3. As concordâncias permanecem no lugar e aparecerão em verde; os capítulos semelhantes finais aparecerão em azul.',
   );
   String get inputTitle => _text(
     'Contenu du chapitre',
@@ -375,52 +375,52 @@ class AppStrings {
     'Confira o nome e gere seu documento.',
   );
   String get inputHint => _text(
-    'Colle les paragraphes numerotes. Les numeros seuls seront rattaches au texte suivant; un verset manquant reste une erreur.',
+    'Colle les paragraphes numérotés. Les numéros seuls seront rattachés au texte suivant ; un verset manquant reste une erreur.',
     'Paste numbered paragraphs. Standalone numbers are attached to the next text; a missing verse remains an error.',
-    'Pega los parrafos numerados. Los numeros solos se unen al texto siguiente; un versiculo faltante sigue siendo error.',
-    'Cole os paragrafos numerados. Numeros sozinhos sao ligados ao texto seguinte; versiculo ausente continua erro.',
+    'Pega los párrafos numerados. Los números aislados se unen al texto siguiente; un versículo faltante sigue siendo un error.',
+    'Cole os parágrafos numerados. Números isolados são ligados ao texto seguinte; a ausência de um versículo continua sendo um erro.',
   );
   String get chapterTitle => _text(
     'Titre du chapitre',
     'Chapter title',
-    'Titulo del capitulo',
-    'Titulo do capitulo',
+    'Título del capítulo',
+    'Título do capítulo',
   );
   String get chapterTitleHint => _text(
     'KACOU 1 : C’est ici la voix de Matthieu 25 :6',
     'KACOU 1: This is the voice of Matthew 25:6',
-    'KACOU 1: Aqui esta la voz de Mateo 25:6',
-    'KACOU 1: Aqui esta a voz de Mateus 25:6',
+    'KACOU 1: Aquí está la voz de Mateo 25:6',
+    'KACOU 1: Aqui está a voz de Mateus 25:6',
   );
   String get chapterTitleLowercaseHelp => _text(
     'Écris le titre normalement, pas tout en majuscules. Les débuts de phrase et les noms propres peuvent avoir une majuscule.',
     'Use normal capitalization, not all caps. Sentences and proper names may start with a capital letter.',
-    'Usa mayusculas normales, no todo en mayusculas. Las frases y los nombres propios pueden empezar con mayuscula.',
-    'Use maiusculas normalmente, nao escreva tudo em maiusculas. Frases e nomes proprios podem comecar com maiuscula.',
+    'Usa mayúsculas normales, no todo en mayúsculas. Las frases y los nombres propios pueden empezar con mayúscula.',
+    'Use maiúsculas normalmente; não escreva tudo em maiúsculas. Frases e nomes próprios podem começar com maiúscula.',
   );
   String get subtitle => _text(
     'Sous-titre optionnel',
     'Optional subtitle',
-    'Subtitulo opcional',
-    'Subtitulo opcional',
+    'Subtítulo opcional',
+    'Subtítulo opcional',
   );
   String get subtitleHint => _text(
     'Laisse vide si le chapitre n’a pas de sous-titre. Il sera ajouté en italique.',
     'Leave empty if the chapter has no subtitle. It will be added in italics.',
-    'Deja vacio si el capitulo no tiene subtitulo. Se agregara en cursiva.',
-    'Deixe vazio se o capitulo nao tiver subtitulo. Sera adicionado em italico.',
+    'Déjalo vacío si el capítulo no tiene subtítulo. Se añadirá en cursiva.',
+    'Deixe vazio se o capítulo não tiver subtítulo. Ele será acrescentado em itálico.',
   );
   String get similarChapters => _text(
     'Chapitres similaires finaux',
     'Final similar chapters',
-    'Capitulos similares finales',
-    'Capitulos similares finais',
+    'Capítulos similares finales',
+    'Capítulos semelhantes finais',
   );
   String get similarChaptersHint => _text(
-    'Uniquement le bloc final du texte. Il sera ajoute en bleu italique a la fin du dernier paragraphe.',
+    'Uniquement le bloc final du texte. Il sera ajouté en bleu et en italique à la fin du dernier paragraphe.',
     'Only the final block of the text. It will be added in blue italic at the end of the last paragraph.',
-    'Solo el bloque final del texto. Se agregara en azul cursiva al final del ultimo parrafo.',
-    'Somente o bloco final do texto. Sera adicionado em azul italico ao final do ultimo paragrafo.',
+    'Solo el bloque final del texto. Se añadirá en azul y cursiva al final del último párrafo.',
+    'Somente o bloco final do texto. Ele será acrescentado em azul e itálico ao final do último parágrafo.',
   );
   String get siteLanguage => _text(
     'Langue du site',
@@ -437,14 +437,14 @@ class AppStrings {
   String get documentLanguageHint => _text(
     'Exemple : russe, allemand, chinois...',
     'Example: Russian, German, Chinese...',
-    'Ejemplo: ruso, aleman, chino...',
-    'Exemplo: russo, alemao, chines...',
+    'Ejemplo: ruso, alemán, chino...',
+    'Exemplo: russo, alemão, chinês...',
   );
   String get fileNameRule => _text(
-    'Nom automatique : KACOU <numero> <langue>.docx',
+    'Nom automatique : KACOU <numéro> <langue>.docx',
     'Automatic name: KACOU <number> <language>.docx',
-    'Nombre automatico: KACOU <numero> <idioma>.docx',
-    'Nome automatico: KACOU <numero> <idioma>.docx',
+    'Nombre automático: KACOU <número> <idioma>.docx',
+    'Nome automático: KACOU <número> <idioma>.docx',
   );
   String get addFiles => _text(
     'Importer un fichier',
@@ -459,12 +459,12 @@ class AppStrings {
     'PDF ilegível: use um PDF com texto selecionável ou converta o arquivo para TXT.',
   );
   String get download =>
-      _text('Telechargement', 'Download', 'Descarga', 'Download');
+      _text('Téléchargement', 'Download', 'Descarga', 'Download');
   String get downloadButton =>
-      _text('Telecharger', 'Download', 'Descargar', 'Baixar');
+      _text('Télécharger', 'Download', 'Descargar', 'Baixar');
   String get urlLabel =>
       _text('Lien du texte', 'Text URL', 'URL del texto', 'URL do texto');
-  String get output => _text('Sortie', 'Output', 'Salida', 'Saida');
+  String get output => _text('Sortie', 'Output', 'Salida', 'Saída');
   String get fileName => _text(
     'Nom du fichier',
     'File name',
@@ -478,29 +478,41 @@ class AppStrings {
     'Reparar e gerar',
   );
   String get checkFormat => _text(
-    'Verifier le format',
+    'Vérifier le format',
     'Check format',
     'Verificar formato',
     'Verificar formato',
   );
   String get sources => _text(
-    'Fichiers ajoutes',
+    'Fichiers ajoutés',
     'Added files',
     'Archivos agregados',
     'Arquivos adicionados',
   );
   String get noSources => _text(
-    'Aucun fichier ajoute.',
+    'Aucun fichier ajouté.',
     'No file added.',
     'Ningun archivo agregado.',
     'Nenhum arquivo adicionado.',
   );
   String get remove => _text('Retirer', 'Remove', 'Quitar', 'Remover');
+  String get importedFilesEditorTitle => _text(
+    'Modifier les fichiers importés',
+    'Edit imported files',
+    'Editar archivos importados',
+    'Editar arquivos importados',
+  );
+  String get importedFilesEditorDescription => _text(
+    'Chaque fichier reste séparé : modifie un verset, supprime-le ou corrige son texte avant la génération.',
+    'Each file stays separate: edit, delete, or correct a verse before generating the document.',
+    'Cada archivo permanece separado: edita, elimina o corrige un versículo antes de generar el documento.',
+    'Cada arquivo permanece separado: edite, exclua ou corrija um versículo antes de gerar o documento.',
+  );
   String get footer => _text(
-    'DEC DOCX $_appVersion : tous les documents sont compares avec le chapitre francais de reference.',
+    'DEC DOCX $_appVersion : tous les documents sont comparés avec le chapitre français de référence.',
     'DEC DOCX $_appVersion: all documents are compared with the French reference chapter.',
-    'DEC DOCX $_appVersion: todos los documentos se comparan con el capitulo frances de referencia.',
-    'DEC DOCX $_appVersion: todos os documentos sao comparados com o capitulo frances de referencia.',
+    'DEC DOCX $_appVersion: todos los documentos se comparan con el capítulo francés de referencia.',
+    'DEC DOCX $_appVersion: todos os documentos são comparados com o capítulo francês de referência.',
   );
   String get noInput => _text(
     'Ajoute un texte ou au moins un fichier.',
@@ -511,50 +523,50 @@ class AppStrings {
   String get invalidUrl => _text(
     'Entre une adresse web valide.',
     'Enter a valid web address.',
-    'Introduce una direccion web valida.',
-    'Informe um endereco web valido.',
+    'Introduce una dirección web válida.',
+    'Informe um endereço web válido.',
   );
   String get unreadableFile => _text(
     'Aucun fichier lisible.',
     'No readable file.',
-    'Ningun archivo legible.',
-    'Nenhum arquivo legivel.',
+    'Ningún archivo legible.',
+    'Nenhum arquivo legível.',
   );
   String filesAdded(int count) => _text(
-    '$count fichier(s) ajoute(s) et prepares par Fresh.',
+    '$count fichier(s) ajouté(s) et préparé(s) par Fresh.',
     '$count file(s) added and prepared by Fresh.',
     '$count archivo(s) agregado(s) y preparado(s) por Fresh.',
     '$count arquivo(s) adicionado(s) e preparado(s) pelo Fresh.',
   );
   String formatReady(int paragraphs) => _text(
-    'Format OK : $paragraphs paragraphe(s) numerote(s) detecte(s). Aucun verset n’a ete ajoute.',
+    'Format OK : $paragraphs paragraphe(s) numéroté(s) détecté(s). Aucun verset n’a été ajouté.',
     'Format OK: $paragraphs numbered paragraph(s) detected. No verse was added.',
-    'Formato OK: $paragraphs parrafo(s) numerado(s) detectado(s). No se agrego ningun versiculo.',
-    'Formato OK: $paragraphs paragrafo(s) numerado(s) detectado(s). Nenhum versiculo foi adicionado.',
+    'Formato OK: $paragraphs párrafo(s) numerado(s) detectado(s). No se añadió ningún versículo.',
+    'Formato OK: $paragraphs parágrafo(s) numerado(s) detectado(s). Nenhum versículo foi adicionado.',
   );
   String downloaded(Uri uri) => _text(
-    'Texte telecharge depuis $uri.',
+    'Texte téléchargé depuis $uri.',
     'Text downloaded from $uri.',
     'Texto descargado desde $uri.',
     'Texto baixado de $uri.',
   );
   String downloadFailed(Object error) => _text(
-    'Telechargement impossible : $error',
+    'Téléchargement impossible : $error',
     'Download failed: $error',
     'Descarga imposible: $error',
-    'Download impossivel: $error',
+    'Download impossível: $error',
   );
   String validationErrors(List<String> errors) => _text(
-    'Correction necessaire avant generation :\n${errors.join('\n')}',
+    'Correction nécessaire avant génération :\n${errors.join('\n')}',
     'Correction required before generation:\n${errors.join('\n')}',
-    'Correccion necesaria antes de generar:\n${errors.join('\n')}',
-    'Correcao necessaria antes de gerar:\n${errors.join('\n')}',
+    'Corrección necesaria antes de generar:\n${errors.join('\n')}',
+    'Correção necessária antes de gerar:\n${errors.join('\n')}',
   );
   String get languageRequired => _text(
-    'Langue obligatoire : choisis une langue du site ou ecris-la manuellement pour nommer correctement le fichier.',
+    'Langue obligatoire : choisis une langue du site ou écris-la manuellement pour nommer correctement le fichier.',
     'Language required: choose a site language or type it manually so the file can be named correctly.',
-    'Idioma obligatorio: elige un idioma del sitio o escribelo manualmente para nombrar correctamente el archivo.',
-    'Idioma obrigatorio: escolha um idioma do site ou escreva manualmente para nomear corretamente o arquivo.',
+    'Idioma obligatorio: elige un idioma del sitio o escríbelo manualmente para nombrar correctamente el archivo.',
+    'Idioma obrigatório: escolha um idioma do site ou escreva-o manualmente para nomear corretamente o arquivo.',
   );
   String updateAvailable({required String version, required String message}) =>
       _text(
@@ -651,6 +663,84 @@ class AppStrings {
     'Document ready to share.',
     'Documento listo para compartir.',
     'Documento pronto para compartilhar.',
+  );
+  String shareStarted(Object value) => _text(
+    'Partage lancé avec $value.',
+    'Sharing started with $value.',
+    'Compartición iniciada con $value.',
+    'Compartilhamento iniciado com $value.',
+  );
+  String shareNotFinished(Object error) => _text(
+    'Partage non terminé : $error',
+    'Sharing did not finish: $error',
+    'La compartición no terminó: $error',
+    'O compartilhamento não terminou: $error',
+  );
+  String get wordPageOpenFailed => _text(
+    'Impossible d’ouvrir la page du complément Word.',
+    'Unable to open the Word add-in page.',
+    'No se pudo abrir la página del complemento de Word.',
+    'Não foi possível abrir a página do suplemento do Word.',
+  );
+  String get browserPageOpenFailed => _text(
+    'Impossible d’ouvrir la page de l’extension navigateur.',
+    'Unable to open the browser extension page.',
+    'No se pudo abrir la página de la extensión del navegador.',
+    'Não foi possível abrir a página da extensão do navegador.',
+  );
+  String get shareCancelled => _text(
+    'Partage annulé. Le document reste dans votre bibliothèque.',
+    'Sharing cancelled. The document remains in your library.',
+    'Compartición cancelada. El documento permanece en tu biblioteca.',
+    'Compartilhamento cancelado. O documento continua na sua biblioteca.',
+  );
+  String get browserShareFallback => _text(
+    'Le navigateur a ouvert le partage ou téléchargé une copie selon ses capacités.',
+    'The browser opened sharing or downloaded a copy according to its capabilities.',
+    'El navegador abrió la compartición o descargó una copia según sus capacidades.',
+    'O navegador abriu o compartilhamento ou baixou uma cópia conforme seus recursos.',
+  );
+  String get systemShareFallback => _text(
+    'Le système ne confirme pas l’application destinataire. Le document reste enregistré.',
+    'The system did not confirm the target app. The document remains saved.',
+    'El sistema no confirmó la aplicación de destino. El documento sigue guardado.',
+    'O sistema não confirmou o aplicativo de destino. O documento continua salvo.',
+  );
+  String get generatedDownloadHint => _text(
+    'Document généré. Utilisez Télécharger ou Partager pour conserver une copie.',
+    'Document generated. Use Download or Share to keep a copy.',
+    'Documento generado. Usa Descargar o Compartir para conservar una copia.',
+    'Documento gerado. Use Baixar ou Compartilhar para guardar uma cópia.',
+  );
+  String get shareDownloadRequired => _text(
+    'Générez un Word pour activer le partage et le téléchargement.',
+    'Generate a Word file to enable sharing and downloading.',
+    'Genera un Word para activar la compartición y la descarga.',
+    'Gere um Word para ativar o compartilhamento e o download.',
+  );
+  String get saveDialogTitle => _text(
+    'Enregistrer dans mes fichiers ou mon cloud',
+    'Save to my files or cloud',
+    'Guardar en mis archivos o en mi nube',
+    'Salvar nos meus arquivos ou na minha nuvem',
+  );
+  String get browserFileShareUnavailable => _text(
+    'Le partage de fichiers n’est pas disponible dans ce navigateur. Utilisez « Enregistrer une copie », puis partagez le Word depuis vos fichiers.',
+    'File sharing is not available in this browser. Use “Save a copy”, then share the Word file from your files.',
+    'La compartición de archivos no está disponible en este navegador. Usa «Guardar una copia» y comparte el Word desde tus archivos.',
+    'O compartilhamento de arquivos não está disponível neste navegador. Use “Salvar uma cópia” e compartilhe o Word pelos seus arquivos.',
+  );
+  String get generatedWordRequired => _text(
+    'Générez un Word pour activer la sauvegarde.',
+    'Generate a Word file to enable backup.',
+    'Genera un Word para activar la copia de seguridad.',
+    'Gere um Word para ativar o backup.',
+  );
+  String get changeStyle => _text(
+    'Changer de style',
+    'Change style',
+    'Cambiar estilo',
+    'Alterar estilo',
   );
   String error(Object error) => _text(
     'Erreur : $error',
@@ -811,6 +901,7 @@ class _GeneratorPageState extends State<GeneratorPage>
   final _referenceService = const SermonReferenceService();
   final _aiAssistant = const LocalAiAssistant();
   final List<DocumentSource> _fileSources = [];
+  final List<TextEditingController> _fileSourceControllers = [];
   AppLanguage _language = AppLanguage.fr;
   DesignMode _designMode = DesignMode.aura;
   bool _isGenerating = false;
@@ -895,6 +986,9 @@ class _GeneratorPageState extends State<GeneratorPage>
     _fileNameController.dispose();
     _documentLanguageController.dispose();
     _personNameController.dispose();
+    for (final controller in _fileSourceControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -934,6 +1028,41 @@ class _GeneratorPageState extends State<GeneratorPage>
     if (!_applyingDraft) _drafts?.change(_draftSnapshot());
   }
 
+  void _addFileSource(DocumentSource source) {
+    final controller = TextEditingController(text: source.text);
+    controller.addListener(() => _fileSourceChanged(controller));
+    _fileSources.add(source);
+    _fileSourceControllers.add(controller);
+  }
+
+  void _fileSourceChanged(TextEditingController controller) {
+    final index = _fileSourceControllers.indexOf(controller);
+    if (index < 0 || _applyingDraft) return;
+    final source = _fileSources[index];
+    if (source.text == controller.text) return;
+    _fileSources[index] = DocumentSource(
+      name: source.name,
+      text: controller.text,
+    );
+    _invalidateEditedText();
+    _draftChanged();
+  }
+
+  void _clearFileSources() {
+    for (final controller in _fileSourceControllers) {
+      controller.dispose();
+    }
+    _fileSourceControllers.clear();
+    _fileSources.clear();
+  }
+
+  void _replaceFileSources(Iterable<DocumentSource> sources) {
+    _clearFileSources();
+    for (final source in sources) {
+      _addFileSource(source);
+    }
+  }
+
   void _applyDraft(Map<String, dynamic> data) {
     _applyingDraft = true;
     try {
@@ -944,16 +1073,14 @@ class _GeneratorPageState extends State<GeneratorPage>
       }
       _fileNameController.text =
           data['fileName'] as String? ?? 'document_genere';
-      _fileSources
-        ..clear()
-        ..addAll(
-          (data['sources'] as List? ?? []).map(
-            (s) => DocumentSource(
-              name: s['name'] as String,
-              text: s['text'] as String,
-            ),
+      _replaceFileSources(
+        (data['sources'] as List? ?? []).map(
+          (s) => DocumentSource(
+            name: s['name'] as String,
+            text: s['text'] as String,
           ),
-        );
+        ),
+      );
       _invalidateEditedText();
     } finally {
       _applyingDraft = false;
@@ -1408,18 +1535,14 @@ class _GeneratorPageState extends State<GeneratorPage>
   void _setShareResult(ShareResult result) {
     switch (result.status) {
       case ShareResultStatus.success:
-        _setStatus('Partage lancé avec ${result.raw}.');
+        _setStatus(_strings.shareStarted(result.raw));
         return;
       case ShareResultStatus.dismissed:
-        _setStatus(
-          'Partage annulé. Le document reste dans votre bibliothèque.',
-        );
+        _setStatus(_strings.shareCancelled);
         return;
       case ShareResultStatus.unavailable:
         _setStatus(
-          kIsWeb
-              ? 'Le navigateur a ouvert le partage ou téléchargé une copie selon ses capacités.'
-              : 'Le système ne confirme pas l’application destinataire. Le document reste enregistré.',
+          kIsWeb ? _strings.browserShareFallback : _strings.systemShareFallback,
         );
         return;
     }
@@ -1459,7 +1582,7 @@ class _GeneratorPageState extends State<GeneratorPage>
       }
       _setShareResult(result);
     } catch (error) {
-      _setStatus('Partage non terminé : $error');
+      _setStatus(_strings.shareNotFinished(error));
     }
   }
 
@@ -1480,7 +1603,7 @@ class _GeneratorPageState extends State<GeneratorPage>
           ? LaunchMode.platformDefault
           : LaunchMode.externalApplication,
     );
-    if (!opened) _setStatus('Impossible d’ouvrir la page du complément Word.');
+    if (!opened) _setStatus(_strings.wordPageOpenFailed);
   }
 
   Future<void> _openBrowserExtension() async {
@@ -1493,7 +1616,7 @@ class _GeneratorPageState extends State<GeneratorPage>
           : LaunchMode.externalApplication,
     );
     if (!opened) {
-      _setStatus('Impossible d’ouvrir la page de l’extension navigateur.');
+      _setStatus(_strings.browserPageOpenFailed);
     }
   }
 
@@ -1556,7 +1679,9 @@ class _GeneratorPageState extends State<GeneratorPage>
 
     _invalidateEditedText();
     setState(() {
-      _fileSources.addAll(imported);
+      for (final source in imported) {
+        _addFileSource(source);
+      }
       _status = imported.isEmpty
           ? (pdfError ? _strings.pdfReadFailed : _strings.unreadableFile)
           : _strings.filesAdded(imported.length);
@@ -1610,7 +1735,7 @@ class _GeneratorPageState extends State<GeneratorPage>
       );
 
       setState(() {
-        _fileSources.add(DocumentSource(name: title, text: text));
+        _addFileSource(DocumentSource(name: title, text: text));
         _downloadUrlController.clear();
         _status = _strings.downloaded(uri);
         _issueMessages = const [];
@@ -1717,7 +1842,7 @@ class _GeneratorPageState extends State<GeneratorPage>
 
       if (path == null) {
         final savedMessage = libraryPath == null
-            ? 'Document généré. Utilisez Télécharger ou Partager pour conserver une copie.'
+            ? _strings.generatedDownloadHint
             : _strings.savedInLibrary(libraryPath);
         _setStatus('$checkMessage\n$savedMessage');
       } else {
@@ -1872,7 +1997,7 @@ class _GeneratorPageState extends State<GeneratorPage>
 
   Future<void> _exportCloudCopy(String name, Uint8List bytes) async {
     final path = await FilePicker.saveFile(
-      dialogTitle: 'Enregistrer dans mes fichiers ou mon cloud',
+      dialogTitle: _strings.saveDialogTitle,
       fileName: name,
       type: FileType.custom,
       allowedExtensions: const ['docx'],
@@ -1900,9 +2025,7 @@ class _GeneratorPageState extends State<GeneratorPage>
       }
       _setShareResult(result);
     } catch (_) {
-      _setStatus(
-        'Le partage de fichiers n’est pas disponible dans ce navigateur. Utilisez « Enregistrer une copie » puis partagez le Word depuis vos fichiers.',
-      );
+      _setStatus(_strings.browserFileShareUnavailable);
     }
   }
 
@@ -1914,13 +2037,19 @@ class _GeneratorPageState extends State<GeneratorPage>
       );
     }
     _invalidateEditedText();
-    setState(() => _fileSources.add(DocumentSource(name: name, text: text)));
+    setState(() => _addFileSource(DocumentSource(name: name, text: text)));
     _draftChanged();
   }
 
   void _removeSource(DocumentSource source) {
+    final index = _fileSources.indexOf(source);
+    if (index < 0) return;
     _invalidateEditedText();
-    setState(() => _fileSources.remove(source));
+    setState(() {
+      _fileSources.removeAt(index);
+      final controller = _fileSourceControllers.removeAt(index);
+      controller.dispose();
+    });
     _draftChanged();
   }
 
@@ -1954,7 +2083,7 @@ class _GeneratorPageState extends State<GeneratorPage>
       _fileNameController.text = 'document_genere';
       _manualTextController.clear();
       _downloadUrlController.clear();
-      _fileSources.clear();
+      _clearFileSources();
       _cloudDocument = null;
       _status = null;
       _aiReview = null;
@@ -2123,6 +2252,9 @@ class _GeneratorPageState extends State<GeneratorPage>
                     subtitleController: _subtitleController,
                     similarChaptersController: _similarChaptersController,
                     manualTextController: _manualTextController,
+                    fileSources: _fileSources,
+                    fileSourceControllers: _fileSourceControllers,
+                    onRemoveSource: _removeSource,
                     editingEnabled: !_isGenerating && !_isDownloading,
                     verseIssues: _issueMessages,
                     downloadUrlController: _downloadUrlController,
@@ -2165,6 +2297,7 @@ class _GeneratorPageState extends State<GeneratorPage>
                       mutedColor: palette.mutedText,
                       accent: palette.accent,
                       surface: palette.surfaceStrong,
+                      locale: strings.language.name,
                     ),
                     onOpenGenerated: _openGeneratedDocument,
                     onShareGenerated: _shareDocumentPath,
@@ -2219,6 +2352,7 @@ class _GeneratorPageState extends State<GeneratorPage>
                               if (_showReleaseNotice) ...[
                                 ReleaseNotice(
                                   version: _appVersion,
+                                  locale: strings.language.name,
                                   onDismiss: () => setState(
                                     () => _showReleaseNotice = false,
                                   ),
@@ -2406,7 +2540,11 @@ class _CompactTopBar extends StatelessWidget {
                 icon: Icon(Icons.restart_alt_rounded, color: palette.text),
               ),
               if (kIsWeb)
-                InstallAppButton(version: _appVersion, color: palette.text),
+                InstallAppButton(
+                  version: _appVersion,
+                  color: palette.text,
+                  locale: strings.language.name,
+                ),
             ],
           ),
           const SizedBox(height: 8),
@@ -2416,6 +2554,7 @@ class _CompactTopBar extends StatelessWidget {
             children: [
               _DesignModeControl(
                 mode: designMode,
+                label: strings.changeStyle,
                 palette: palette,
                 onChanged: onDesignModeChanged,
               ),
@@ -2447,6 +2586,7 @@ class _CompactTopBar extends StatelessWidget {
         ),
         _DesignModeControl(
           mode: designMode,
+          label: strings.changeStyle,
           palette: palette,
           onChanged: onDesignModeChanged,
         ),
@@ -2457,7 +2597,12 @@ class _CompactTopBar extends StatelessWidget {
           palette: palette,
         ),
         const SizedBox(width: 4),
-        if (kIsWeb) InstallAppButton(version: _appVersion, color: palette.text),
+        if (kIsWeb)
+          InstallAppButton(
+            version: _appVersion,
+            color: palette.text,
+            locale: strings.language.name,
+          ),
         IconButton(
           tooltip: strings.clear,
           onPressed: onClear,
@@ -2520,18 +2665,20 @@ class _LanguageControl extends StatelessWidget {
 class _DesignModeControl extends StatelessWidget {
   const _DesignModeControl({
     required this.mode,
+    required this.label,
     required this.palette,
     required this.onChanged,
   });
 
   final DesignMode mode;
+  final String label;
   final DesignPalette palette;
   final ValueChanged<DesignMode> onChanged;
 
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<DesignMode>(
-      tooltip: 'Changer de style',
+      tooltip: label,
       color: palette.surfaceStrong,
       onSelected: onChanged,
       itemBuilder: (context) => DesignMode.values
@@ -2871,6 +3018,9 @@ class _InputPanel extends StatelessWidget {
     required this.subtitleController,
     required this.similarChaptersController,
     required this.manualTextController,
+    required this.fileSources,
+    required this.fileSourceControllers,
+    required this.onRemoveSource,
     required this.editingEnabled,
     required this.verseIssues,
     required this.downloadUrlController,
@@ -2887,6 +3037,9 @@ class _InputPanel extends StatelessWidget {
   final TextEditingController subtitleController;
   final TextEditingController similarChaptersController;
   final TextEditingController manualTextController;
+  final List<DocumentSource> fileSources;
+  final List<TextEditingController> fileSourceControllers;
+  final ValueChanged<DocumentSource> onRemoveSource;
   final bool editingEnabled;
   final List<String> verseIssues;
   final TextEditingController downloadUrlController;
@@ -3066,6 +3219,38 @@ class _InputPanel extends StatelessWidget {
                 enabled: editingEnabled,
                 issues: verseIssues,
               ),
+              if (fileSources.isNotEmpty) ...[
+                const SizedBox(height: 18),
+                Text(
+                  strings.importedFilesEditorTitle,
+                  style: TextStyle(
+                    color: palette.text,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  strings.importedFilesEditorDescription,
+                  style: TextStyle(color: palette.mutedText, height: 1.4),
+                ),
+                const SizedBox(height: 12),
+                for (var index = 0; index < fileSources.length; index++) ...[
+                  _ImportedSourceEditor(
+                    source: fileSources[index],
+                    controller: fileSourceControllers[index],
+                    languageController: documentLanguageController,
+                    locale: strings.language.name,
+                    enabled: editingEnabled,
+                    issues: verseIssues,
+                    onRemove: () => onRemoveSource(fileSources[index]),
+                    removeLabel: strings.remove,
+                    palette: palette,
+                  ),
+                  if (index != fileSources.length - 1)
+                    const SizedBox(height: 14),
+                ],
+              ],
               const SizedBox(height: 8),
               ExpansionTile(
                 key: const PageStorageKey('import-link'),
@@ -3116,6 +3301,84 @@ class _InputPanel extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ImportedSourceEditor extends StatelessWidget {
+  const _ImportedSourceEditor({
+    required this.source,
+    required this.controller,
+    required this.languageController,
+    required this.locale,
+    required this.enabled,
+    required this.issues,
+    required this.onRemove,
+    required this.removeLabel,
+    required this.palette,
+  });
+
+  final DocumentSource source;
+  final TextEditingController controller;
+  final TextEditingController languageController;
+  final String locale;
+  final bool enabled;
+  final List<String> issues;
+  final VoidCallback onRemove;
+  final String removeLabel;
+  final DesignPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+      decoration: BoxDecoration(
+        color: palette.surfaceStrong.withValues(alpha: .72),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: palette.accent.withValues(alpha: .25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  source.name,
+                  style: TextStyle(
+                    color: palette.text,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: enabled ? onRemove : null,
+                icon: const Icon(Icons.remove_circle_outline, size: 18),
+                label: Text(removeLabel),
+              ),
+            ],
+          ),
+          TextField(
+            controller: controller,
+            enabled: enabled,
+            minLines: 4,
+            maxLines: 16,
+            textAlignVertical: TextAlignVertical.top,
+            decoration: InputDecoration(
+              labelText: source.name,
+              alignLabelWithHint: true,
+            ),
+          ),
+          VerseEditor(
+            controller: controller,
+            languageController: languageController,
+            locale: locale,
+            enabled: enabled,
+            issues: issues,
+            sourceName: source.name,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -3532,7 +3795,7 @@ class _SettingsPanel extends StatelessWidget {
                 if (!documentReady) ...[
                   const SizedBox(height: 7),
                   Text(
-                    'Générez un Word pour activer le partage et le téléchargement.',
+                    strings.shareDownloadRequired,
                     style: TextStyle(color: palette.mutedText, fontSize: 12),
                   ),
                 ],

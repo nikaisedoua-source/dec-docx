@@ -1,8 +1,8 @@
 {
-  "version": "1.9.14",
+  "version": "1.9.15",
   "message": "Les dates anglaises jour-mois avec virgule, comme 15 December, 2002, sont reconnues sans faux blocage. Les concordances Kc avec plage de versets, comme [Kc.15v14-16], sont conservées et mises en forme correctement.",
-  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.14-preview/DEC-DOCX-Android-preview.apk",
-  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.14-preview/DEC-DOCX-macOS-preview.zip",
-  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.14-preview/DEC-DOCX-Windows-preview.zip",
+  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.15-preview/DEC-DOCX-Android-preview.apk",
+  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.15-preview/DEC-DOCX-macOS-preview.zip",
+  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.15-preview/DEC-DOCX-Windows-preview.zip",
   "webUrl": "https://nikaisedoua-source.github.io/dec-docx/"
 }

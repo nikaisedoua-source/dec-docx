@@ -22,6 +22,35 @@ class _StorageGateState extends State<StorageGate> {
   bool _loading = true;
   bool _busy = false;
 
+  String get _locale =>
+      WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+
+  String _t(String fr, String en, String es, String pt) => switch (_locale) {
+    'en' => en,
+    'es' => es,
+    'pt' => pt,
+    _ => fr,
+  };
+
+  String _quota(String provider, String value) => switch (_locale) {
+    'en' => switch (provider) {
+      'MEGA' => '20 GB advertised',
+      'Google Drive' => 'Up to 15 GB',
+      _ => '5 GB free',
+    },
+    'es' => switch (provider) {
+      'MEGA' => '20 GB anunciados',
+      'Google Drive' => 'Hasta 15 GB',
+      _ => '5 GB gratuitos',
+    },
+    'pt' => switch (provider) {
+      'MEGA' => '20 GB anunciados',
+      'Google Drive' => 'Até 15 GB',
+      _ => '5 GB gratuitos',
+    },
+    _ => value,
+  };
+
   @override
   void initState() {
     super.initState();
@@ -36,7 +65,12 @@ class _StorageGateState extends State<StorageGate> {
         _provider = _storage.provider!;
       }
     } catch (error) {
-      _error = 'Le stockage précédent est indisponible : $error';
+      _error = _t(
+        'Le stockage précédent est indisponible : $error',
+        'The previous storage location is unavailable: $error',
+        'El almacenamiento anterior no está disponible: $error',
+        'O armazenamento anterior não está disponível: $error',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -50,7 +84,16 @@ class _StorageGateState extends State<StorageGate> {
     try {
       await action();
     } catch (error) {
-      if (mounted) setState(() => _error = 'Connexion non terminée : $error');
+      if (mounted) {
+        setState(
+          () => _error = _t(
+            'Connexion non terminée : $error',
+            'Connection did not finish: $error',
+            'La conexión no terminó: $error',
+            'A conexão não terminou: $error',
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -95,8 +138,18 @@ class _StorageGateState extends State<StorageGate> {
                         const SizedBox(height: 14),
                         Text(
                           needsAuthorization
-                              ? 'Réautoriser votre stockage'
-                              : 'Où conserver vos documents ?',
+                              ? _t(
+                                  'Réautoriser votre stockage',
+                                  'Reauthorize your storage',
+                                  'Volver a autorizar el almacenamiento',
+                                  'Reautorizar seu armazenamento',
+                                )
+                              : _t(
+                                  'Où conserver vos documents ?',
+                                  'Where should your documents be kept?',
+                                  '¿Dónde guardar sus documentos?',
+                                  'Onde seus documentos devem ser guardados?',
+                                ),
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.headlineSmall
                               ?.copyWith(fontWeight: FontWeight.w800),
@@ -104,8 +157,18 @@ class _StorageGateState extends State<StorageGate> {
                         const SizedBox(height: 8),
                         Text(
                           needsAuthorization
-                              ? 'Le dossier ${_storage.folder} est mémorisé, mais le navigateur demande votre autorisation pour y accéder de nouveau.'
-                              : 'Ce choix est mémorisé. Vous pourrez le modifier ensuite dans Sauvegarde & cloud.',
+                              ? _t(
+                                  'Le dossier ${_storage.folder} est mémorisé, mais le navigateur demande votre autorisation pour y accéder de nouveau.',
+                                  'The folder ${_storage.folder} is remembered, but the browser needs your authorization to access it again.',
+                                  'La carpeta ${_storage.folder} está guardada, pero el navegador necesita autorización para acceder de nuevo.',
+                                  'A pasta ${_storage.folder} foi memorizada, mas o navegador precisa de autorização para acessá-la novamente.',
+                                )
+                              : _t(
+                                  'Ce choix est mémorisé. Vous pourrez le modifier ensuite dans Sauvegarde et cloud.',
+                                  'This choice is remembered. You can change it later in Backup and cloud.',
+                                  'Esta elección se guarda. Podrá cambiarla después en Copia de seguridad y nube.',
+                                  'Esta escolha é memorizada. Você poderá alterá-la depois em Backup e nuvem.',
+                                ),
                           textAlign: TextAlign.center,
                         ),
                         if (_error != null) ...[
@@ -120,10 +183,18 @@ class _StorageGateState extends State<StorageGate> {
                           TextButton.icon(
                             onPressed: () => showDialog<void>(
                               context: context,
-                              builder: (_) => const IphoneInstallGuide(),
+                              builder: (_) =>
+                                  IphoneInstallGuide(locale: _locale),
                             ),
                             icon: const Icon(Icons.phone_iphone),
-                            label: const Text('Installer sur iPhone — guide'),
+                            label: Text(
+                              _t(
+                                'Installer sur iPhone — guide',
+                                'Install on iPhone — guide',
+                                'Instalar en iPhone — guía',
+                                'Instalar no iPhone — guia',
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 12),
                         ],
@@ -134,7 +205,12 @@ class _StorageGateState extends State<StorageGate> {
                                 : () => _run(_storage.authorize),
                             icon: const Icon(Icons.lock_open_outlined),
                             label: Text(
-                              'Autoriser ${_storage.provider ?? 'le dossier'}',
+                              _t(
+                                'Autoriser ${_storage.provider ?? 'le dossier'}',
+                                'Authorize ${_storage.provider ?? 'the folder'}',
+                                'Autorizar ${_storage.provider ?? 'la carpeta'}',
+                                'Autorizar ${_storage.provider ?? 'a pasta'}',
+                              ),
                             ),
                           ),
                           const SizedBox(height: 10),
@@ -148,17 +224,31 @@ class _StorageGateState extends State<StorageGate> {
                               ? null
                               : () => _run(_storage.chooseLocal),
                           icon: const Icon(Icons.computer_outlined),
-                          label: const Text('Sur cet appareil'),
+                          label: Text(
+                            _t(
+                              'Sur cet appareil',
+                              'On this device',
+                              'En este dispositivo',
+                              'Neste dispositivo',
+                            ),
+                          ),
                         ),
                         if (_storage.supported) ...[
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.symmetric(vertical: 14),
                             child: Row(
                               children: [
                                 Expanded(child: Divider()),
                                 Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 10),
-                                  child: Text('OU DOSSIER SYNCHRONISÉ'),
+                                  child: Text(
+                                    _t(
+                                      'OU DOSSIER SYNCHRONISÉ',
+                                      'OR SYNCHRONIZED FOLDER',
+                                      'O CARPETA SINCRONIZADA',
+                                      'OU PASTA SINCRONIZADA',
+                                    ),
+                                  ),
                                 ),
                                 Expanded(child: Divider()),
                               ],
@@ -167,15 +257,20 @@ class _StorageGateState extends State<StorageGate> {
                           DropdownButtonFormField<String>(
                             initialValue: _provider,
                             isExpanded: true,
-                            decoration: const InputDecoration(
-                              labelText: 'Service cloud installé',
+                            decoration: InputDecoration(
+                              labelText: _t(
+                                'Service cloud installé',
+                                'Installed cloud service',
+                                'Servicio de nube instalado',
+                                'Serviço de nuvem instalado',
+                              ),
                             ),
                             items: cloudProviders.entries
                                 .map(
                                   (entry) => DropdownMenuItem(
                                     value: entry.key,
                                     child: Text(
-                                      '${entry.key} · ${entry.value.quota}',
+                                      '${entry.key} · ${_quota(entry.key, entry.value.quota)}',
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
@@ -191,11 +286,23 @@ class _StorageGateState extends State<StorageGate> {
                                 ? null
                                 : () => _run(() => _storage.choose(_provider)),
                             icon: const Icon(Icons.cloud_done_outlined),
-                            label: const Text('Choisir et relier le dossier'),
+                            label: Text(
+                              _t(
+                                'Choisir et relier le dossier',
+                                'Choose and connect the folder',
+                                'Elegir y conectar la carpeta',
+                                'Escolher e conectar a pasta',
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
-                            'Sélectionnez le dossier déjà synchronisé par Google Drive, MEGA, OneDrive ou iCloud. Une simple connexion au site du service ne donne pas encore accès à ce dossier.',
+                          Text(
+                            _t(
+                              'Sélectionnez le dossier déjà synchronisé par Google Drive, MEGA, OneDrive ou iCloud. Une simple connexion au site du service ne donne pas encore accès à ce dossier.',
+                              'Select the folder already synchronized by Google Drive, MEGA, OneDrive, or iCloud. Signing in to the service website alone does not grant access to this folder.',
+                              'Seleccione la carpeta ya sincronizada por Google Drive, MEGA, OneDrive o iCloud. Iniciar sesión en el sitio del servicio no da acceso a esta carpeta.',
+                              'Selecione a pasta já sincronizada pelo Google Drive, MEGA, OneDrive ou iCloud. Apenas entrar no site do serviço não dá acesso a essa pasta.',
+                            ),
                             textAlign: TextAlign.center,
                           ),
                         ],
