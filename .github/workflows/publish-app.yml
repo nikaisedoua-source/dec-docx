@@ -128,7 +128,7 @@ jobs:
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath DEC-DOCX-Windows-preview.zip
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.17-preview
+          tag_name: v1.9.18-preview
           prerelease: true
           files: |
             DEC-DOCX-Android-preview.apk
