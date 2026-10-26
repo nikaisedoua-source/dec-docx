@@ -22,13 +22,47 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: stable
+
+      - name: Prepare pinned Web assets
+        run: python3 tool/prepare_release_assets.py
+
+      - name: Resolve Flutter dependencies
+        run: flutter pub get
+
+      - name: Analyze and test the app
+        run: |
+          flutter analyze
+          flutter test test/widget_test.dart test/cloud_storage_test.dart test/verse_editor_test.dart test/french_consistency_test.dart test/draft_session_test.dart test/localized_issues_test.dart
+          node --test test/cloud_storage_web_test.mjs test/app_bootstrap_test.mjs
+
+      - name: Build the current Web application
+        run: flutter build web --release --base-href /dec-docx/
+
+      - name: Version the Web assets
+        run: python3 tool/version_web_assets.py build/web
+
+      - name: Copy static pages and the Word add-in
+        run: |
+          cp -R public/. build/web/
+          cp -R word_addin build/web/word-addin
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
       - name: Upload web app
         uses: actions/upload-pages-artifact@v3
         with:
-          path: DEC_DOCX/web
+          path: build/web
 
       - name: Deploy to GitHub Pages
         id: deployment

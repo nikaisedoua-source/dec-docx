@@ -43,10 +43,11 @@ jobs:
           zip -qr DEC-DOCX-Browser-Extension.zip browser_extension
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.17-preview
-          name: DEC DOCX 1.9.17 — aperçu
+          tag_name: v1.9.18-preview
+          name: DEC DOCX 1.9.18 — aperçu
           prerelease: true
           body: |
+            Correction du démarrage sur iPhone : le rendu Flutter démarre sans attendre la fin du nettoyage des caches Safari.
             Les dates anglaises écrites jour-mois avec une virgule avant l’année, comme 15 December, 2002, sont reconnues sans faux blocage [FR-DATE].
             Les concordances Kc comportant une plage de versets, comme [Kc.15v14-16], restent à leur place et sont mises en forme correctement dans Word.
             Les chapitres similaires finaux en tchèque et les libellés traduits suivis de références Kc ne sont plus pris pour des versets.

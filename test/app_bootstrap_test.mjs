@@ -28,12 +28,45 @@ test('canonical app retires only its asset cache and loads current compiled code
     navigator: {serviceWorker: {getRegistrations: async () => [appRoot, 'https://nikaisedoua-source.github.io/other/']
       .map((scope) => ({scope, unregister: async () => unregistered.push(scope)}))}},
   });
+  await new Promise(resolve => setImmediate(resolve));
   assert.deepEqual(unregistered, [appRoot]);
   assert.deepEqual(opened, ['flutter-app-cache']);
   assert.deepEqual(deleted, [requests[0]]);
   assert.equal(loads, 1);
-  assert.equal(configuration.assetBase, 'releases/1.9.17/');
-  assert.equal(flutter.buildConfig.builds[0].mainJsPath, appRoot + 'main.dart.js?build=1.9.17');
+  assert.equal(configuration.assetBase, 'releases/1.9.18/');
+  assert.equal(flutter.buildConfig.builds[0].mainJsPath, appRoot + 'main.dart.js?build=1.9.18');
+});
+
+test('slow iOS cache cleanup does not delay Flutter startup', async () => {
+  let loaded = false;
+  let cleanupStarted = false;
+  const stalled = new Promise(() => {});
+  const appRoot = 'https://nikaisedoua-source.github.io/dec-docx/';
+  const flutter = {
+    buildConfig: {builds: [{compileTarget: 'dart2js', mainJsPath: 'main.dart.js'}]},
+    loader: {load: async () => { loaded = true; }},
+  };
+  let timeout;
+  const startup = vm.runInNewContext(script, {
+    URL,
+    console: {warn() {}},
+    document: {baseURI: appRoot},
+    window: {caches: {keys: () => stalled}},
+    caches: {keys: () => stalled},
+    navigator: {serviceWorker: {getRegistrations: () => {
+      cleanupStarted = true;
+      return stalled;
+    }}},
+    _flutter: flutter,
+  });
+  const completed = await Promise.race([
+    startup.then(() => true),
+    new Promise(resolve => { timeout = setTimeout(() => resolve(false), 250); }),
+  ]);
+  clearTimeout(timeout);
+  assert.equal(cleanupStarted, true);
+  assert.equal(completed, true);
+  assert.equal(loaded, true);
 });
 
 test('unavailable cache cleanup never prevents app startup', async () => {
