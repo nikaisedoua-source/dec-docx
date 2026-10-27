@@ -1210,7 +1210,7 @@ Benzer bölüm: Kc. 118
     expect(documentXml, contains('[Kc.15v14-16]'));
   });
 
-  test('adds explicit spacing after each numbered paragraph', () {
+  test('removes extra spacing after each numbered paragraph', () {
     final bytes = DocxBuilder.buildChapter(
       const ChapterInput(
         title: 'kacou 183 : exemple',
@@ -1231,7 +1231,8 @@ Benzer bölüm: Kc. 118
     );
 
     expect(
-      RegExp(r'<w:spacing w:after="240"/>').allMatches(documentXml),
+      RegExp(r'<w:p>\s*<w:pPr><w:spacing w:after="0"/></w:pPr>')
+          .allMatches(documentXml),
       hasLength(2),
     );
   });
