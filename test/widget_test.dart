@@ -289,7 +289,10 @@ void main() {
         'swahili RDC',
       );
       expect(nameField.controller!.text, 'KACOU 181 swahili rdc.docx');
-      await tester.tap(find.byTooltip('Vider'));
+      final clearLanguage = find.byTooltip('Vider');
+      await tester.ensureVisible(clearLanguage);
+      await tester.pump();
+      await tester.tap(clearLanguage);
       await tester.pump();
       expect(
         tester
