@@ -31,6 +31,7 @@ import 'release_seen_io.dart'
 import 'drafts/draft_session.dart';
 import 'drafts/draft_store.dart';
 import 'drafts/draft_repository.dart';
+import 'platform_design.dart';
 
 enum DesignMode {
   aura,
@@ -128,7 +129,7 @@ class DesignPalette {
 }
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.9.19';
+const _appVersion = '1.9.20';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -991,6 +992,7 @@ class _DocxGeneratorAppState extends State<DocxGeneratorApp> {
 
   @override
   Widget build(BuildContext context) {
+    final platformDesign = PlatformDesign.current();
     return MaterialApp(
       title: _appName,
       locale: Locale(_language.name),
@@ -1002,16 +1004,21 @@ class _DocxGeneratorAppState extends State<DocxGeneratorApp> {
       ],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       debugShowCheckedModeBanner: false,
+      themeMode: ThemeMode.light,
       theme: ThemeData(
+        platform: platformDesign.platform,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6157F5),
+          seedColor: platformDesign.accent,
           brightness: Brightness.light,
           surface: Colors.white,
         ),
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFFF3F5FA),
-        fontFamily: 'Inter',
+        fontFamily: platformDesign.fontFamily,
         fontFamilyFallback: const ['Arial', 'sans-serif'],
+        visualDensity: platformDesign.isDesktop
+            ? VisualDensity.compact
+            : VisualDensity.standard,
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFFF3F5FA),
           foregroundColor: Color(0xFF20243A),
@@ -1025,7 +1032,7 @@ class _DocxGeneratorAppState extends State<DocxGeneratorApp> {
           elevation: 0,
           margin: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(26),
+            borderRadius: BorderRadius.circular(platformDesign.surfaceRadius),
             side: const BorderSide(color: Color(0xFFE7E9F2)),
           ),
         ),
@@ -1033,28 +1040,28 @@ class _DocxGeneratorAppState extends State<DocxGeneratorApp> {
           filled: true,
           fillColor: const Color(0xFFF7F8FC),
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: 17,
+            horizontal: 16,
+            vertical: 14,
           ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(platformDesign.controlRadius),
             borderSide: const BorderSide(color: Color(0xFFE2E5EF)),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(platformDesign.controlRadius),
             borderSide: const BorderSide(color: Color(0xFFE2E5EF)),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF6157F5), width: 2),
+            borderRadius: BorderRadius.circular(platformDesign.controlRadius),
+            borderSide: BorderSide(color: platformDesign.accent, width: 2),
           ),
           helperStyle: const TextStyle(color: Color(0xFF74798D), height: 1.35),
         ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
-            minimumSize: const Size(0, 54),
+            minimumSize: Size(0, platformDesign.isDesktop ? 42 : 50),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(platformDesign.controlRadius),
             ),
             textStyle: const TextStyle(
               fontSize: 15,
@@ -1065,9 +1072,9 @@ class _DocxGeneratorAppState extends State<DocxGeneratorApp> {
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.white,
-            minimumSize: const Size(0, 54),
+            minimumSize: Size(0, platformDesign.isDesktop ? 42 : 50),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(platformDesign.controlRadius),
             ),
             side: BorderSide(color: Colors.white.withValues(alpha: 0.34)),
             textStyle: const TextStyle(fontWeight: FontWeight.w700),
@@ -1730,6 +1737,8 @@ class _GeneratorPageState extends State<GeneratorPage>
           ? payload['macDownloadUrl']?.toString().trim() ?? fallbackUrl
           : Platform.isWindows
           ? payload['windowsDownloadUrl']?.toString().trim() ?? fallbackUrl
+          : Platform.isLinux
+          ? payload['linuxDownloadUrl']?.toString().trim() ?? fallbackUrl
           : fallbackUrl;
 
       if (latestVersion.isEmpty ||
@@ -2083,7 +2092,8 @@ class _GeneratorPageState extends State<GeneratorPage>
       final localCount = DocxBuilder.paragraphCount(document);
       var checkMessage = referenceCheck.message;
       if (referenceCheck.errors.isNotEmpty) {
-        final referenceUnavailable = referenceCheck.errors.length == 1 &&
+        final referenceUnavailable =
+            referenceCheck.errors.length == 1 &&
             referenceCheck.errors.single.startsWith('[FR-UNAVAILABLE]');
         if (!referenceUnavailable || chapterNumber == null) {
           _setStatus(
@@ -2465,8 +2475,10 @@ class _GeneratorPageState extends State<GeneratorPage>
     final strings = _strings;
     final theme = Theme.of(context);
     final palette = _palette;
+    final platformDesign = PlatformDesign.current();
     final pageTheme = theme.copyWith(
       scaffoldBackgroundColor: palette.background,
+      platform: platformDesign.platform,
       textTheme: theme.textTheme.copyWith(
         bodyLarge: theme.textTheme.bodyLarge?.copyWith(
           color: palette.inputText,
@@ -2485,9 +2497,8 @@ class _GeneratorPageState extends State<GeneratorPage>
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: palette.text,
-          minimumSize: const Size(0, 44),
+          minimumSize: Size(0, platformDesign.isDesktop ? 38 : 44),
           textStyle: const TextStyle(
-            fontFamily: 'Inter',
             fontSize: 13,
             fontWeight: FontWeight.w600,
             height: 1.3,
@@ -2498,29 +2509,32 @@ class _GeneratorPageState extends State<GeneratorPage>
         style: OutlinedButton.styleFrom(
           foregroundColor: palette.text,
           disabledForegroundColor: palette.mutedText.withValues(alpha: .65),
-          minimumSize: const Size(0, 48),
+          minimumSize: Size(0, platformDesign.isDesktop ? 40 : 48),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           textStyle: const TextStyle(
-            fontFamily: 'Inter',
             fontSize: 13,
             fontWeight: FontWeight.w600,
             height: 1.3,
           ),
           side: BorderSide(color: palette.border),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(platformDesign.controlRadius),
           ),
         ),
       ),
       inputDecorationTheme: theme.inputDecorationTheme.copyWith(
         filled: true,
         fillColor: palette.input,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: platformDesign.isDesktop ? 14 : 16,
+          vertical: platformDesign.isDesktop ? 12 : 14,
+        ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(platformDesign.controlRadius),
           borderSide: BorderSide(color: palette.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(platformDesign.controlRadius),
           borderSide: BorderSide(color: palette.accent, width: 2),
         ),
         labelStyle: TextStyle(
@@ -2566,30 +2580,40 @@ class _GeneratorPageState extends State<GeneratorPage>
             ? SafeArea(
                 top: false,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (_status != null) ...[
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxHeight: 120),
-                          child: SingleChildScrollView(
-                            child: _issueMessages.isNotEmpty
-                                ? _IssueIndex(
-                                    issues: _issueMessages
-                                        .map(strings.issue)
-                                        .toList(),
-                                    title: strings.issues,
-                                    status: _status!,
-                                  )
-                                : _StatusMessage(text: _status!),
+                  padding: EdgeInsets.fromLTRB(
+                    platformDesign.isAppleMobile ? 12 : 14,
+                    8,
+                    platformDesign.isAppleMobile ? 12 : 14,
+                    8,
+                  ),
+                  child: GlassSurface(
+                    tint: palette.surfaceStrong,
+                    radius: platformDesign.isAppleMobile ? 22 : 18,
+                    padding: const EdgeInsets.all(10),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_status != null) ...[
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 120),
+                            child: SingleChildScrollView(
+                              child: _issueMessages.isNotEmpty
+                                  ? _IssueIndex(
+                                      issues: _issueMessages
+                                          .map(strings.issue)
+                                          .toList(),
+                                      title: strings.issues,
+                                      status: _status!,
+                                    )
+                                  : _StatusMessage(text: _status!),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
+                          const SizedBox(height: 8),
+                        ],
+                        generateButton,
                       ],
-                      generateButton,
-                    ],
+                    ),
                   ),
                 ),
               )
@@ -2601,11 +2625,18 @@ class _GeneratorPageState extends State<GeneratorPage>
                 child: _AuroraBackground(
                   animation: _ambientController,
                   palette: palette,
+                  platformDesign: platformDesign,
                 ),
               ),
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final wide = constraints.maxWidth >= 920;
+                  final wide =
+                      constraints.maxWidth >=
+                      switch (platformDesign.platform) {
+                        TargetPlatform.macOS => 1024,
+                        TargetPlatform.linux => 900,
+                        _ => 920,
+                      };
                   final inputPanel = _InputPanel(
                     strings: strings,
                     chapterTitleController: _chapterTitleController,
@@ -2691,7 +2722,7 @@ class _GeneratorPageState extends State<GeneratorPage>
                             children: [
                               GlassSurface(
                                 tint: palette.surfaceStrong,
-                                radius: 22,
+                                radius: platformDesign.toolbarRadius,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 10,
                                   vertical: 8,
@@ -2717,6 +2748,7 @@ class _GeneratorPageState extends State<GeneratorPage>
                                   onDesignModeChanged: (mode) =>
                                       setState(() => _designMode = mode),
                                   palette: palette,
+                                  platformDesign: platformDesign,
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -2796,10 +2828,15 @@ class _GeneratorPageState extends State<GeneratorPage>
 }
 
 class _AuroraBackground extends StatelessWidget {
-  const _AuroraBackground({required this.animation, required this.palette});
+  const _AuroraBackground({
+    required this.animation,
+    required this.palette,
+    required this.platformDesign,
+  });
 
   final Animation<double> animation;
   final DesignPalette palette;
+  final PlatformDesign platformDesign;
 
   @override
   Widget build(BuildContext context) {
@@ -2807,6 +2844,9 @@ class _AuroraBackground extends StatelessWidget {
       animation: animation,
       builder: (context, _) {
         final value = animation.value;
+        final platformTint = platformDesign.accent.withValues(
+          alpha: platformDesign.isAppleMobile ? 0.1 : 0.16,
+        );
         return DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -2815,7 +2855,9 @@ class _AuroraBackground extends StatelessWidget {
               colors: [
                 palette.background,
                 palette.backgroundSecondary,
-                palette.accentSecondary,
+                platformDesign.isAppleMobile
+                    ? Color.alphaBlend(platformTint, palette.accentSecondary)
+                    : palette.accentSecondary,
                 palette.background,
               ],
               stops: const [0, 0.34, 0.7, 1],
@@ -2827,16 +2869,22 @@ class _AuroraBackground extends StatelessWidget {
                 left: -120 + value * 90,
                 bottom: -180 + value * 50,
                 child: _GlowOrb(
-                  size: 520,
-                  color: palette.accent.withValues(alpha: 0.28),
+                  size: platformDesign.isAppleMobile ? 380 : 520,
+                  color: palette.accent.withValues(
+                    alpha: platformDesign.isAppleMobile ? 0.17 : 0.28,
+                  ),
                 ),
               ),
               Positioned(
                 right: -150 + value * 70,
                 top: -130 + value * 55,
                 child: _GlowOrb(
-                  size: 500,
-                  color: palette.accentSecondary.withValues(alpha: 0.3),
+                  size: platformDesign.isAppleMobile ? 360 : 500,
+                  color: platformDesign.isWindows
+                      ? platformDesign.accent.withValues(alpha: 0.22)
+                      : palette.accentSecondary.withValues(
+                          alpha: platformDesign.isAppleMobile ? 0.16 : 0.3,
+                        ),
                 ),
               ),
             ],
@@ -2875,6 +2923,7 @@ class _CompactTopBar extends StatelessWidget {
     required this.designMode,
     required this.onDesignModeChanged,
     required this.palette,
+    required this.platformDesign,
   });
 
   final AppStrings strings;
@@ -2884,10 +2933,12 @@ class _CompactTopBar extends StatelessWidget {
   final DesignMode designMode;
   final ValueChanged<DesignMode> onDesignModeChanged;
   final DesignPalette palette;
+  final PlatformDesign platformDesign;
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.sizeOf(context).width < 620) {
+    final compactWidth = platformDesign.isDesktop ? 860.0 : 620.0;
+    if (MediaQuery.sizeOf(context).width < compactWidth) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2900,8 +2951,10 @@ class _CompactTopBar extends StatelessWidget {
                   strings.appTitle,
                   style: TextStyle(
                     color: palette.text,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
+                    fontSize: platformDesign.isAppleMobile ? 18 : 20,
+                    fontWeight: platformDesign.isAppleMobile
+                        ? FontWeight.w700
+                        : FontWeight.w800,
                   ),
                 ),
               ),
@@ -2948,13 +3001,21 @@ class _CompactTopBar extends StatelessWidget {
             strings.appTitle,
             style: TextStyle(
               color: palette.text,
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
         ),
+        _PlatformIdentity(
+          design: platformDesign,
+          foreground: palette.text,
+          accent: platformDesign.isMacOS || platformDesign.isWindows
+              ? platformDesign.accent
+              : palette.accent,
+        ),
+        const SizedBox(width: 12),
         _DesignModeControl(
           mode: designMode,
           strings: strings,
@@ -2980,6 +3041,51 @@ class _CompactTopBar extends StatelessWidget {
           icon: Icon(Icons.restart_alt_rounded, color: palette.text),
         ),
       ],
+    );
+  }
+}
+
+class _PlatformIdentity extends StatelessWidget {
+  const _PlatformIdentity({
+    required this.design,
+    required this.foreground,
+    required this.accent,
+  });
+
+  final PlatformDesign design;
+  final Color foreground;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = switch (design.platform) {
+      TargetPlatform.macOS => Icons.laptop_mac_rounded,
+      TargetPlatform.windows => Icons.desktop_windows_rounded,
+      TargetPlatform.linux => Icons.computer_rounded,
+      _ => Icons.devices_rounded,
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: .14),
+        borderRadius: BorderRadius.circular(design.controlRadius),
+        border: Border.all(color: accent.withValues(alpha: .32)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: accent, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            design.label,
+            style: TextStyle(
+              color: foreground,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -3305,10 +3411,12 @@ class _SectionCardState extends State<_SectionCard>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = widget.palette;
+    final platformDesign = PlatformDesign.current();
     return GlassSurface(
       tint: palette.surfaceStrong,
+      radius: platformDesign.surfaceRadius,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(platformDesign.isDesktop ? 14 : 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -3969,7 +4077,9 @@ class _SettingsPanel extends StatelessWidget {
                   dense: true,
                   tileColor: palette.surfaceStrong,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(
+                      PlatformDesign.current().controlRadius,
+                    ),
                   ),
                   leading: Icon(Icons.article_outlined, color: palette.accent),
                   title: Text(

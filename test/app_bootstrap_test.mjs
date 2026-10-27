@@ -33,8 +33,8 @@ test('canonical app retires only its asset cache and loads current compiled code
   assert.deepEqual(opened, ['flutter-app-cache']);
   assert.deepEqual(deleted, [requests[0]]);
   assert.equal(loads, 1);
-  assert.equal(configuration.assetBase, 'releases/1.9.19/');
-  assert.equal(flutter.buildConfig.builds[0].mainJsPath, appRoot + 'main.dart.js?build=1.9.19');
+  assert.equal(configuration.assetBase, 'releases/1.9.20/');
+  assert.equal(flutter.buildConfig.builds[0].mainJsPath, appRoot + 'main.dart.js?build=1.9.20');
 });
 
 test('slow iOS cache cleanup does not delay Flutter startup', async () => {

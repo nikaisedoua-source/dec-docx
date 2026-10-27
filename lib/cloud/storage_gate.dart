@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
+import '../glass_surface.dart';
 import '../iphone_install_guide.dart';
 import '../localized_issues.dart';
+import '../platform_design.dart';
 
 import 'cloud_models.dart';
 import 'cloud_storage.dart';
@@ -111,13 +113,27 @@ class _StorageGateState extends State<StorageGate> {
 
     final needsAuthorization =
         _storage.mode == 'folder' && _storage.folder != null;
+    final platformDesign = PlatformDesign.current();
+    final background = switch (platformDesign.platform) {
+      TargetPlatform.iOS || TargetPlatform.macOS => const Color(0xFFF2F3F7),
+      TargetPlatform.windows => const Color(0xFFEAF2F8),
+      TargetPlatform.linux => const Color(0xFFF2EDF5),
+      _ => const Color(0xFFF5F1FA),
+    };
     return Scaffold(
+      backgroundColor: background,
       body: DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xff37106b), Color(0xff130b31)],
+            colors: [
+              background,
+              Color.alphaBlend(
+                platformDesign.accent.withValues(alpha: .12),
+                background,
+              ),
+            ],
           ),
         ),
         child: SafeArea(
@@ -126,17 +142,18 @@ class _StorageGateState extends State<StorageGate> {
               padding: const EdgeInsets.all(20),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 560),
-                child: Card(
-                  color: const Color(0xfffbf7ff),
+                child: GlassSurface(
+                  tint: const Color(0xFFFDFDFF),
+                  radius: platformDesign.surfaceRadius,
                   child: Padding(
-                    padding: const EdgeInsets.all(24),
+                    padding: EdgeInsets.all(platformDesign.isDesktop ? 28 : 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const Icon(
                           Icons.folder_copy_outlined,
-                          size: 42,
-                          color: Color(0xff6f2bd3),
+                          size: 38,
+                          color: Color(0xFF0F6CBD),
                         ),
                         const SizedBox(height: 14),
                         Text(
@@ -155,7 +172,12 @@ class _StorageGateState extends State<StorageGate> {
                                 ),
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.w800),
+                              ?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: platformDesign.isAppleMobile
+                                    ? -.2
+                                    : 0,
+                              ),
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -220,8 +242,13 @@ class _StorageGateState extends State<StorageGate> {
                         ],
                         OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xff35125f),
-                            side: const BorderSide(color: Color(0xff7c3bd1)),
+                            foregroundColor: platformDesign.accent,
+                            side: BorderSide(color: platformDesign.accent),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                platformDesign.controlRadius,
+                              ),
+                            ),
                           ),
                           onPressed: _busy
                               ? null

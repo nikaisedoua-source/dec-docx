@@ -43,8 +43,8 @@ jobs:
           zip -qr DEC-DOCX-Browser-Extension.zip browser_extension
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.19-preview
-          name: DEC DOCX 1.9.19 — aperçu
+          tag_name: v1.9.20-preview
+          name: DEC DOCX 1.9.20 — aperçu
           prerelease: true
           body: |
             Les versets générés n’ont plus d’espace ajouté entre eux.
@@ -54,7 +54,8 @@ jobs:
             Les dates anglaises écrites jour-mois avec une virgule avant l’année, comme 15 December, 2002, sont reconnues sans faux blocage [FR-DATE].
             Les concordances Kc comportant une plage de versets, comme [Kc.15v14-16], restent à leur place et sont mises en forme correctement dans Word.
             Les chapitres similaires finaux en tchèque et les libellés traduits suivis de références Kc ne sont plus pris pour des versets.
-            Interface en verre translucide, avis animé de nouvelle version et bouton d’installation discret adapté à l’appareil.
+            Présentation ajustée à iPhone, macOS, Windows et Linux avec les contrôles, couleurs et espacements propres à chaque système.
+            Le panneau Word adopte le style Microsoft Office et conserve le transfert direct de la sélection vers le document Word.
             Reconnaissance des dates tchèques et des jours suivis d’un point dans les sous-titres.
             Les mois encore inconnus dans une langue n’empêchent plus la génération si le jour et l’année concordent ; un avis demande de vérifier le mois.
             Les nombres des références bibliques restent dans leur verset, y compris avec des espaces autour des deux-points et des intervalles.
@@ -71,7 +72,7 @@ jobs:
             Brouillons automatiques récupérables et historique des versions locales.
             Bibliothèque hors ligne, copie de récupération en cas d’échec de synchronisation et animations accessibles.
             Le site web est utilisable sans installation. Les archives natives sont des versions de test.
-            Android utilise une signature de test ; macOS et Windows ne sont pas signés pour distribution de confiance.
+            Android utilise une signature de test ; les exécutables macOS, Windows et Linux sont des aperçus non signés.
             Aucun document utilisateur n'est inclus dans ces fichiers.
           files: |
             DEC-DOCX-Web.zip
@@ -92,6 +93,8 @@ jobs:
         include:
           - os: ubuntu-latest
             target: apk
+          - os: ubuntu-latest
+            target: linux
           - os: macos-latest
             target: macos
           - os: windows-latest
@@ -112,6 +115,11 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - name: Install Linux desktop build dependencies
+        if: matrix.target == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.41.9'
@@ -122,6 +130,9 @@ jobs:
       - name: Package Android
         if: matrix.target == 'apk'
         run: cp build/app/outputs/flutter-apk/app-release.apk DEC-DOCX-Android-preview.apk
+      - name: Package Linux
+        if: matrix.target == 'linux'
+        run: tar -czf DEC-DOCX-Linux-preview.tar.gz -C build/linux/x64/release/bundle .
       - name: Package macOS
         if: matrix.target == 'macos'
         run: ditto -c -k --keepParent 'build/macos/Build/Products/Release/DEC DOCX.app' DEC-DOCX-macOS-preview.zip
@@ -131,9 +142,10 @@ jobs:
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath DEC-DOCX-Windows-preview.zip
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.19-preview
+          tag_name: v1.9.20-preview
           prerelease: true
           files: |
             DEC-DOCX-Android-preview.apk
+            DEC-DOCX-Linux-preview.tar.gz
             DEC-DOCX-macOS-preview.zip
             DEC-DOCX-Windows-preview.zip

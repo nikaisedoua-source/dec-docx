@@ -39,6 +39,7 @@ class InstallAppButton extends StatelessWidget {
       TargetPlatform.android => 'DEC-DOCX-Android-preview.apk',
       TargetPlatform.macOS => 'DEC-DOCX-macOS-preview.zip',
       TargetPlatform.windows => 'DEC-DOCX-Windows-preview.zip',
+      TargetPlatform.linux => 'DEC-DOCX-Linux-preview.tar.gz',
       _ => '',
     };
     final uri = Uri.parse(
@@ -75,9 +76,10 @@ class InstallAppButton extends StatelessWidget {
       TargetPlatform.iOS => ('iPhone', Icons.phone_iphone_rounded),
       TargetPlatform.macOS => ('Mac', Icons.laptop_mac_rounded),
       TargetPlatform.windows => ('Windows', Icons.desktop_windows_rounded),
-      _ => ('cet appareil', Icons.install_desktop_rounded),
+      TargetPlatform.linux => ('Linux', Icons.computer_rounded),
+      TargetPlatform.fuchsia => ('cet appareil', Icons.install_desktop_rounded),
     };
-    if (target == TargetPlatform.linux || target == TargetPlatform.fuchsia) {
+    if (target == TargetPlatform.fuchsia) {
       return PopupMenuButton<TargetPlatform>(
         tooltip: _t(
           'Installer l’application',
@@ -92,6 +94,7 @@ class InstallAppButton extends StatelessWidget {
           PopupMenuItem(value: TargetPlatform.iOS, child: Text('iPhone')),
           PopupMenuItem(value: TargetPlatform.macOS, child: Text('Mac')),
           PopupMenuItem(value: TargetPlatform.windows, child: Text('Windows')),
+          PopupMenuItem(value: TargetPlatform.linux, child: Text('Linux')),
         ],
       );
     }

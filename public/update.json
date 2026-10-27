@@ -1,8 +1,9 @@
 {
-  "version": "1.9.19",
-  "message": "Versets sans espace supplémentaire; import DOCX renforcé; connexion directe à Word pour remplacer la sélection par le DOCX formaté.",
-  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.19-preview/DEC-DOCX-Android-preview.apk",
-  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.19-preview/DEC-DOCX-macOS-preview.zip",
-  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.19-preview/DEC-DOCX-Windows-preview.zip",
+  "version": "1.9.20",
+  "message": "Interface native à iPhone, macOS, Windows et Linux; intégration Word modernisée; Linux disponible en application de bureau.",
+  "downloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.20-preview/DEC-DOCX-Android-preview.apk",
+  "macDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.20-preview/DEC-DOCX-macOS-preview.zip",
+  "windowsDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.20-preview/DEC-DOCX-Windows-preview.zip",
+  "linuxDownloadUrl": "https://github.com/nikaisedoua-source/dec-docx/releases/download/v1.9.20-preview/DEC-DOCX-Linux-preview.tar.gz",
   "webUrl": "https://nikaisedoua-source.github.io/dec-docx/"
 }
