@@ -21,7 +21,7 @@ class PlatformDesign {
         TargetPlatform.iOS => PlatformDesign._(
           platform: platform,
           label: 'iPhone',
-          accent: const Color(0xFF0A84FF),
+          accent: const Color(0xFF0063CC),
           surfaceRadius: 22,
           controlRadius: 12,
           toolbarRadius: 24,
@@ -32,7 +32,7 @@ class PlatformDesign {
         TargetPlatform.macOS => PlatformDesign._(
           platform: platform,
           label: 'macOS',
-          accent: const Color(0xFF007AFF),
+          accent: const Color(0xFF0062D5),
           surfaceRadius: 14,
           controlRadius: 9,
           toolbarRadius: 14,
@@ -43,7 +43,7 @@ class PlatformDesign {
         TargetPlatform.windows => PlatformDesign._(
           platform: platform,
           label: 'Windows',
-          accent: const Color(0xFF0078D4),
+          accent: const Color(0xFF0067B9),
           surfaceRadius: 8,
           controlRadius: 6,
           toolbarRadius: 8,
@@ -54,7 +54,7 @@ class PlatformDesign {
         TargetPlatform.linux => PlatformDesign._(
           platform: platform,
           label: 'Linux',
-          accent: const Color(0xFF9141AC),
+          accent: const Color(0xFF7A368C),
           surfaceRadius: 12,
           controlRadius: 8,
           toolbarRadius: 12,
@@ -87,6 +87,57 @@ class PlatformDesign {
   final String? fontFamily;
   final bool isAppleMobile;
   final bool isDesktop;
+
+  double get contentMaxWidth => switch (platform) {
+    TargetPlatform.macOS => 1360,
+    TargetPlatform.windows => 1400,
+    TargetPlatform.linux => 1320,
+    TargetPlatform.iOS => 760,
+    _ => 1200,
+  };
+
+  double get wideLayoutBreakpoint => switch (platform) {
+    TargetPlatform.macOS => 1080,
+    TargetPlatform.windows => 1120,
+    TargetPlatform.linux => 1040,
+    _ => 920,
+  };
+
+  double horizontalInset(double width) => switch (width) {
+    < 480 => 16,
+    < 900 => 24,
+    _ => isDesktop ? 32 : 24,
+  };
+
+  double get pageTopInset => isDesktop ? 24 : 14;
+  double get sectionGap => isDesktop ? 20 : 14;
+  double get panelPadding => isDesktop ? 22 : (isAppleMobile ? 18 : 16);
+  double get nestedRadius => switch (platform) {
+    TargetPlatform.iOS => 18,
+    TargetPlatform.macOS => 12,
+    TargetPlatform.windows => 6,
+    TargetPlatform.linux => 10,
+    _ => 12,
+  };
+  double get buttonRadius => switch (platform) {
+    TargetPlatform.iOS => 16,
+    TargetPlatform.macOS => 11,
+    TargetPlatform.windows => 6,
+    TargetPlatform.linux => 10,
+    _ => 14,
+  };
+  double get inputFontSize => isAppleMobile ? 16 : (isDesktop ? 14 : 15);
+  double get bodyFontSize => isAppleMobile ? 16 : (isDesktop ? 14 : 15);
+  double get sectionTitleSize => isDesktop ? 18 : 17;
+  double get toolbarHorizontalPadding => isDesktop ? 16 : 12;
+  double get toolbarVerticalPadding => isDesktop ? 10 : 8;
+  double get glassBlurSigma => switch (platform) {
+    TargetPlatform.iOS => 18,
+    TargetPlatform.macOS => 20,
+    TargetPlatform.windows => 16,
+    TargetPlatform.linux => 8,
+    _ => 12,
+  };
 
   bool get isWindows => platform == TargetPlatform.windows;
   bool get isMacOS => platform == TargetPlatform.macOS;

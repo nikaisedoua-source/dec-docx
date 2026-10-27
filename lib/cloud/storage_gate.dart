@@ -114,6 +114,7 @@ class _StorageGateState extends State<StorageGate> {
     final needsAuthorization =
         _storage.mode == 'folder' && _storage.folder != null;
     final platformDesign = PlatformDesign.current();
+    final cardWidth = (MediaQuery.sizeOf(context).width - 40).clamp(0.0, 560.0);
     final background = switch (platformDesign.platform) {
       TargetPlatform.iOS || TargetPlatform.macOS => const Color(0xFFF2F3F7),
       TargetPlatform.windows => const Color(0xFFEAF2F8),
@@ -141,211 +142,219 @@ class _StorageGateState extends State<StorageGate> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 560),
-                child: GlassSurface(
-                  tint: const Color(0xFFFDFDFF),
-                  radius: platformDesign.surfaceRadius,
-                  child: Padding(
-                    padding: EdgeInsets.all(platformDesign.isDesktop ? 28 : 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Icon(
-                          Icons.folder_copy_outlined,
-                          size: 38,
-                          color: Color(0xFF0F6CBD),
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          needsAuthorization
-                              ? _t(
-                                  'Réautoriser votre stockage',
-                                  'Reauthorize your storage',
-                                  'Volver a autorizar el almacenamiento',
-                                  'Reautorizar seu armazenamento',
-                                )
-                              : _t(
-                                  'Où conserver vos documents ?',
-                                  'Where should your documents be kept?',
-                                  '¿Dónde guardar sus documentos?',
-                                  'Onde seus documentos devem ser guardados?',
-                                ),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: platformDesign.isAppleMobile
-                                    ? -.2
-                                    : 0,
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          needsAuthorization
-                              ? _t(
-                                  'Le dossier ${_storage.folder} est mémorisé, mais le navigateur demande votre autorisation pour y accéder de nouveau.',
-                                  'The folder ${_storage.folder} is remembered, but the browser needs your authorization to access it again.',
-                                  'La carpeta ${_storage.folder} está guardada, pero el navegador necesita autorización para acceder de nuevo.',
-                                  'A pasta ${_storage.folder} foi memorizada, mas o navegador precisa de autorização para acessá-la novamente.',
-                                )
-                              : _t(
-                                  'Ce choix est mémorisé. Vous pourrez le modifier ensuite dans Sauvegarde et cloud.',
-                                  'This choice is remembered. You can change it later in Backup and cloud.',
-                                  'Esta elección se guarda. Podrá cambiarla después en Copia de seguridad y nube.',
-                                  'Esta escolha é memorizada. Você poderá alterá-la depois em Backup e nuvem.',
-                                ),
-                          textAlign: TextAlign.center,
-                        ),
-                        if (_error != null) ...[
-                          const SizedBox(height: 12),
+                constraints: BoxConstraints(maxWidth: cardWidth),
+                child: SizedBox(
+                  width: cardWidth,
+                  child: GlassSurface(
+                    tint: const Color(0xFFFDFDFF),
+                    radius: platformDesign.surfaceRadius,
+                    child: Padding(
+                      padding: EdgeInsets.all(
+                        platformDesign.isDesktop ? 28 : 20,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Icon(
+                            Icons.folder_copy_outlined,
+                            size: 38,
+                            color: platformDesign.accent,
+                          ),
+                          const SizedBox(height: 14),
                           Text(
-                            _error!,
-                            style: const TextStyle(color: Color(0xff9c1c3e)),
-                          ),
-                        ],
-                        const SizedBox(height: 20),
-                        if (kIsWeb) ...[
-                          TextButton.icon(
-                            onPressed: () => showDialog<void>(
-                              context: context,
-                              builder: (_) =>
-                                  IphoneInstallGuide(locale: _locale),
-                            ),
-                            icon: const Icon(Icons.phone_iphone),
-                            label: Text(
-                              _t(
-                                'Installer sur iPhone — guide',
-                                'Install on iPhone — guide',
-                                'Instalar en iPhone — guía',
-                                'Instalar no iPhone — guia',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-                        if (needsAuthorization) ...[
-                          FilledButton.icon(
-                            onPressed: _busy
-                                ? null
-                                : () => _run(_storage.authorize),
-                            icon: const Icon(Icons.lock_open_outlined),
-                            label: Text(
-                              _t(
-                                'Autoriser ${_storage.provider ?? 'le dossier'}',
-                                'Authorize ${_storage.provider ?? 'the folder'}',
-                                'Autorizar ${_storage.provider ?? 'la carpeta'}',
-                                'Autorizar ${_storage.provider ?? 'a pasta'}',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                        ],
-                        OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: platformDesign.accent,
-                            side: BorderSide(color: platformDesign.accent),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                platformDesign.controlRadius,
-                              ),
-                            ),
-                          ),
-                          onPressed: _busy
-                              ? null
-                              : () => _run(_storage.chooseLocal),
-                          icon: const Icon(Icons.computer_outlined),
-                          label: Text(
-                            _t(
-                              'Sur cet appareil',
-                              'On this device',
-                              'En este dispositivo',
-                              'Neste dispositivo',
-                            ),
-                          ),
-                        ),
-                        if (_storage.supported) ...[
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: 14),
-                            child: Row(
-                              children: [
-                                Expanded(child: Divider()),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 10),
-                                  child: Text(
-                                    _t(
-                                      'OU DOSSIER SYNCHRONISÉ',
-                                      'OR SYNCHRONIZED FOLDER',
-                                      'O CARPETA SINCRONIZADA',
-                                      'OU PASTA SINCRONIZADA',
-                                    ),
+                            needsAuthorization
+                                ? _t(
+                                    'Réautoriser votre stockage',
+                                    'Reauthorize your storage',
+                                    'Volver a autorizar el almacenamiento',
+                                    'Reautorizar seu armazenamento',
+                                  )
+                                : _t(
+                                    'Où conserver vos documents ?',
+                                    'Where should your documents be kept?',
+                                    '¿Dónde guardar sus documentos?',
+                                    'Onde seus documentos devem ser guardados?',
                                   ),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: platformDesign.isAppleMobile
+                                      ? -.2
+                                      : 0,
                                 ),
-                                Expanded(child: Divider()),
-                              ],
-                            ),
-                          ),
-                          DropdownButtonFormField<String>(
-                            initialValue: _provider,
-                            isExpanded: true,
-                            decoration: InputDecoration(
-                              labelText: _t(
-                                'Service cloud installé',
-                                'Installed cloud service',
-                                'Servicio de nube instalado',
-                                'Serviço de nuvem instalado',
-                              ),
-                            ),
-                            items: cloudProviders.entries
-                                .map(
-                                  (entry) => DropdownMenuItem(
-                                    value: entry.key,
-                                    child: Text(
-                                      '${entry.key} · ${_quota(entry.key, entry.value.quota)}',
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: _busy
-                                ? null
-                                : (value) => setState(() => _provider = value!),
-                          ),
-                          const SizedBox(height: 10),
-                          FilledButton.icon(
-                            onPressed: _busy
-                                ? null
-                                : () => _run(
-                                    () => _storage.choose(
-                                      _provider,
-                                      locale: _locale,
-                                    ),
-                                  ),
-                            icon: const Icon(Icons.cloud_done_outlined),
-                            label: Text(
-                              _t(
-                                'Choisir et relier le dossier',
-                                'Choose and connect the folder',
-                                'Elegir y conectar la carpeta',
-                                'Escolher e conectar a pasta',
-                              ),
-                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            _t(
-                              'Sélectionnez le dossier déjà synchronisé par Google Drive, MEGA, OneDrive ou iCloud. Une simple connexion au site du service ne donne pas encore accès à ce dossier.',
-                              'Select the folder already synchronized by Google Drive, MEGA, OneDrive, or iCloud. Signing in to the service website alone does not grant access to this folder.',
-                              'Seleccione la carpeta ya sincronizada por Google Drive, MEGA, OneDrive o iCloud. Iniciar sesión en el sitio del servicio no da acceso a esta carpeta.',
-                              'Selecione a pasta já sincronizada pelo Google Drive, MEGA, OneDrive ou iCloud. Apenas entrar no site do serviço não dá acesso a essa pasta.',
-                            ),
+                            needsAuthorization
+                                ? _t(
+                                    'Le dossier ${_storage.folder} est mémorisé, mais le navigateur demande votre autorisation pour y accéder de nouveau.',
+                                    'The folder ${_storage.folder} is remembered, but the browser needs your authorization to access it again.',
+                                    'La carpeta ${_storage.folder} está guardada, pero el navegador necesita autorización para acceder de nuevo.',
+                                    'A pasta ${_storage.folder} foi memorizada, mas o navegador precisa de autorização para acessá-la novamente.',
+                                  )
+                                : _t(
+                                    'Ce choix est mémorisé. Vous pourrez le modifier ensuite dans Sauvegarde et cloud.',
+                                    'This choice is remembered. You can change it later in Backup and cloud.',
+                                    'Esta elección se guarda. Podrá cambiarla después en Copia de seguridad y nube.',
+                                    'Esta escolha é memorizada. Você poderá alterá-la depois em Backup e nuvem.',
+                                  ),
                             textAlign: TextAlign.center,
                           ),
+                          if (_error != null) ...[
+                            const SizedBox(height: 12),
+                            Text(
+                              _error!,
+                              style: const TextStyle(color: Color(0xff9c1c3e)),
+                            ),
+                          ],
+                          const SizedBox(height: 20),
+                          if (kIsWeb) ...[
+                            TextButton.icon(
+                              onPressed: () => showDialog<void>(
+                                context: context,
+                                builder: (_) =>
+                                    IphoneInstallGuide(locale: _locale),
+                              ),
+                              icon: const Icon(Icons.phone_iphone),
+                              label: Text(
+                                _t(
+                                  'Installer sur iPhone — guide',
+                                  'Install on iPhone — guide',
+                                  'Instalar en iPhone — guía',
+                                  'Instalar no iPhone — guia',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                          if (needsAuthorization) ...[
+                            FilledButton.icon(
+                              onPressed: _busy
+                                  ? null
+                                  : () => _run(_storage.authorize),
+                              icon: const Icon(Icons.lock_open_outlined),
+                              label: Text(
+                                _t(
+                                  'Autoriser ${_storage.provider ?? 'le dossier'}',
+                                  'Authorize ${_storage.provider ?? 'the folder'}',
+                                  'Autorizar ${_storage.provider ?? 'la carpeta'}',
+                                  'Autorizar ${_storage.provider ?? 'a pasta'}',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: platformDesign.accent,
+                              side: BorderSide(color: platformDesign.accent),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  platformDesign.controlRadius,
+                                ),
+                              ),
+                            ),
+                            onPressed: _busy
+                                ? null
+                                : () => _run(_storage.chooseLocal),
+                            icon: const Icon(Icons.computer_outlined),
+                            label: Text(
+                              _t(
+                                'Sur cet appareil',
+                                'On this device',
+                                'En este dispositivo',
+                                'Neste dispositivo',
+                              ),
+                            ),
+                          ),
+                          if (_storage.supported) ...[
+                            Padding(
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                              child: Row(
+                                children: [
+                                  Expanded(child: Divider()),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                    ),
+                                    child: Text(
+                                      _t(
+                                        'OU DOSSIER SYNCHRONISÉ',
+                                        'OR SYNCHRONIZED FOLDER',
+                                        'O CARPETA SINCRONIZADA',
+                                        'OU PASTA SINCRONIZADA',
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(child: Divider()),
+                                ],
+                              ),
+                            ),
+                            DropdownButtonFormField<String>(
+                              initialValue: _provider,
+                              isExpanded: true,
+                              decoration: InputDecoration(
+                                labelText: _t(
+                                  'Service cloud installé',
+                                  'Installed cloud service',
+                                  'Servicio de nube instalado',
+                                  'Serviço de nuvem instalado',
+                                ),
+                              ),
+                              items: cloudProviders.entries
+                                  .map(
+                                    (entry) => DropdownMenuItem(
+                                      value: entry.key,
+                                      child: Text(
+                                        '${entry.key} · ${_quota(entry.key, entry.value.quota)}',
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: _busy
+                                  ? null
+                                  : (value) =>
+                                        setState(() => _provider = value!),
+                            ),
+                            const SizedBox(height: 10),
+                            FilledButton.icon(
+                              onPressed: _busy
+                                  ? null
+                                  : () => _run(
+                                      () => _storage.choose(
+                                        _provider,
+                                        locale: _locale,
+                                      ),
+                                    ),
+                              icon: const Icon(Icons.cloud_done_outlined),
+                              label: Text(
+                                _t(
+                                  'Choisir et relier le dossier',
+                                  'Choose and connect the folder',
+                                  'Elegir y conectar la carpeta',
+                                  'Escolher e conectar a pasta',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _t(
+                                'Sélectionnez le dossier déjà synchronisé par Google Drive, MEGA, OneDrive ou iCloud. Une simple connexion au site du service ne donne pas encore accès à ce dossier.',
+                                'Select the folder already synchronized by Google Drive, MEGA, OneDrive, or iCloud. Signing in to the service website alone does not grant access to this folder.',
+                                'Seleccione la carpeta ya sincronizada por Google Drive, MEGA, OneDrive o iCloud. Iniciar sesión en el sitio del servicio no da acceso a esta carpeta.',
+                                'Selecione a pasta já sincronizada pelo Google Drive, MEGA, OneDrive ou iCloud. Apenas entrar no site do serviço não dá acesso a essa pasta.',
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                          if (_busy) ...[
+                            const SizedBox(height: 14),
+                            const LinearProgressIndicator(),
+                          ],
                         ],
-                        if (_busy) ...[
-                          const SizedBox(height: 14),
-                          const LinearProgressIndicator(),
-                        ],
-                      ],
+                      ),
                     ),
                   ),
                 ),
