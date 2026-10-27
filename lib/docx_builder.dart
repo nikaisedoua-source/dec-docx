@@ -7,10 +7,15 @@ import 'package:xml/xml.dart';
 import 'sermon_rules.dart';
 
 class DocumentSource {
-  const DocumentSource({required this.name, required this.text});
+  const DocumentSource({
+    required this.name,
+    required this.text,
+    this.isImportedDocx = false,
+  });
 
   final String name;
   final String text;
+  final bool isImportedDocx;
 }
 
 class ChapterInput {
@@ -121,7 +126,8 @@ class DocxBuilder {
       errors.add(
         'Titre du chapitre : ce champ est obligatoire. Mets un titre comme "KACOU 1 : C’est ici la voix de Matthieu 25 :6".',
       );
-    } else if (_isAllCapsTitle(title)) {
+    } else if (_isAllCapsTitle(title) &&
+        !_matchesImportedDocxTitle(input.sources, title)) {
       errors.add(
         'Titre du chapitre : ne l’écris pas entièrement en majuscules. Écris-le normalement, par exemple "KACOU 1 : C’est ici la voix de Matthieu 25 :6". Les débuts de phrase et les noms propres peuvent garder leur majuscule.',
       );
@@ -161,6 +167,7 @@ class DocxBuilder {
         source.text,
         input.language,
         title,
+        source.isImportedDocx,
       );
       blocks.addAll(result.blocks);
       errors.addAll(result.errors);
@@ -208,6 +215,29 @@ class DocxBuilder {
         descriptiveTitle == descriptiveTitle.toUpperCase() &&
         descriptiveTitle != descriptiveTitle.toLowerCase();
   }
+
+  static bool _matchesImportedDocxTitle(
+    List<DocumentSource> sources,
+    String title,
+  ) {
+    final expected = _titleComparisonKey(title);
+    return sources.any((source) {
+      if (!source.isImportedDocx) return false;
+      for (final line in source.text.split('\n')) {
+        final candidate = line.trim();
+        if (candidate.isEmpty) continue;
+        if (!_isKacouTitle(candidate)) return false;
+        return _titleComparisonKey(candidate) == expected;
+      }
+      return false;
+    });
+  }
+
+  static String _titleComparisonKey(String value) => value
+      .replaceAll('\u00a0', ' ')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim()
+      .toLowerCase();
 
   static int? extractKacouChapterNumber(String value) {
     final patterns = [
@@ -416,6 +446,7 @@ class DocxBuilder {
     String text, [
     String language = '',
     String chapterTitle = '',
+    bool isImportedDocx = false,
   ]) {
     final rawLines = text
         .replaceAll('\r\n', '\n')
@@ -551,9 +582,12 @@ class DocxBuilder {
     int? expectedNumber;
     var sawNumberedParagraph = false;
     final attachedLines = _attachStandaloneNumbers(contentLines, sourceName);
-    final normalizedLines = isChinese
+    var normalizedLines = isChinese
         ? attachedLines
         : _splitEmbeddedNumberedParagraphs(attachedLines);
+    if (isImportedDocx) {
+      normalizedLines = _attachImportedDocxContinuations(normalizedLines);
+    }
     final similarChapters = _extractTrailingSimilarChapters(normalizedLines);
 
     for (final contentLine in similarChapters.lines) {
@@ -678,6 +712,53 @@ class DocxBuilder {
     }
 
     return _NormalizedLines(lines: normalized, errors: errors);
+  }
+
+  static _NormalizedLines _attachImportedDocxContinuations(
+    _NormalizedLines input,
+  ) {
+    final lines = <_ContentLine>[];
+    int? previousNumber;
+
+    for (var index = 0; index < input.lines.length; index++) {
+      final line = input.lines[index];
+      final paragraph = _parseNumberedParagraph(line.text);
+      if (paragraph != null) {
+        lines.add(line);
+        previousNumber = paragraph.number;
+        continue;
+      }
+
+      final nextParagraph = index + 1 < input.lines.length
+          ? _parseNumberedParagraph(input.lines[index + 1].text)
+          : null;
+      final isStructuralLine =
+          _isKacouTitle(line.text) ||
+          _isConcordanceLine(line.text) ||
+          _looksLikeSimilarChaptersLine(line.text) ||
+          _looksLikeSectionSubtitle(line.text) ||
+          SermonRules.isDateHeading(line.text) ||
+          _looksLikeParenthesizedDate(line.text);
+
+      if (previousNumber != null &&
+          nextParagraph?.number == previousNumber + 1 &&
+          !isStructuralLine &&
+          lines.isNotEmpty) {
+        final previous = lines.removeLast();
+        lines.add(
+          _ContentLine(
+            text: '${previous.text}\n${line.text}',
+            number: previous.number,
+          ),
+        );
+        continue;
+      }
+
+      lines.add(line);
+      previousNumber = null;
+    }
+
+    return _NormalizedLines(lines: lines, errors: input.errors);
   }
 
   static _NormalizedLines _splitEmbeddedNumberedParagraphs(
@@ -947,12 +1028,12 @@ class DocxBuilder {
         <w:r><w:rPr><w:b/><w:bCs/><w:sz w:val="24"/></w:rPr><w:t xml:space="preserve">$number </w:t></w:r>
         ${_runsWithConcordances(text.substring(0, pinyin.start))}
       </w:p><w:p>
-        <w:pPr><w:spacing w:after="240"/></w:pPr>
+        <w:pPr><w:spacing w:after="0"/></w:pPr>
         ${_runsWithConcordances(text.substring(pinyin.end))}
       </w:p>''';
     }
     return '''<w:p>
-      <w:pPr><w:spacing w:after="240"/></w:pPr>
+      <w:pPr><w:spacing w:after="0"/></w:pPr>
       <w:r><w:rPr><w:b/><w:bCs/><w:sz w:val="24"/></w:rPr><w:t xml:space="preserve">$number </w:t></w:r>
       ${_runsWithConcordances(text)}
     </w:p>''';
@@ -1111,7 +1192,7 @@ class DocxBuilder {
     </w:rPrDefault>
     <w:pPrDefault>
       <w:pPr>
-        <w:spacing w:after="240"/>
+        <w:spacing w:after="0"/>
       </w:pPr>
     </w:pPrDefault>
   </w:docDefaults>

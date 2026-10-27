@@ -17,6 +17,7 @@ import 'cloud/cloud_models.dart';
 import 'cloud/cloud_panel.dart';
 import 'cloud/cloud_storage.dart';
 import 'cloud/storage_gate.dart';
+import 'office_bridge.dart';
 import 'pdf_web_stub.dart' if (dart.library.js_interop) 'pdf_web.dart';
 import 'ai_assistant.dart';
 import 'sermon_reference.dart';
@@ -127,7 +128,7 @@ class DesignPalette {
 }
 
 const _appName = 'DEC DOCX';
-const _appVersion = '1.9.18';
+const _appVersion = '1.9.19';
 const _updateManifestUrl = String.fromEnvironment(
   'DEC_DOCX_UPDATE_MANIFEST_URL',
   defaultValue: 'https://nikaisedoua-source.github.io/dec-docx/update.json',
@@ -597,10 +598,10 @@ class AppStrings {
     'Cada arquivo permanece separado: edite, exclua ou corrija um versículo antes de gerar o documento.',
   );
   String get footer => _text(
-    'DEC DOCX $_appVersion : tous les documents sont comparés avec le chapitre français de référence.',
-    'DEC DOCX $_appVersion: all documents are compared with the French reference chapter.',
-    'DEC DOCX $_appVersion: todos los documentos se comparan con el capítulo francés de referencia.',
-    'DEC DOCX $_appVersion: todos os documentos são comparados com o capítulo francês de referência.',
+    'DEC DOCX $_appVersion : comparaison avec le chapitre français quand la référence est disponible. Si elle manque, la génération locale demande confirmation.',
+    'DEC DOCX $_appVersion: French comparison runs when the reference is available. If it is missing, local generation asks for confirmation.',
+    'DEC DOCX $_appVersion: comparación francesa cuando la referencia está disponible. Si falta, la generación local pide confirmación.',
+    'DEC DOCX $_appVersion: comparação francesa quando a referência está disponível. Se faltar, a geração local pede confirmação.',
   );
   String get noInput => _text(
     'Ajoute un texte ou au moins un fichier.',
@@ -658,6 +659,31 @@ class AppStrings {
     '[FR-UNAVAILABLE] The French reference for Kacou $chapter is unavailable (${technicalError(error)}). Check your connection and run generation again to verify subtitle dates and numbering.',
     '[FR-UNAVAILABLE] La referencia francesa de Kacou $chapter no está disponible (${technicalError(error)}). Comprueba la conexión y vuelve a generar el documento para verificar las fechas de los subtítulos y la numeración.',
     '[FR-UNAVAILABLE] A referência francesa de Kacou $chapter está indisponível (${technicalError(error)}). Verifique a conexão e gere novamente o documento para conferir as datas dos subtítulos e a numeração.',
+  );
+  String get referenceUnavailableTitle => _text(
+    'Référence française indisponible',
+    'French reference unavailable',
+    'Referencia francesa no disponible',
+    'Referência francesa indisponível',
+  );
+  String localOnlyConfirmation(int chapter, int paragraphCount) => _text(
+    'La référence française de Kacou $chapter ne répond pas. Le contrôle local a détecté $paragraphCount paragraphes numérotés, mais ne peut pas vérifier leur nombre ni les dates des sous-titres avec le français. Générer quand même le document sans cette comparaison ?',
+    'The French reference for Kacou $chapter is unavailable. Local checks found $paragraphCount numbered paragraphs, but cannot verify their count or subtitle dates against the French text. Generate the document without that comparison anyway?',
+    'La referencia francesa de Kacou $chapter no está disponible. La comprobación local encontró $paragraphCount párrafos numerados, pero no puede verificar su cantidad ni las fechas de los subtítulos con el francés. ¿Generar el documento sin esa comparación?',
+    'A referência francesa de Kacou $chapter não está disponível. A verificação local encontrou $paragraphCount parágrafos numerados, mas não pode conferir a quantidade nem as datas dos subtítulos com o francês. Gerar o documento sem essa comparação mesmo assim?',
+  );
+  String get cancel => _text('Annuler', 'Cancel', 'Cancelar', 'Cancelar');
+  String get generateWithoutComparison => _text(
+    'Générer sans comparer',
+    'Generate without comparison',
+    'Generar sin comparar',
+    'Gerar sem comparar',
+  );
+  String localOnlyGenerationNotice(int chapter, int paragraphCount) => _text(
+    'Généré avec les contrôles locaux : Kacou $chapter, $paragraphCount paragraphe(s). La comparaison française et le contrôle des dates ne sont pas effectués.',
+    'Generated with local checks: Kacou $chapter, $paragraphCount paragraph(s). French comparison and date checks were not performed.',
+    'Generado con controles locales: Kacou $chapter, $paragraphCount párrafo(s). No se realizaron la comparación francesa ni la comprobación de fechas.',
+    'Gerado com verificações locais: Kacou $chapter, $paragraphCount parágrafo(s). A comparação francesa e a verificação das datas não foram realizadas.',
   );
   String get subtitleDatesVerified => _text(
     'Dates des sous-titres vérifiées avec le français.',
@@ -808,6 +834,24 @@ class AppStrings {
     'Unable to open the Word add-in page.',
     'No se pudo abrir la página del complemento de Word.',
     'Não foi possível abrir a página do suplemento do Word.',
+  );
+  String get officeSelectionReceived => _text(
+    'Texte chargé depuis Word. Complète les informations du chapitre, puis génère le DOCX pour le réinsérer à la sélection.',
+    'Text loaded from Word. Complete the chapter details, then generate the DOCX to replace the selection.',
+    'Texto cargado desde Word. Completa los datos del capítulo y genera el DOCX para reemplazar la selección.',
+    'Texto carregado do Word. Complete os dados do capítulo e gere o DOCX para substituir a seleção.',
+  );
+  String get officeDocumentInserted => _text(
+    'Le document formaté a été inséré dans Word à la place de la sélection.',
+    'The formatted document was inserted in Word in place of the selection.',
+    'El documento con formato se insertó en Word en lugar de la selección.',
+    'O documento formatado foi inserido no Word no lugar da seleção.',
+  );
+  String get officeTransferFailed => _text(
+    'Word n’a pas confirmé l’insertion. Le DOCX reste disponible en téléchargement.',
+    'Word did not confirm insertion. The DOCX is still available to download.',
+    'Word no confirmó la inserción. El DOCX sigue disponible para descargar.',
+    'O Word não confirmou a inserção. O DOCX continua disponível para baixar.',
   );
   String get browserPageOpenFailed => _text(
     'Impossible d’ouvrir la page de l’extension navigateur.',
@@ -1099,11 +1143,13 @@ class _GeneratorPageState extends State<GeneratorPage>
   final _personNameController = TextEditingController();
   final _referenceService = const SermonReferenceService();
   final _aiAssistant = const LocalAiAssistant();
+  final _officeBridge = OfficeBridge();
   final List<DocumentSource> _fileSources = [];
   final List<TextEditingController> _fileSourceControllers = [];
   AppLanguage _language = AppLanguage.fr;
   DesignMode _designMode = DesignMode.aura;
   bool _isGenerating = false;
+  bool _officeSelectionImported = false;
   bool _isDownloading = false;
   bool _isAiReviewing = false;
   String? _status;
@@ -1123,6 +1169,7 @@ class _GeneratorPageState extends State<GeneratorPage>
   @override
   void initState() {
     super.initState();
+    var draftRestore = Future<void>.value();
     _language = widget.initialLanguage ?? AppLanguage.fr;
     _ambientController = AnimationController(
       vsync: this,
@@ -1140,8 +1187,9 @@ class _GeneratorPageState extends State<GeneratorPage>
       for (final field in _draftFields.values) {
         field.addListener(_draftChanged);
       }
-      unawaited(_restoreDraft());
+      draftRestore = _restoreDraft();
     }
+    unawaited(draftRestore.then((_) => _importOfficeSelection()));
     _similarChaptersController.addListener(_invalidateEditedText);
     _personNameController.addListener(_invalidateEditedText);
     _fileNameController.addListener(_invalidateEditedText);
@@ -1218,7 +1266,13 @@ class _GeneratorPageState extends State<GeneratorPage>
     for (final entry in _draftFields.entries) entry.key: entry.value.text,
     'uiLanguage': _language.name,
     'sources': _fileSources
-        .map((s) => {'name': s.name, 'text': s.text})
+        .map(
+          (s) => {
+            'name': s.name,
+            'text': s.text,
+            'isImportedDocx': s.isImportedDocx,
+          },
+        )
         .toList(),
   };
   void _draftStatusChanged() {
@@ -1244,6 +1298,7 @@ class _GeneratorPageState extends State<GeneratorPage>
     _fileSources[index] = DocumentSource(
       name: source.name,
       text: controller.text,
+      isImportedDocx: source.isImportedDocx,
     );
     _invalidateEditedText();
     _draftChanged();
@@ -1287,6 +1342,7 @@ class _GeneratorPageState extends State<GeneratorPage>
           (s) => DocumentSource(
             name: s['name'] as String,
             text: s['text'] as String,
+            isImportedDocx: s['isImportedDocx'] == true,
           ),
         ),
       );
@@ -1299,6 +1355,19 @@ class _GeneratorPageState extends State<GeneratorPage>
   Future<void> _restoreDraft() async {
     final data = await _drafts!.load();
     if (mounted && data != null) _applyDraft(data);
+  }
+
+  Future<void> _importOfficeSelection() async {
+    if (!_officeBridge.active) return;
+    try {
+      final text = await _officeBridge.receiveSelection();
+      if (!mounted || text.trim().isEmpty) return;
+      _officeSelectionImported = true;
+      _manualTextController.text = text;
+      _setStatus(_strings.officeSelectionReceived);
+    } catch (error) {
+      if (mounted) _setStatus(_strings.error(error));
+    }
   }
 
   String _draftLabel(String fr, String en, String es, String pt) =>
@@ -1886,7 +1955,13 @@ class _GeneratorPageState extends State<GeneratorPage>
       }
       final text = _normalizeWebText(rawText);
 
-      imported.add(DocumentSource(name: _fileTitle(file.name), text: text));
+      imported.add(
+        DocumentSource(
+          name: _fileTitle(file.name),
+          text: text,
+          isImportedDocx: extension == 'docx',
+        ),
+      );
     }
 
     _invalidateEditedText();
@@ -2004,25 +2079,43 @@ class _GeneratorPageState extends State<GeneratorPage>
 
       final document = validation.documents.first;
       final referenceCheck = await _compareWithFrenchReference(input, document);
+      final chapterNumber = DocxBuilder.extractKacouChapterNumber(input.title);
+      final localCount = DocxBuilder.paragraphCount(document);
+      var checkMessage = referenceCheck.message;
       if (referenceCheck.errors.isNotEmpty) {
-        _setStatus(
-          _strings.validationErrors(referenceCheck.errors),
-          issues: referenceCheck.errors,
+        final referenceUnavailable = referenceCheck.errors.length == 1 &&
+            referenceCheck.errors.single.startsWith('[FR-UNAVAILABLE]');
+        if (!referenceUnavailable || chapterNumber == null) {
+          _setStatus(
+            _strings.validationErrors(referenceCheck.errors),
+            issues: referenceCheck.errors,
+          );
+          return;
+        }
+        final continueLocally = await _confirmLocalOnlyGeneration(
+          chapter: chapterNumber,
+          paragraphCount: localCount,
         );
-        return;
+        if (!continueLocally) {
+          _setStatus(
+            _strings.validationErrors(referenceCheck.errors),
+            issues: referenceCheck.errors,
+          );
+          return;
+        }
+        checkMessage = _strings.localOnlyGenerationNotice(
+          chapterNumber,
+          localCount,
+        );
       }
 
-      final chapterNumber = DocxBuilder.extractKacouChapterNumber(input.title)!;
-      final localCount = DocxBuilder.paragraphCount(document);
-      final checkMessage =
-          referenceCheck.message ??
-          _strings.localChecksOk(
-            chapter: chapterNumber,
-            paragraphCount: localCount,
-          );
+      checkMessage ??= _strings.localChecksOk(
+        chapter: chapterNumber!,
+        paragraphCount: localCount,
+      );
       final bytes = DocxBuilder.buildChapter(input);
       final fileName = _automaticFileName(
-        chapterNumber: chapterNumber,
+        chapterNumber: chapterNumber!,
         language: documentLanguage,
       );
       _fileNameController.text = fileName;
@@ -2044,6 +2137,21 @@ class _GeneratorPageState extends State<GeneratorPage>
       }
       _libraryPath = libraryPath;
 
+      String? officeTransferWarning;
+      if (_officeBridge.active) {
+        var result = 'unavailable';
+        try {
+          result = await _officeBridge.sendDocument(bytes, fileName);
+        } catch (_) {
+          // Keep the generated file available if Word closes the dialog.
+        }
+        if (result == 'inserted') {
+          _setStatus('$checkMessage\n${_strings.officeDocumentInserted}');
+          return;
+        }
+        officeTransferWarning = _strings.officeTransferFailed;
+      }
+
       final path = await FilePicker.saveFile(
         dialogTitle: _strings.generate,
         fileName: fileName,
@@ -2056,13 +2164,19 @@ class _GeneratorPageState extends State<GeneratorPage>
         final savedMessage = libraryPath == null
             ? _strings.generatedDownloadHint
             : _strings.savedInLibrary(libraryPath);
-        _setStatus('$checkMessage\n$savedMessage');
+        final transferNotice = officeTransferWarning == null
+            ? ''
+            : '$officeTransferWarning\n';
+        _setStatus('$checkMessage\n$transferNotice$savedMessage');
       } else {
         _generatedPath = path;
         final savedMessage = libraryPath == null
             ? _strings.created(path)
             : '${_strings.created(path)}\n${_strings.savedInLibrary(libraryPath)}';
-        _setStatus('$checkMessage\n$savedMessage');
+        final transferNotice = officeTransferWarning == null
+            ? ''
+            : '$officeTransferWarning\n';
+        _setStatus('$checkMessage\n$transferNotice$savedMessage');
       }
     } catch (error) {
       _setStatus(_strings.error(error));
@@ -2071,6 +2185,33 @@ class _GeneratorPageState extends State<GeneratorPage>
         setState(() => _isGenerating = false);
       }
     }
+  }
+
+  Future<bool> _confirmLocalOnlyGeneration({
+    required int chapter,
+    required int paragraphCount,
+  }) async {
+    if (!mounted) return false;
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(_strings.referenceUnavailableTitle),
+            content: Text(
+              _strings.localOnlyConfirmation(chapter, paragraphCount),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(_strings.cancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(_strings.generateWithoutComparison),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   ChapterInput _chapterInput() {
@@ -2084,6 +2225,7 @@ class _GeneratorPageState extends State<GeneratorPage>
           DocumentSource(
             name: 'Texte saisi',
             text: _normalizeWebText(_manualTextController.text),
+            isImportedDocx: _officeSelectionImported,
           ),
         ..._fileSources,
       ],
@@ -2249,7 +2391,11 @@ class _GeneratorPageState extends State<GeneratorPage>
       );
     }
     _invalidateEditedText();
-    setState(() => _addFileSource(DocumentSource(name: name, text: text)));
+    setState(
+      () => _addFileSource(
+        DocumentSource(name: name, text: text, isImportedDocx: true),
+      ),
+    );
     _draftChanged();
   }
 
